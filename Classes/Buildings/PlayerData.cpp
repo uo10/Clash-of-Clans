@@ -5,6 +5,8 @@ PlayerData* PlayerData::_instance = nullptr;
 PlayerData::PlayerData() {
     _totalGold = 0;   // 初始金币
     _totalElixir = 0; // 初始圣水
+    _maxGold = 1000;  // 初始最大值
+    _maxElixir = 1000;// 初始最大值
 }
 
 void PlayerData::updateMaxLimits(int maxGold, int maxElixir) {

@@ -27,7 +27,11 @@ bool ResourceProducer::init(BuildingType type, int level) {
 
     // 3. 创建气泡图标 (一开始隐藏)
     // 现在没有图，用黄色圆圈代替
-    bubbleIcon = Sprite::create("icon_gold.png");
+    std::string iconName = "Gold.png";
+    if (this->type == BuildingType::ELIXIR_PUMP) {
+        iconName = "Elixir.png"; // 确保你有这个图片
+    }
+    bubbleIcon = Sprite::create(iconName);
     if (!bubbleIcon) {
         // 容错代码：画一个黄色圆形
         auto drawNode = DrawNode::create();

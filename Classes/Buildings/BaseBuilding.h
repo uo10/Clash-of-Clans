@@ -89,6 +89,9 @@ public:
 
     // 返回值 true 代表建筑被摧毁了
     bool takeDamage(float damage);
+    
+    // 刷新画面函数(在changeState和upgradeLevel函数中运用)
+    void updateView();
 
     // 切换状态 (比如从 建造 -> 正常)
     void changeState(BuildingState newState);
