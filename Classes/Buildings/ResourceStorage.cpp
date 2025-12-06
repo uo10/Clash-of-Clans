@@ -14,18 +14,23 @@ ResourceStorage* ResourceStorage::create(BuildingType type, int level) {
 }
 
 bool ResourceStorage::init(BuildingType type, int level) {
-    // 1. 【关键】调用父类初始化
+    // 1. 调用父类初始化
     // 父类会自动调用 setupSpecialProperties，将 stats.capacity 赋值给 this->maxLimit
     if (!BaseBuilding::init(type, level)) return false;
 
     // 2.获取容量信息
-    this->capacity = _stats.capacity;
+    this->maxLimit = _stats.capacity;
 
     // 3. 开启 Update (可选)
-    // 虽然存储建筑不产资源，但如果你想实现“金库里的金币随总量变化而升降”的动画，需要 update
+    // 虽然存储建筑不产资源，但如果想实现“金库里的金币随总量变化而升降”的动画，需要 update
     //this->scheduleUpdate();
 
     return true;
+}
+
+void ResourceStorage::updateSpecialProperties() override {
+    // 从父类已更新的 _stats 中获取新值
+    this->maxLimit = _stats.capacity;
 }
 
 void ResourceStorage::update(float dt) {
@@ -44,14 +49,16 @@ void ResourceStorage::update(float dt) {
         }
     }
     else if (this->type == BuildingType::ELIXIR_STORAGE) {
-        // 计算圣水比例...
-        // percent = ...
+        if (player->getElixirSpace() + player->getElixir() > 0) {
+            percent = (float)player->getElixir() / (float)(player->getElixir() + player->getElixirSpace());
+        }
     }
 
-    // 2. 根据比例切换 SpriteFrame (假设你切好了图)
+    // 2. 根据比例切换 SpriteFrame 
     /*
     if (percent < 0.2f) mainSprite->setSpriteFrame("gold_storage_empty.png");
     else if (percent < 0.6f) mainSprite->setSpriteFrame("gold_storage_half.png");
     else mainSprite->setSpriteFrame("gold_storage_full.png");
     */
 }
+

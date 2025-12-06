@@ -5,6 +5,8 @@ PlayerData* PlayerData::_instance = nullptr;
 PlayerData::PlayerData() {
     _totalGold = 0;   // 初始金币
     _totalElixir = 0; // 初始圣水
+    _maxGold = 1000;  // 初始最大值
+    _maxElixir = 1000;// 初始最大值
 }
 
 void PlayerData::updateMaxLimits(int maxGold, int maxElixir) {
@@ -12,8 +14,8 @@ void PlayerData::updateMaxLimits(int maxGold, int maxElixir) {
     _maxElixir = maxElixir;
 
     // 如果当前资源超过了新上限 进行截断处理
-    if (_currentGold > _maxGold) _totalGold = _maxGold;
-    if (_currentElixir > _maxElixir) _totalElixir = _maxElixir;
+    if (_totalGold > _maxGold) _totalGold = _maxGold;
+    if (_totalElixir > _maxElixir) _totalElixir = _maxElixir;
 
     // 发送UI更新事件
     Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI_GOLD");

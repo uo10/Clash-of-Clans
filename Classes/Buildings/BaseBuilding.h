@@ -44,7 +44,7 @@ public:
     int buildCostGold;   // 需要消耗的金币
     int buildCostElixir; // 需要消耗的圣水
 
-    // 建造所需时间 (秒) - 既然加了造价，通常也会加时间
+    // 建造所需时间 (秒) 
     int buildTimeSeconds;
 
     //网格坐标
@@ -53,8 +53,6 @@ public:
     // 建筑占地大小 (例如 3x3)
     int width;
     int height;
-
-    cocos2d::Sprite* mainSprite; // 建筑主图
 
     // 2. 身份标识
     BuildingType type;    //建筑的类型
@@ -78,6 +76,8 @@ public:
     cocos2d::ui::LoadingBar* buildBar;    // 建造进度条
     cocos2d::Label* timeLabel;            // 显示剩余时间文字 (如 "10s")
 
+    cocos2d::Sprite* mainSprite; // 建筑主图
+
     virtual bool init(BuildingType type, int level);
     static BaseBuilding* create(BuildingType type, int level);
 
@@ -89,12 +89,22 @@ public:
 
     // 返回值 true 代表建筑被摧毁了
     bool takeDamage(float damage);
+    
+    // 刷新画面函数(在changeState和upgradeLevel函数中运用)
+    void updateView();
 
     // 切换状态 (比如从 建造 -> 正常)
     void changeState(BuildingState newState);
 
+    // 升级函数
+    void upgradeLevel();
+
+    // 通知子类更新自己特有属性
+    virtual void updateSpecialProperties() {}; 
+
     // 更新血条显示
     void updateUI();
+
 };
 
 #endif

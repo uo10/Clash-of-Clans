@@ -27,7 +27,11 @@ bool ResourceProducer::init(BuildingType type, int level) {
 
     // 3. 创建气泡图标 (一开始隐藏)
     // 现在没有图，用黄色圆圈代替
-    bubbleIcon = Sprite::create("icon_gold.png");
+    std::string iconName = "Gold.png";
+    if (this->type == BuildingType::ELIXIR_PUMP) {
+        iconName = "Elixir.png"; // 确保你有这个图片
+    }
+    bubbleIcon = Sprite::create(iconName);
     if (!bubbleIcon) {
         // 容错代码：画一个黄色圆形
         auto drawNode = DrawNode::create();
@@ -155,4 +159,10 @@ void ResourceProducer::showFloatText(int amount) {
     auto fade = FadeOut::create(0.8f);
     auto seq = Sequence::create(Spawn::create(move, fade), RemoveSelf::create(), nullptr);
     label->runAction(seq);
+}
+
+void ResourceProducer::updateSpecialProperties() override {
+    // 从父类已更新的 _stats 中获取新值
+    this->productionRate = _stats.productionRate;
+    this->maxCapacity = _stats.capacity;
 }

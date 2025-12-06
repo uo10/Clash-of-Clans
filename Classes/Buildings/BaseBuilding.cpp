@@ -34,6 +34,14 @@ static BuildingStats getStatsConfig(BuildingType type, int level) {
             data.capacity = 1000;
             data.productionRate = 400;
         }
+        else if (level == 3) {
+            data.name = "Gold Mine Lv3";
+            data.hp = 560;
+            data.costElixir = 450;
+            data.buildTime = 120;
+            data.capacity = 2000;
+            data.productionRate = 800;
+        }
     }
     // 2. 圣水收集器配置
     else if (type == BuildingType::ELIXIR_PUMP) {
@@ -45,12 +53,29 @@ static BuildingStats getStatsConfig(BuildingType type, int level) {
             data.capacity = 500;
             data.productionRate = 200;
         }
+        else if (level == 2) {
+            data.name = "Elixir Pump Lv2";
+            data.hp = 500;
+            data.costGold = 300;
+            data.buildTime = 30;
+            data.capacity = 1000;
+            data.productionRate = 400;
+        }
+        else if (level == 3) {
+            data.name = "Elixir Pump Lv3";
+            data.hp = 800;
+            data.costGold = 600;
+            data.buildTime = 60;
+            data.capacity = 2000;
+            data.productionRate = 800;
+        }
     }
     // 3. 金库配置
     else if (type == BuildingType::GOLD_STORAGE) {
         data.name = "Gold Storage";
         data.hp = 800 + (level * 200);
         data.costElixir = 500 * level; // 金库通常消耗圣水
+        data.buildTime = 30 + (level * 30); 
         data.capacity = 1500 * level;
     }
     // 4. 圣水瓶配置
@@ -58,6 +83,7 @@ static BuildingStats getStatsConfig(BuildingType type, int level) {
         data.name = "Elixir Storage";
         data.hp = 800 + (level * 200);
         data.costGold = 500 * level;
+        data.buildTime = 30 + (level * 30); 
         data.capacity = 1500 * level;
     }
 
@@ -88,14 +114,6 @@ bool BaseBuilding::init(BuildingType type, int level) {
     // 5. 创建主图片
     std::string filename = getTextureName(type, level);
     mainSprite = Sprite::create(filename);
-
-    // 容错处理：如果图片没找到，搞个色块顶替
-    if (!mainSprite) {
-        mainSprite = Sprite::create();
-        mainSprite->setTextureRect(Rect(0, 0, 64, 64));
-        mainSprite->setColor(Color3B::GRAY);
-        CCLOG("Error: 找不到图片 %s", filename.c_str());
-    }
 
     // 设置锚点：脚底中心 为了看着像站在中间
     mainSprite->setAnchorPoint(Vec2(0.5f, 0.0f));
@@ -132,10 +150,10 @@ void BaseBuilding::setGridPosition(int x, int y) {
 std::string BaseBuilding::getTextureName(BuildingType type, int level) {
     std::string prefix = "";
     switch (type) {
-    case BuildingType::GOLD_MINE:     prefix = "gold_mine"; break;
-    case BuildingType::ELIXIR_PUMP:   prefix = "elixir_pump"; break;
-    case BuildingType::GOLD_STORAGE:  prefix = "gold_storage"; break;
-    case BuildingType::ELIXIR_STORAGE: prefix = "elixir_storage"; break;
+    case BuildingType::GOLD_MINE:     prefix = "Gold_Mine"; break;
+    case BuildingType::ELIXIR_PUMP:   prefix = "Elixir_Pump"; break;
+    case BuildingType::GOLD_STORAGE:  prefix = "Gold_Storage"; break;
+    case BuildingType::ELIXIR_STORAGE: prefix = "Elixir_Storage"; break;
     default: prefix = "building"; break;
     }
     return StringUtils::format("%s_%d.png", prefix.c_str(), level);
@@ -166,13 +184,159 @@ bool BaseBuilding::takeDamage(float damage) {
     return false;
 }
 
+void BaseBuilding::updateView() {
+
+    // 1. 底图处理 无论什么状态，先确定当前等级对应的图片
+    std::string baseTextureName = getTextureName(this->type, this->level);
+
+    // 如果是 PREVIEW 状态，可能还没有 level，默认显示 1 级外观
+    if (this->state == BuildingState::PREVIEW && this->level == 0) {
+        baseTextureName = getTextureName(this->type, 1);
+    }
+
+    if (!mainSprite) {
+        mainSprite = Sprite::create(baseTextureName);
+        this->addChild(mainSprite);
+    }
+    else {
+        // 如果图片变了，重新设置
+        mainSprite->setTexture(baseTextureName);
+    }
+
+    // 2. 【状态修饰】根据不同状态调整颜色、透明度、UI组件显隐
+
+    // 辅助函数：根据名字移除图标（避免代码重复）
+    auto removeIcon = [&](const std::string& name) {
+        if (auto child = this->getChildByName(name)) {
+            child->removeFromParent();
+        }
+        };
+
+    switch (this->state) {
+    case BuildingState::PREVIEW:
+    {
+        // 【预览模式】：半透明，带一点绿色（表示可放置），无血条
+        mainSprite->setColor(Color3B(100, 255, 100)); // 偏绿
+        mainSprite->setOpacity(128);                  // 半透明
+
+        if (hpBar) hpBar->setVisible(false);
+        removeIcon("icon_hammer");
+    }
+    break;
+
+    case BuildingState::BUILDING:
+    {
+        // 建造/升级中：建筑变暗，显示施工图标
+        mainSprite->setColor(Color3B(150, 150, 150)); // 变暗
+        mainSprite->setOpacity(255);
+
+        if (hpBar) hpBar->setVisible(false); // 施工时通常不显示血条
+
+        // 添加一个施工的小锤子图标
+        if (!this->getChildByName("icon_hammer")) {
+            auto hammer = Sprite::create("hammer.png");
+            if (hammer) {
+                hammer->setName("icon_hammer");
+                hammer->setPosition(Vec2(0, 50)); // 放在头顶
+                // 加个简单的动画
+                auto action = RepeatForever::create(Sequence::create(
+                    RotateTo::create(0.2f, 30),
+                    RotateTo::create(0.2f, -30),
+                    nullptr
+                ));
+                hammer->runAction(action);
+                this->addChild(hammer, 10);
+            }
+        }
+    }
+    break;
+
+    case BuildingState::IDLE:
+    {
+        // 正常待机：恢复原色，显示血条
+        mainSprite->setColor(Color3B::WHITE);
+        mainSprite->setOpacity(255);
+
+        if (hpBar) hpBar->setVisible(true);
+
+        // 清理掉施工图标
+        removeIcon("icon_hammer");
+    }
+    break;
+
+    case BuildingState::ATTACKING:
+    {
+        // 攻击中：视觉上通常和 IDLE 类似，或者是播放攻击动画的起点
+        mainSprite->setColor(Color3B::WHITE);
+        mainSprite->setOpacity(255);
+
+        if (hpBar) hpBar->setVisible(true);
+        removeIcon("icon_hammer");
+
+        // 这里不需要写“发射子弹”的逻辑， updateView 只管静态表现。
+        // 攻击逻辑应该在 update(float dt) 里判断 if(state == ATTACKING) loop...
+    }
+    break;
+
+    case BuildingState::DESTROYED:
+    {
+        if (this->type == BuildingType::GOLD_MINE) {
+            mainSprite = Sprite::create("Gold_Mine_Ruin.png");
+            this->addChild(mainSprite);
+        }
+        else if (this->type == BuildingType::ELIXIR_STORAGE) {
+            mainSprite = Sprite::create("Elixir_Pump_Ruin.png");
+            this->addChild(mainSprite);
+        }
+        if (hpBar) hpBar->setVisible(false);
+        removeIcon("icon_hammer");
+    }
+    break;
+    }
+}
+
 void BaseBuilding::changeState(BuildingState newState) {
+    if (this->state == newState) return;
+
+    // 1. 改变状态变量
     this->state = newState;
 
-    if (newState == BuildingState::DESTROYED) {
-        // 最好准备一张废墟图 "rubble.png"
-        // 如果没有，可以用变灰来代替
-        mainSprite->setColor(Color3B::GRAY);
-        if (hpBar) hpBar->setVisible(false);
+    // 2. 统一刷新画面
+    this->updateView();
+}
+
+void BaseBuilding::upgradeLevel() {
+    // 1. 逻辑数据升级
+    this->level++;
+
+    // 2. 获取新数值配置
+    BuildingStats newStats = getStatsConfig(this->type, this->level);
+    this->_stats = newStats;
+
+    // 3. 更新通用基础属性
+    this->maxHP = _stats.hp;
+    this->currentHP = _stats.hp; // 升级通常回满血
+    this->name = _stats.name;
+
+    // 补全基础属性更新，保持数据一致性
+    this->buildCostGold = _stats.costGold;
+    this->buildCostElixir = _stats.costElixir;
+    this->buildTimeSeconds = _stats.buildTime;
+
+    // 调用虚函数，通知子类更新它们的特有属性
+    // 这会让 ResourceProducer 更新 productionRate，让 ResourceStorage 更新 maxLimit
+    this->updateSpecialProperties();
+
+    // 4. 通知系统 (刷新容量等)
+    if (type == BuildingType::GOLD_STORAGE || type == BuildingType::ELIXIR_STORAGE) {
+        Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_MAX_CAPACITY");
     }
+
+    // 5. 状态回归
+    this->state = BuildingState::IDLE;
+
+    // 6. 统一刷新画面
+    this->updateView();
+
+    CCLOG("升级完成 Lv.%d, 新名称: %s", level, name.c_str());
 }
