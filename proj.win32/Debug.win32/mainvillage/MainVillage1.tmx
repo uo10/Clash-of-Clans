@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="15" height="15" tilewidth="32" tileheight="32" infinite="0" backgroundcolor="#2f8136" nextlayerid="4" nextobjectid="1">
+ <tileset firstgid="1" source="LayerRes.tsx"/>
+ <tileset firstgid="17" source="newpac.tsx"/>
+ <layer id="3" name="MainBackGround" width="15" height="15" locked="1">
+  <data encoding="base64" compression="zlib">
+   eJzTZGBgMARiSyBWIAHLMDAsEALSwkAsQqJeWaBecSAtAcRSZOglRT0ylqNA71DFWgwMDeTqdRrVSzRWBaYtoH4FdKxFRJoDABW/JNc=
+  </data>
+ </layer>
+ <layer id="1" name="MainForeGround" width="15" height="15" locked="1">
+  <data encoding="base64" compression="zlib">
+   eJxjYCAOMEExP5SmJWCHYnL1ItPUcAs11MDUkeoufOpZgZgTiLmpYCYhd5HibmLNRxcjFD6E3MBIhFps4oxoeokFILN4iNDLiwPzQzEAb+cBPg==
+  </data>
+ </layer>
+ <objectgroup id="2" name="abletoset" visible="0"/>
+</map>

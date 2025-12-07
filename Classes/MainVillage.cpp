@@ -1,5 +1,6 @@
-#include "MainVillage.h"
+ï»¿#include "MainVillage.h"
 #include "SimpleAudioEngine.h"
+
 
 USING_NS_CC;
 Scene* MainVillage::createScene()
@@ -8,35 +9,35 @@ Scene* MainVillage::createScene()
 }
 bool MainVillage::isTileBlock(Vec2 tileCoord)
 {
-    // 1¡¢»ñÈ¡µØÍ¼Í¼²ã 
-	//¼ì²é±³¾°²ã
+    // 1ã€è·å–åœ°å›¾å›¾å±‚ 
+	//æ£€æŸ¥èƒŒæ™¯å±‚
     auto layer = _MainVillageMap->getLayer("MainBackGround"); 
     if (!layer) return false;
-	// ¼ì²éÇ°¾°²ã
+	// æ£€æŸ¥å‰æ™¯å±‚
     auto layer1 = _MainVillageMap->getLayer("MainForeGround");
     if (!layer1) return false;
 
-    // 2¡¢»ñÈ¡¸ÃÍø¸ñ×ø±êÏÂµÄ GID (È«¾ÖÍ¼¿éID)
+    // 2ã€è·å–è¯¥ç½‘æ ¼åæ ‡ä¸‹çš„ GID (å…¨å±€å›¾å—ID)
     int gid = layer->getTileGIDAt(tileCoord);
-	//Ç°¾°²ã
+	//å‰æ™¯å±‚
     int gid1 = layer1->getTileGIDAt(tileCoord);
-    // Èç¹û GID Îª 0£¬ËµÃ÷ÕâµØ·½ÊÇ¿ÕµÄ£¨Ã»ÓĞÍ¼¿é£©£¬¿ÉÍ¨ĞĞ
+    // å¦‚æœ GID ä¸º 0ï¼Œè¯´æ˜è¿™åœ°æ–¹æ˜¯ç©ºçš„ï¼ˆæ²¡æœ‰å›¾å—ï¼‰ï¼Œå¯é€šè¡Œ
     if (gid == 0 && gid1 == 0) return false;
 
-    // 3¡¢²éÑ¯¸Ã GID µÄÊôĞÔ
+    // 3ã€æŸ¥è¯¢è¯¥ GID çš„å±æ€§
     Value properties = _MainVillageMap->getPropertiesForGID(gid);
-    //Ç°¾°²ã
+    //å‰æ™¯å±‚
     Value properties1 = _MainVillageMap->getPropertiesForGID(gid1);
 
-    // 4¡¢¼ì²éBlockÊôĞÔ
+    // 4ã€æ£€æŸ¥Blockå±æ€§
     if (!properties.isNull()) {
         ValueMap map = properties.asValueMap();
         if (map.find("Block") != map.end()) {
-            // Èç¹ûÊôĞÔ´æÔÚ£¬ÇÒÎª true£¬Ôò·µ»Ø true (±íÊ¾ÊÇÕÏ°­Îï)
+            // å¦‚æœå±æ€§å­˜åœ¨ï¼Œä¸”ä¸º trueï¼Œåˆ™è¿”å› true (è¡¨ç¤ºæ˜¯éšœç¢ç‰©)
             return map.at("Block").asBool();
         }
     }
-	//Ç°¾°²ã
+	//å‰æ™¯å±‚
     if (!properties1.isNull()) {
         ValueMap map = properties1.asValueMap();
         if (map.find("Block") != map.end()) {
@@ -44,7 +45,7 @@ bool MainVillage::isTileBlock(Vec2 tileCoord)
         }
     }
 
-    return false; // Ä¬ÈÏÃ»ÓĞÕÏ°­
+    return false; // é»˜è®¤æ²¡æœ‰éšœç¢
 }
 bool MainVillage::init()
 {
@@ -52,133 +53,143 @@ bool MainVillage::init()
     {
         return false;
     }
-	_isDragging = false;// ³õÊ¼»¯Î´ÔÚÍÏ×§×´Ì¬
-	_isClickValid = false;// ³õÊ¼»¯µã»÷ÎŞĞ§
-    _selectedSpritePath = "R-C.jpg";//Ä¬ÈÏÑ¡ÔñÍ¼Æ¬
+	_isDragging = false;// åˆå§‹åŒ–æœªåœ¨æ‹–æ‹½çŠ¶æ€
+	_isClickValid = false;// åˆå§‹åŒ–ç‚¹å‡»æ— æ•ˆ
+    _selectedSpritePath = "R-C.jpg";//é»˜è®¤é€‰æ‹©å›¾ç‰‡
+    _selectedBuildingType = BuildingType::GOLD_MINE;
 
-	// ================  ÉèÖÃ³õÊ¼»¯µØÍ¼  ======================
+	// ================  è®¾ç½®åˆå§‹åŒ–åœ°å›¾  ======================
     // 
-	//»ñÈ¡ÆÁÄ»¿É¼û´óĞ¡ºÍÔ­µãÎ»ÖÃ
+	//è·å–å±å¹•å¯è§å¤§å°å’ŒåŸç‚¹ä½ç½®
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
     
     Director::getInstance()->getTextureCache()->removeAllTextures();
 
-	// 1¡¢¼ÓÔØ TMX µØÍ¼
+	// 1ã€åŠ è½½ TMX åœ°å›¾
      _MainVillageMap = TMXTiledMap::create("MainVillage1.tmx");
 
-    Size mapSize = _MainVillageMap->getMapSize(); // Í¼¿éÊıÁ¿
-    Size tileSize = _MainVillageMap->getTileSize(); // µ¥¸öÍ¼¿éÏñËØ 
+    Size mapSize = _MainVillageMap->getMapSize(); // å›¾å—æ•°é‡
+    Size tileSize = _MainVillageMap->getTileSize(); // å•ä¸ªå›¾å—åƒç´  
 
-    // 2¡¢¼ÆËãµØÍ¼Êµ¼ÊÏñËØ¿í¶ÈºÍ¸ß¶È
+    // 2ã€è®¡ç®—åœ°å›¾å®é™…åƒç´ å®½åº¦å’Œé«˜åº¦
     float mapPixelWidth = mapSize.width * tileSize.width;
     float mapPixelHeight = mapSize.height * tileSize.height;
 
-    // 3¡¢¼ÆËãËõ·ÅÒò×Ó
+    // 3ã€è®¡ç®—ç¼©æ”¾å› å­
     float scaleX = visibleSize.width / mapPixelWidth;
     float scaleY = visibleSize.height / mapPixelHeight;
 
-    // 4¡¢ÉèÖÃËõ·Å
+    // 4ã€è®¾ç½®ç¼©æ”¾
     _MainVillageMap->setScaleX(scaleX);
     _MainVillageMap->setScaleY(scaleY);
 
-    // ====================¾«ÁéÑ¡Ôñ°´Å¥========================
-    // °´Å¥ 1
-    auto label1 = Label::createWithSystemFont("Select Item A", "Arial", 24);
-    auto item1 = MenuItemLabel::create(label1, [=](Ref* sender) {
-        _selectedSpritePath = "R-C.jpg";
-        CCLOG("Switched to Item A");
-        });
+    createBuildUI();
 
-    // °´Å¥ 2
-    auto label2 = Label::createWithSystemFont("Select Item B", "Arial", 24);
-    auto item2 = MenuItemLabel::create(label2, [=](Ref* sender) {
-        _selectedSpritePath = "HelloWorld.png"; 
-        CCLOG("Switched to Item B");
-        });
+    // ====================æœ€å·¦ä¸Šè§’å»ºç­‘ä¸»æŒ‰é’®========================
+    auto itemBuild = MenuItemImage::create(
+        "itemBuild.png", 
+        "itemBuild.png", 
+        [=](Ref* sender) {
+            // ç‚¹å‡»é€»è¾‘ä¿æŒä¸å˜
+            if (_buildMenuNode) {
+                bool isVisible = _buildMenuNode->isVisible();
+                _buildMenuNode->setVisible(!isVisible);
 
-  
-    auto menu = Menu::create(item1, item2, nullptr);// ´´½¨²Ëµ¥ÈİÆ÷
+                if (!_buildMenuNode->isVisible()) {
+                    this->closeBuildingMenu();
+                }
+            }
+        }
+    );
+    itemBuild->setScale(0.12f);
+    auto mainMenu = Menu::create(itemBuild, nullptr);
+    mainMenu->setPosition(Vec2(75, visibleSize.height - 70)); // å·¦ä¸Šè§’
+    this->addChild(mainMenu, 1000); // åŠ åˆ° thisï¼Œå±‚çº§é«˜
 
-    menu->alignItemsVerticallyWithPadding(20); // ÅÅÁĞ°´Å¥ (×İÏòÅÅÁĞ)
-
-    menu->setPosition(Vec2(100, visibleSize.height - 100));    // ÉèÖÃ²Ëµ¥Î»ÖÃ (ÆÁÄ»×óÉÏ½Ç)
-
-    this->addChild(menu, 100);    // ½«Ñ¡ÔñUIÌí¼Óµ½ this
+    
 	//=============================================================
     auto mouseListener = EventListenerMouse::create();
 
-	// ==================== Êó±ê²Ù×÷  ==================
+    // ç›‘å¬å™¨ç”¨æ¥ç›‘å¬åˆ·æ–°æœ€å¤§èµ„æºé‡ä¿¡å·
+    auto refreshListener = EventListenerCustom::create("REFRESH_MAX_CAPACITY", [=](EventCustom* event) {
+        CCLOG("æ”¶åˆ°åˆ·æ–°æŒ‡ä»¤ï¼Œå¼€å§‹ç»Ÿè®¡å…¨å±€å®¹é‡...");
+        this->refreshTotalCapacity();
+        });
+
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(refreshListener, this);
+
+	// ==================== é¼ æ ‡æ“ä½œ  ==================
    
-    // =================  Ò»¡¢¹öÂÖËõ·Å  ==================
+    // =================  ä¸€ã€æ»šè½®ç¼©æ”¾  ==================
     mouseListener->onMouseScroll = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
         auto map = _MainVillageMap;
-        if (!map) return;//Ã»ÓĞ³É¹¦´´½¨µØÍ¼¾Í·µ»Ø
+        if (!map) return;//æ²¡æœ‰æˆåŠŸåˆ›å»ºåœ°å›¾å°±è¿”å›
 
-        Size mapContentSize = map->getContentSize(); // »ñÈ¡µØÍ¼Ô­Ê¼´óĞ¡
+        Size mapContentSize = map->getContentSize(); // è·å–åœ°å›¾åŸå§‹å¤§å°
 
-		float scrollY = e->getScrollY();// »ñÈ¡¹öÂÖ¹ö¶¯Öµ
-		float currentScaleX = map->getScaleX();// »ñÈ¡µ±Ç°XËõ·ÅÖµ
-		float currentScaleY = map->getScaleY();//   »ñÈ¡µ±Ç°YËõ·ÅÖµ
-        //»ñÈ¡Ëõ·ÅÇ°Êó±ê×ø±ê
+		float scrollY = e->getScrollY();// è·å–æ»šè½®æ»šåŠ¨å€¼
+		float currentScaleX = map->getScaleX();// è·å–å½“å‰Xç¼©æ”¾å€¼
+		float currentScaleY = map->getScaleY();//   è·å–å½“å‰Yç¼©æ”¾å€¼
+        //è·å–ç¼©æ”¾å‰é¼ æ ‡åæ ‡
         Vec2 mouseLocation = Vec2(e->getCursorX(), e->getCursorY());
         Vec2 nodePosBeforeScale = map->convertToNodeSpace(mouseLocation);
-        // 1¡¢¼ÆËãĞÂµÄËõ·ÅÖµ
+        // 1ã€è®¡ç®—æ–°çš„ç¼©æ”¾å€¼
         float factor = (scrollY > 0) ? 1.1f : 0.9f;
         float newScaleX = currentScaleX * factor;
         float newScaleY = currentScaleY * factor;
 
         // ---------------------------------------------------------
-        //ÏŞÖÆ×îĞ¡Ëõ·ÅÖµ (·ÀÖ¹µØÍ¼ËõµÃ±ÈÆÁÄ»»¹Ğ¡,µ¼ÖÂ³öÏÖºÚ±ß)
+        //é™åˆ¶æœ€å°ç¼©æ”¾å€¼ (é˜²æ­¢åœ°å›¾ç¼©å¾—æ¯”å±å¹•è¿˜å°,å¯¼è‡´å‡ºç°é»‘è¾¹)
         // ---------------------------------------------------------
-        // ×îĞ¡Ëõ·Å±ÈÀı = ÆÁÄ»³ß´ç / µØÍ¼Ô­Ê¼³ß´ç
+        // æœ€å°ç¼©æ”¾æ¯”ä¾‹ = å±å¹•å°ºå¯¸ / åœ°å›¾åŸå§‹å°ºå¯¸
         float minScaleX = visibleSize.width / mapContentSize.width;
         float minScaleY = visibleSize.height / mapContentSize.height;
 
-        // ±£Ö¤²»ÄÜĞ¡ÓÚ×îĞ¡Ëõ·ÅÖµ
+        // ä¿è¯ä¸èƒ½å°äºæœ€å°ç¼©æ”¾å€¼
         if (newScaleX < minScaleX) newScaleX = minScaleX;
         if (newScaleY < minScaleY) newScaleY = minScaleY;
 
-        // ÏŞÖÆ×î´óËõ·ÅÖµ
+        // é™åˆ¶æœ€å¤§ç¼©æ”¾å€¼
         if (newScaleX > 5.0f) newScaleX = 5.0f;
         if (newScaleY > 5.0f) newScaleY = 5.0f;
 
-        // Ó¦ÓÃËõ·Å
+        // åº”ç”¨ç¼©æ”¾
         map->setScaleX(newScaleX);
         map->setScaleY(newScaleY);
 
-		//µ÷ÕûµØÍ¼Î»ÖÃ£¬Ê¹Êó±êÎ»ÖÃ²»±ä
+		//è°ƒæ•´åœ°å›¾ä½ç½®ï¼Œä½¿é¼ æ ‡ä½ç½®ä¸å˜
         Vec2 nodePosAfterScale = map->convertToNodeSpace(mouseLocation);
         Vec2 diff = nodePosAfterScale - nodePosBeforeScale;
         Vec2 currentPos = map->getPosition();
         map->setPosition(currentPos + Vec2(diff.x * newScaleX, diff.y * newScaleY));
 
         // ---------------------------------------------------------
-        // Î»ÖÃĞŞÕı (·ÀÖ¹Ëõ·Åºó±ßÔµÂ¶³öºÚµ×)
+        // ä½ç½®ä¿®æ­£ (é˜²æ­¢ç¼©æ”¾åè¾¹ç¼˜éœ²å‡ºé»‘åº•)
         // ---------------------------------------------------------
 
-        // ¼ÆËãµ±Ç°µØÍ¼Ëõ·ÅºóµÄÊµ¼Ê¿í¸ß
+        // è®¡ç®—å½“å‰åœ°å›¾ç¼©æ”¾åçš„å®é™…å®½é«˜
         float currentMapWidth = mapContentSize.width * newScaleX;
         float currentMapHeight = mapContentSize.height * newScaleY;
 
-        // --- XÖáĞŞÕı ---
-        // 1¡¢µØÍ¼×ó±ß½ç²»ÄÜÍùÓÒÅÜ (x²»ÄÜ´óÓÚ 0£¬·ñÔò×ó±ß³öÏÖºÚ±ß)
+        // --- Xè½´ä¿®æ­£ ---
+        // 1ã€åœ°å›¾å·¦è¾¹ç•Œä¸èƒ½å¾€å³è·‘ (xä¸èƒ½å¤§äº 0ï¼Œå¦åˆ™å·¦è¾¹å‡ºç°é»‘è¾¹)
         if (currentPos.x > 0) {
             currentPos.x = 0;
         }
-        // 2¡¢µØÍ¼ÓÒ±ß½ç²»ÄÜÍù×óÅÜ (x²»ÄÜĞ¡ÓÚÆÁÄ»¿í - µØÍ¼¿í£¬·ñÔòÓÒ±ß³öÏÖºÚ±ß)
+        // 2ã€åœ°å›¾å³è¾¹ç•Œä¸èƒ½å¾€å·¦è·‘ (xä¸èƒ½å°äºå±å¹•å®½ - åœ°å›¾å®½ï¼Œå¦åˆ™å³è¾¹å‡ºç°é»‘è¾¹)
         float minX = visibleSize.width - currentMapWidth;
         if (currentPos.x < minX) {
             currentPos.x = minX;
         }
 
-        // --- YÖáĞŞÕı ---
-        // 1¡¢µØÍ¼ÏÂ±ß½ç²»ÄÜÍùÉÏÅÜ (y²»ÄÜ´óÓÚ0£¬·ñÔòÏÂ±ß³öÏÖºÚ±ß)
+        // --- Yè½´ä¿®æ­£ ---
+        // 1ã€åœ°å›¾ä¸‹è¾¹ç•Œä¸èƒ½å¾€ä¸Šè·‘ (yä¸èƒ½å¤§äº0ï¼Œå¦åˆ™ä¸‹è¾¹å‡ºç°é»‘è¾¹)
         if (currentPos.y > 0) {
             currentPos.y = 0;
         }
-        // 2¡¢µØÍ¼ÉÏ±ß½ç²»ÄÜÍùÏÂÅÜ (y²»ÄÜĞ¡ÓÚÆÁÄ»¸ß-µØÍ¼¸ß£¬·ñÔòÉÏ±ß³öÏÖºÚ±ß)
+        // 2ã€åœ°å›¾ä¸Šè¾¹ç•Œä¸èƒ½å¾€ä¸‹è·‘ (yä¸èƒ½å°äºå±å¹•é«˜-åœ°å›¾é«˜ï¼Œå¦åˆ™ä¸Šè¾¹å‡ºç°é»‘è¾¹)
         float minY = visibleSize.height - currentMapHeight;
         if (currentPos.y < minY) {
             currentPos.y = minY;
@@ -186,175 +197,691 @@ bool MainVillage::init()
         map->setPosition(currentPos);
 
         };
+    // ------åˆ¤æ–­é¼ æ ‡æ˜¯å¦ç‚¹åˆ°äº†å³é”®èœå•------
+    auto isMouseOnMenu = [=](Vec2 mousePos) -> bool {
+        if (_activeMenuNode ) {
+            // --- æƒ…å†µ A: å»ºç­‘æ“ä½œèœå• ---
+            auto activemenu = _activeMenuNode->getChildByName("BuildingMenu");
+            if (activemenu) {
+                bool isHitAnyButton = false; // æ ‡è®°ï¼šæ˜¯å¦ç‚¹åˆ°äº†ä»»æ„ä¸€ä¸ªæŒ‰é’®
 
-    // ==================  ¶ş¡¢Êó±ê°´ÏÂ  ==================
+                for (const auto& child : activemenu->getChildren()) {
+                    Vec2 localPos = activemenu->convertToNodeSpace(mousePos);
+
+                    // åªè¦ç‚¹ä¸­äº†å…¶ä¸­ä¸€ä¸ª
+                    if (child->getBoundingBox().containsPoint(localPos)) {
+                        isHitAnyButton = true;
+                        break; // æ‰¾åˆ°ï¼Œåœæ­¢
+                    }
+                }
+                if (isHitAnyButton) {
+                    // ç‚¹åœ¨æŒ‰é’®ä¸Šäº† -> æ‹¦æˆªäº‹ä»¶ï¼Œä½†ä¸å…³é—­èœå•
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+                else {
+                    // å¾ªç¯ç»“æŸäº†ï¼Œè¯´æ˜æ‰€æœ‰æŒ‰é’®éƒ½æ²¡ç‚¹ä¸­ -> å…³é—­èœå•ï¼Œå¹¶æ‹¦æˆªäº‹ä»¶
+                    this->closeBuildingMenu();
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+            }
+            // --- æƒ…å†µ B: å»ºç­‘ä¿¡æ¯å¼¹çª— ---
+            auto infoBg = _activeMenuNode->getChildByName("InfoBackground");
+            if (infoBg) {
+                Vec2 localPos = infoBg->convertToNodeSpace(mousePos);
+
+                Size s = infoBg->getContentSize();
+                Rect bgRect = Rect(0, 0, s.width, s.height);
+
+                // åˆ¤æ–­é¼ æ ‡æ˜¯å¦åœ¨èƒŒæ™¯æ¿èŒƒå›´å†…
+                if (bgRect.containsPoint(localPos)) {
+                    // ç‚¹åœ¨é¢æ¿ä¸Š -> æ‹¦æˆª
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+                else {
+                    // ç‚¹åœ¨é¢æ¿å¤–é¢ -> å…³é—­é¢æ¿ï¼Œå¹¶æ‹¦æˆªè¿™æ¬¡ç‚¹å‡»
+                    this->closeBuildingMenu();
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+            }
+        }
+        // --- æƒ…å†µCï¼šå»ºç­‘é€‰æ‹©èœå• ---
+        if (_buildMenuNode && _buildMenuNode->isVisible()) {
+            auto bg = _buildMenuNode->getChildByName("BuildPanelBG");
+            if (bg) {
+                Vec2 localPos = bg->convertToNodeSpace(mousePos);
+                // åˆ¤æ–­é¼ æ ‡æ˜¯å¦åœ¨èƒŒæ™¯æ¿èŒƒå›´å†…
+                if (bg->getBoundingBox().containsPoint(localPos)) {
+                    // ç‚¹åœ¨é¢æ¿ä¸Š -> æ‹¦æˆª
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+                else {
+                    // ç‚¹åœ¨é¢æ¿å¤–é¢ -> å…³é—­é¢æ¿ï¼Œå¹¶æ‹¦æˆªè¿™æ¬¡ç‚¹å‡»
+                    _buildMenuNode->setVisible(false);
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+            }
+        }
+        return false;
+        };
+
+    // ==================  äºŒã€é¼ æ ‡æŒ‰ä¸‹  ==================
     mouseListener->onMouseDown = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
-		//1¡¢ÅĞ¶ÏÊÇ·ñµãÔÚ²Ëµ¥ÉÏ
-		Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());// »ñÈ¡Êó±êµã»÷Î»ÖÃ
-		Vec2 localPos = menu->getParent()->convertToNodeSpace(mousePos);// ×ª»»µ½²Ëµ¥½Úµã¿Õ¼ä
-		if (menu->getBoundingBox().containsPoint(localPos)) {// ÅĞ¶ÏÊÇ·ñµãÔÚ²Ëµ¥ÇøÓòÄÚ
+		//1ã€åˆ¤æ–­æ˜¯å¦ç‚¹åœ¨èœå•ä¸Š
+		Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());// è·å–é¼ æ ‡ç‚¹å‡»ä½ç½®
+		Vec2 localPos = mainMenu->getParent()->convertToNodeSpace(mousePos);// è½¬æ¢åˆ°èœå•èŠ‚ç‚¹ç©ºé—´
+		if (mainMenu->getBoundingBox().containsPoint(localPos)) {// åˆ¤æ–­æ˜¯å¦ç‚¹åœ¨èœå•åŒºåŸŸå†…
             _isDragging = false;
-            return; // µãÔÚ²Ëµ¥ÉÏÁË£¬ºöÂÔÍÏ×§
+            return; // ç‚¹åœ¨èœå•ä¸Šäº†ï¼Œå¿½ç•¥æ‹–æ‹½
         }
-		//2¡¢Èç¹ûÊÇ×ó¼ü°´ÏÂ
+        // å¦‚æœç‚¹åœ¨å³é”®èœå•ä¸Šï¼Œç›´æ¥ç»“æŸï¼Œ_isClickValid = false
+        if (isMouseOnMenu(mousePos)) {
+            _isDragging = false;
+            _isClickValid = false; 
+            return;
+        }
+		//2ã€å¦‚æœæ˜¯å·¦é”®æŒ‰ä¸‹
         if (e->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
-            _isDragging = true; // Ö»ÓĞÃ»µãÔÚ²Ëµ¥ÉÏ£¬²ÅÔÊĞíÍÏ×§
+            _isDragging = true; // åªæœ‰æ²¡ç‚¹åœ¨èœå•ä¸Šï¼Œæ‰å…è®¸æ‹–æ‹½
             _isClickValid = true;
             _lastMousePos = mousePos;
             _startClickPos = mousePos;
         }
         };
 
-    // ==================  Èı¡¢Êó±êËÉ¿ª  ==================
+    // ==================  ä¸‰ã€é¼ æ ‡æ¾å¼€  ==================
+
     mouseListener->onMouseUp = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
         auto map = _MainVillageMap;
 		if (!map) return;
-		//1¡¢ÅĞ¶ÏÊÇ·ñµãÔÚ²Ëµ¥ÉÏ
+		//1ã€åˆ¤æ–­æ˜¯å¦ç‚¹åœ¨èœå•ä¸Š
         Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());
-        Vec2 localPos = menu->getParent()->convertToNodeSpace(mousePos);
-        if (menu->getBoundingBox().containsPoint(localPos)) {
-            return; // µãÔÚ²Ëµ¥ÉÏÁË£¬ºöÂÔÍÏ×§
+        Vec2 localPos = mainMenu->getParent()->convertToNodeSpace(mousePos);
+        if (mainMenu->getBoundingBox().containsPoint(localPos)) {
+            return; // ç‚¹åœ¨èœå•ä¸Šäº†ï¼Œå¿½ç•¥æ‹–æ‹½
         }
-        // 2¡¢Èç¹ûÊÇ×ó¼üËÉ¿ª
+        // 2ã€å¦‚æœæ˜¯å·¦é”®æ¾å¼€
         if (e->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
 
-            // Ö»ÓĞµ±Ã»ÓĞ·¢Éú´ó·ù¶ÈÍÏ×§Ê±£¬²ÅÖ´ĞĞ·ÅÖÃÂß¼­
+            // åªæœ‰å½“æ²¡æœ‰å‘ç”Ÿå¤§å¹…åº¦æ‹–æ‹½æ—¶ï¼Œæ‰æ‰§è¡Œæ”¾ç½®é€»è¾‘
             if (_isClickValid) {
                 
                 if (map) {                   
-					// 1¡¢»ñÈ¡µã»÷ÔÚµØÍ¼ÄÚ²¿µÄ×ø±ê
+					// 1ã€è·å–ç‚¹å‡»åœ¨åœ°å›¾å†…éƒ¨çš„åæ ‡
                     Vec2 nodePos = map->convertToNodeSpace(mousePos);
 
-					// 2¡¢¼ÆËã¶ÔÓ¦µÄÍßÆ¬×ø±ê                
+					// 2ã€è®¡ç®—å¯¹åº”çš„ç“¦ç‰‡åæ ‡                
                     int tileX = (int)(nodePos.x / tileSize.width);
                     int tileY = (int)(mapSize.height - (nodePos.y / tileSize.height));
 
-                    // 3¡¢±ß½ç¼ì²é
+                    // 3ã€è¾¹ç•Œæ£€æŸ¥
                     if (tileX >= 0 && tileX < mapSize.width && tileY >= 0 && tileY < mapSize.height) {
-						Vec2 targetCoord = Vec2(tileX, tileY);// Ä¿±êÍßÆ¬×ø±ê
-						// ¼ì²é¸ÃÍßÆ¬ÊÇ·ñÒÑ±»Õ¼ÓÃ
+						Vec2 targetCoord = Vec2(tileX, tileY);// ç›®æ ‡ç“¦ç‰‡åæ ‡
+						// æ£€æŸ¥è¯¥ç“¦ç‰‡æ˜¯å¦å·²è¢«å ç”¨
                         std::string key = StringUtils::format("%d_%d", tileX, tileY);
                         if (_occupiedTiles.find(key) != _occupiedTiles.end() && _occupiedTiles[key] == true) {
                             CCLOG("Tile is already occupied by another sprite!");
                             _isDragging = false;
-                            // Ö±½Ó·µ»Ø£¬²»Ö´ĞĞºóÃæµÄ·ÅÖÃ´úÂë
+                            // ç›´æ¥è¿”å›ï¼Œä¸æ‰§è¡Œåé¢çš„æ”¾ç½®ä»£ç 
                             return;
                         }
-						// ¼ì²é¸ÃÍßÆ¬ÊÇ·ñÎªÕÏ°­Îï
+						// æ£€æŸ¥è¯¥ç“¦ç‰‡æ˜¯å¦ä¸ºéšœç¢ç‰©
                         if (isTileBlock(targetCoord)) {
                             _isDragging = false;
                             CCLOG("Blocked! Cannot place item on water or mountain.");                        
                             return;
                         }
-                        // 4¡¢´´½¨¾«Áé
-                        auto newSprite = Sprite::create(_selectedSpritePath);
-                        if (newSprite) {
-                            // ÊÊÓ¦ÍßÆ¬´óĞ¡
-                            Size spriteSize = newSprite->getContentSize();
-                            newSprite->setScaleX(tileSize.width / spriteSize.width);
-                            newSprite->setScaleY(tileSize.height / spriteSize.height);
+                        // 4ã€åˆ›å»ºç²¾çµ
+                        BaseBuilding* newBuilding = nullptr; 
 
-                            // ¾ÓÖĞÎ»ÖÃ
-                            float finalX = tileX * tileSize.width + tileSize.width / 2;
-                            float finalY = (mapSize.height - 1 - tileY) * tileSize.height + tileSize.height / 2;
-                            newSprite->setPosition(Vec2(finalX, finalY));
-							newSprite->setTag(999);// ÉèÖÃTagÒÔ±ãºóĞøÊ¶±ğ
-                            map->addChild(newSprite, 10);
-							// ±ê¼Ç¸ÃÍßÆ¬ÎªÒÑÕ¼ÓÃ
-                            std::string key = StringUtils::format("%d_%d", tileX, tileY);
-                            _occupiedTiles[key] = true;
-                            CCLOG("Sprite placed at tile (%d, %d)", tileX, tileY);
+                        // åˆ¤æ–­å»ºç­‘ç±»å‹ï¼Œå¦‚æœæ˜¯çŸ¿æˆ–é‡‡é›†å™¨ï¼Œåˆ›å»º ResourceProducer
+                        if (_selectedBuildingType == BuildingType::GOLD_MINE ||
+                            _selectedBuildingType == BuildingType::ELIXIR_PUMP) {
+                            newBuilding = ResourceProducer::create(_selectedBuildingType, 1);
+                        }
+                        //å¦‚æœæ˜¯å­˜å‚¨ç±»
+                        else if (_selectedBuildingType == BuildingType::GOLD_STORAGE ||
+                            _selectedBuildingType == BuildingType::ELIXIR_STORAGE) {
+                            // 1. ä½¿ç”¨å…·ä½“çš„å­ç±»æŒ‡é’ˆæ¥åˆ›å»º
+                            // auto ä¼šè‡ªåŠ¨æ¨å¯¼ä¸º ResourceStorage*
+                            ResourceStorage* storageBuilding = ResourceStorage::create(_selectedBuildingType, 1);
+
+                            _storageList.push_back(storageBuilding);
+                            newBuilding = storageBuilding;
+
+                            this->refreshTotalCapacity();
+                        }
+                        //å…¶ä»–æœªå®šä¹‰å»ºç­‘ç±»å‹
+                        else {
+                            newBuilding = BaseBuilding::create(_selectedBuildingType, 1);
+                        }
+                        if (newBuilding) {
+                            // 1. è·å–è¯¥å»ºç­‘çš„é€ ä»·
+                            int costGold = newBuilding->buildCostGold;
+                            int costElixir = newBuilding->buildCostElixir;
+
+                            // 2. å°è¯•æ‰£è´¹
+                            if (PlayerData::getInstance()->consumeGold(costGold)&& PlayerData::getInstance()->consumeElixir(costElixir) ){
+                                // === æ‰£è´¹æˆåŠŸï¼Œæ‰§è¡Œå»ºé€ é€»è¾‘ ===
+
+                                // åˆ·æ–° UI æ˜¾ç¤ºæ‰£é’±åçš„ç»“æœ
+                                this->updateResourceUI();
+                                // é€‚åº”ç“¦ç‰‡å¤§å°
+                                Size spriteSize = newBuilding->getContentSize();
+                                newBuilding->setScaleX(tileSize.width / spriteSize.width);
+                                newBuilding->setScaleY(tileSize.height / spriteSize.height);
+
+                                // å±…ä¸­ä½ç½®
+                                float finalX = tileX * tileSize.width + tileSize.width / 2;
+                                float finalY = (mapSize.height - 1 - tileY) * tileSize.height + tileSize.height / 2;
+                                newBuilding->setPosition(Vec2(finalX, finalY));
+                                newBuilding->setTag(999);// è®¾ç½®Tagä»¥ä¾¿åç»­è¯†åˆ«
+                                map->addChild(newBuilding, 10);
+                                // æ ‡è®°è¯¥ç“¦ç‰‡ä¸ºå·²å ç”¨
+                                std::string key = StringUtils::format("%d_%d", tileX, tileY);
+                                _occupiedTiles[key] = true;
+                                CCLOG("Sprite placed at tile (%d, %d)", tileX, tileY);
+                            }
+                            else {
+                                // === é’±ä¸å¤Ÿï¼Œå–æ¶ˆå»ºé€  ===
+
+                                CCLOG("èµ„æºä¸è¶³ï¼éœ€è¦: é‡‘å¸%d, åœ£æ°´%dï¼Œä½†ä½ åªæœ‰: é‡‘å¸%d, åœ£æ°´%d",
+                                    costGold, costElixir,
+                                    PlayerData::getInstance()->getGold(),
+                                    PlayerData::getInstance()->getElixir());
+                                // å¦‚æœåˆšæ‰ push_back è¿›äº† _storageListï¼Œç°åœ¨è¦æŠŠå®ƒå¼¹å‡ºæ¥
+                                if (_selectedBuildingType == BuildingType::GOLD_STORAGE ||
+                                    _selectedBuildingType == BuildingType::ELIXIR_STORAGE) {
+                                    if (!_storageList.empty() && _storageList.back() == newBuilding) {
+                                        _storageList.pop_back(); // è¿˜æ²¡å»ºæˆå°±ä¸ç®—è¿›å®¹é‡
+                                        this->refreshTotalCapacity(); // åˆ·æ–°å›æ»šå®¹é‡
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            // ½áÊøÍÏ×§×´Ì¬
+            // ç»“æŸæ‹–æ‹½çŠ¶æ€
             _isDragging = false;
         }
-		// 3¡¢Èç¹ûÊÇÓÒ¼üËÉ¿ª
+		// 3ã€å¦‚æœæ˜¯å³é”®æ¾å¼€
         else if (e->getMouseButton() == EventMouse::MouseButton::BUTTON_RIGHT) {
 
-            // 1¡¢»ñÈ¡µã»÷ÔÚµØÍ¼ÄÚ²¿µÄ×ø±ê
+            // 1. è·å–ç‚¹å‡»åæ ‡
             Vec2 nodePos = map->convertToNodeSpace(mousePos);
-            int spriteTileX = (int)(nodePos.x / tileSize.width);
-            int spriteTileY = (int)(mapSize.height - (nodePos.y / tileSize.height));
-            // 2¡¢±éÀúµØÍ¼µÄËùÓĞ×Ó½Úµã
-            auto& children = map->getChildren();
-          
-            for (const auto& child : children) {
 
-                // 3¡¢É¸Ñ¡£ºÖ»¼ì²âTagÎª999µÄ½Úµã (·ÀÖ¹É¾µôµØÍ¼Í¼²ã)
+            // 2. éå†æŸ¥æ‰¾ç‚¹ä¸­äº†è°
+            auto& children = map->getChildren();
+
+            for (auto it = children.rbegin(); it != children.rend(); ++it) {
+                Node* child = *it;
+
+                // 3. ç­›é€‰ Tag (åªçœ‹å»ºç­‘)
                 if (child->getTag() == 999) {
 
-                    // 4¡¢Åö×²¼ì²â£ºÅĞ¶Ïµã»÷µãÊÇ·ñÔÚ¾«ÁéµÄ¾ØĞÎ·¶Î§ÄÚ                   
+                    // 4. ç¢°æ’æ£€æµ‹
                     if (child->getBoundingBox().containsPoint(nodePos)) {
-                        // 5¡¢ÒÆ³ı¾«Áé
-                        child->removeFromParent();
-						// ¸üĞÂÕ¼ÓÃ×´Ì¬
-                        std::string key = StringUtils::format("%d_%d", spriteTileX, spriteTileY);
-                        _occupiedTiles[key] = false;
-                        CCLOG("Sprite deleted!");                     
-                        break;
+
+                        // å¦‚æœæ˜¯Buildingç±»å‹çš„è¯ å°è¯•è½¬ä¸º BaseBuilding
+                        BaseBuilding* building = dynamic_cast<BaseBuilding*>(child);
+
+                        if (building) {
+                            CCLOG("å³é”®é€‰ä¸­äº†å»ºç­‘ï¼Œå¼¹å‡ºæ“ä½œèœå•");
+
+                            // è°ƒç”¨èœå•æ˜¾ç¤ºå‡½æ•°ï¼ŒæŠŠ building ä¼ è¿‡å»
+                            this->showBuildingMenu(building);
+
+                            break;
+                        }
                     }
                 }
             }
         }
         };
 
-    // ==================  ËÄ¡¢Êó±êÒÆ¶¯  ==================
+    // ==================  å››ã€é¼ æ ‡ç§»åŠ¨  ==================
     mouseListener->onMouseMove = [=](Event* event) {
-        // Ö»ÓĞµ±¡°ÕıÔÚÍÏ×§¡±×´Ì¬Îª true Ê±²ÅÒÆ¶¯µØÍ¼
+        // åªæœ‰å½“â€œæ­£åœ¨æ‹–æ‹½â€çŠ¶æ€ä¸º true æ—¶æ‰ç§»åŠ¨åœ°å›¾
         if (_isDragging) {
             EventMouse* e = (EventMouse*)event;
             auto map = _MainVillageMap;
             if (!map) return;
 
-            // 1¡¢»ñÈ¡µ±Ç°Êó±êÎ»ÖÃ
+            // 1ã€è·å–å½“å‰é¼ æ ‡ä½ç½®
             Vec2 currentMousePos = Vec2(e->getCursorX(), e->getCursorY());
 
-            // 2¡¢¼ÆËãÒÆ¶¯¾àÀë (Delta)
+            // 2ã€è®¡ç®—ç§»åŠ¨è·ç¦» (Delta)
             Vec2 delta = currentMousePos - _lastMousePos;
 
-            // 3¡¢¼ÆËãĞÂÎ»ÖÃ
+            // 3ã€è®¡ç®—æ–°ä½ç½®
             Vec2 newPos = map->getPosition() + delta;
 
-			// ÏŞÖÆ±ß½ç£¬·ÀÖ¹³öÏÖºÚ±ß
+			// é™åˆ¶è¾¹ç•Œï¼Œé˜²æ­¢å‡ºç°é»‘è¾¹
             Size mapContentSize = map->getContentSize();
             float currentMapWidth = mapContentSize.width * map->getScaleX();
             float currentMapHeight = mapContentSize.height * map->getScaleY();
 
-            // X ÖáÏŞÖÆ
+            // X è½´é™åˆ¶
             float minX = visibleSize.width - currentMapWidth;
             float maxX = 0;
-            if (newPos.x < minX) newPos.x = minX; // ÓÒ±ßºÚ±ßÏŞÖÆ
-            if (newPos.x > maxX) newPos.x = maxX; // ×ó±ßºÚ±ßÏŞÖÆ
+            if (newPos.x < minX) newPos.x = minX; // å³è¾¹é»‘è¾¹é™åˆ¶
+            if (newPos.x > maxX) newPos.x = maxX; // å·¦è¾¹é»‘è¾¹é™åˆ¶
 
-            // Y ÖáÏŞÖÆ
+            // Y è½´é™åˆ¶
             float minY = visibleSize.height - currentMapHeight;
             float maxY = 0;
-            if (newPos.y < minY) newPos.y = minY; // ÉÏ±ßºÚ±ßÏŞÖÆ
-            if (newPos.y > maxY) newPos.y = maxY; // ÏÂ±ßºÚ±ßÏŞÖÆ
+            if (newPos.y < minY) newPos.y = minY; // ä¸Šè¾¹é»‘è¾¹é™åˆ¶
+            if (newPos.y > maxY) newPos.y = maxY; // ä¸‹è¾¹é»‘è¾¹é™åˆ¶
 
             map->setPosition(newPos);
             _lastMousePos = currentMousePos;
-			// Èç¹ûÊó±êÒÆ¶¯¾àÀë³¬¹ıãĞÖµ£¬È¡Ïûµã»÷ÓĞĞ§ĞÔ
+			// å¦‚æœé¼ æ ‡ç§»åŠ¨è·ç¦»è¶…è¿‡é˜ˆå€¼ï¼Œå–æ¶ˆç‚¹å‡»æœ‰æ•ˆæ€§
             if (_isClickValid && currentMousePos.distance(_startClickPos) > 10.0f) {
                 _isClickValid = false;
                 CCLOG("Mode switched to Dragging. Click invalidated.");
             }
         }
         };
-    // ================== Îå¡¢Ìí¼Ó¼àÌıÆ÷²¶»ñÊó±ê²Ù×÷ ==================
+    // ================== äº”ã€æ·»åŠ ç›‘å¬å™¨æ•è·é¼ æ ‡æ“ä½œ ==================
     _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 
 	this->addChild(_MainVillageMap, 0);
+
+    PlayerData::getInstance()->updateMaxLimits(1000, 1000);
+    createResourceUI();
 
     return true;
 }
 void MainVillage::menuCloseCallback(Ref* pSender)
 {
     Director::getInstance()->end();
+}
+
+void MainVillage::createResourceUI() {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 1. é‡‘å¸ UI (å³ä¸Šè§’)
+    auto goldIcon = Sprite::create("Gold.png"); 
+    goldIcon->setPosition(visibleSize.width - 150, visibleSize.height - 40);
+    this->addChild(goldIcon, 9999);
+
+    _goldLabel = Label::createWithSystemFont("0", "Arial", 24);
+    _goldLabel->setAnchorPoint(Vec2(0, 0.5));
+    _goldLabel->setPosition(visibleSize.width - 120, visibleSize.height - 40);
+    this->addChild(_goldLabel, 9999);
+
+    // 2. åœ£æ°´ UI (é‡‘å¸ä¸‹æ–¹)
+    auto elixirIcon = Sprite::create("Elixir.png"); 
+    elixirIcon->setPosition(visibleSize.width - 150, visibleSize.height - 80);
+    this->addChild(elixirIcon, 9999);
+
+    _elixirLabel = Label::createWithSystemFont("0", "Arial", 24);
+    _elixirLabel->setAnchorPoint(Vec2(0, 0.5));
+    _elixirLabel->setPosition(visibleSize.width - 120, visibleSize.height - 80);
+    this->addChild(_elixirLabel, 9999);
+
+    // 3. åˆå§‹åˆ·æ–°ä¸€æ¬¡
+    updateResourceUI();
+
+    // 4. æ³¨å†Œç›‘å¬å™¨ï¼šå½“ GameManager å‘å‡º "REFRESH_UI" ä¿¡å·æ—¶ï¼Œè‡ªåŠ¨åˆ·æ–°æ–‡å­—
+    auto listener = EventListenerCustom::create("REFRESH_UI", [=](EventCustom* event) {
+        this->updateResourceUI();
+        });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+}
+
+void MainVillage::updateResourceUI() {
+    int gold = PlayerData::getInstance()->getGold();
+    int elixir = PlayerData::getInstance()->getElixir();
+
+    if (_goldLabel) _goldLabel->setString(std::to_string(gold));
+    if (_elixirLabel) _elixirLabel->setString(std::to_string(elixir));
+}
+
+void MainVillage::refreshTotalCapacity()
+{
+    long long totalGoldCapacity = 1000;
+    long long totalElixirCapacity = 1000;
+
+    // 1. éå†å®¹å™¨ä¸­çš„æ¯ä¸€ä¸ªå»ºç­‘
+    for (auto building : _storageList) {
+        // ç¡®ä¿æ˜¯å»ºç­‘ç±»
+        if (building) {
+
+            // æ ¹æ®ç±»å‹ç´¯åŠ 
+            if (building->type == BuildingType::GOLD_STORAGE) {
+                totalGoldCapacity += building->maxLimit;
+            }
+            else if (building->type == BuildingType::ELIXIR_STORAGE) {
+                totalElixirCapacity += building->maxLimit;
+            }
+        }
+    }
+    PlayerData::getInstance()->updateMaxLimits(totalGoldCapacity, totalElixirCapacity);
+    CCLOG("=== åˆ·æ–°å®Œæˆ ===");
+    CCLOG("å½“å‰é‡‘å¸æ€»ä¸Šé™: %lld", totalGoldCapacity);
+    CCLOG("å½“å‰åœ£æ°´æ€»ä¸Šé™: %lld", totalElixirCapacity);
+}
+
+void MainVillage::closeBuildingMenu() {
+    if (_activeMenuNode) {
+        _activeMenuNode->removeFromParent();
+        _activeMenuNode = nullptr;
+    }
+}
+
+void MainVillage::showBuildingMenu(BaseBuilding* building) {
+    //1. å¦‚æœè¿˜æœ‰æœªå…³é—­çš„èœå•
+    if (_activeMenuNode != nullptr) {
+        closeBuildingMenu();
+    }
+    if (!building) return;
+
+    // 2. åˆ›å»ºä¸€ä¸ªèŠ‚ç‚¹ä½œä¸ºèœå•å®¹å™¨
+    _activeMenuNode = Node::create();
+    // æŠŠèœå•æ”¾åœ¨å»ºç­‘çš„å¤´é¡¶ 
+    _activeMenuNode->setPosition(building->getPosition() + Vec2(0, 50));
+
+    float mapScaleX = _MainVillageMap->getScaleX();
+    float mapScaleY = _MainVillageMap->getScaleY();
+
+    _activeMenuNode->setScaleX(1.0f / mapScaleX);
+    _activeMenuNode->setScaleY(1.0f / mapScaleY);
+    _activeMenuNode->setTag(888); // ç‰¹æ®ŠTagï¼ŒåŒºåˆ«äºå»ºç­‘
+
+    // åŠ åˆ°åœ°å›¾ä¸Šï¼Œè®¾ç½®é«˜Zè½´ï¼Œä¿è¯ç›–åœ¨æ‰€æœ‰å»ºç­‘ä¸Šé¢
+    _MainVillageMap->addChild(_activeMenuNode, 10000);
+
+    //---------------æŒ‰é’®1ï¼šå‡çº§åŠŸèƒ½----------------
+    auto labelUp = Label::createWithSystemFont("Upgrade (Lv+1)", "Arial", 24);
+
+    auto btnUpgrade = MenuItemLabel::create(labelUp, [=](Ref* sender) {
+        CCLOG("ç‚¹å‡»äº†å‡çº§æŒ‰é’®");
+
+        // --- æ‰£è´¹å‡çº§é€»è¾‘ ---
+        int nextLevel = building->level + 1;
+        BuildingStats nextStats = BaseBuilding::getStatsConfig(building->type, nextLevel);//è·å–å‡çº§èŠ±è´¹
+
+        int upgradeCostGold = nextStats.costGold; 
+        int upgradeCostElixir = nextStats.costElixir;
+        if (PlayerData::getInstance()->consumeGold(upgradeCostGold)&& PlayerData::getInstance()->consumeElixir(upgradeCostElixir)) {
+            // æ‰£é’±æˆåŠŸï¼Œæ‰§è¡Œå‡çº§
+            building->upgradeLevel();
+            this->updateResourceUI(); // åˆ·æ–°å³ä¸Šè§’é’±æ•°
+            
+            //å…³é—­èœå•
+            this->closeBuildingMenu();
+        }
+        else {
+            CCLOG("é‡‘å¸ä¸è¶³ï¼Œæ— æ³•å‡çº§ï¼");
+        }
+        });
+
+    //-------------æŒ‰é’®2ï¼šåˆ é™¤åŠŸèƒ½--------------
+    auto labelRem = Label::createWithSystemFont("Remove", "Arial", 24);
+
+    auto btnRemove = MenuItemLabel::create(labelRem, [=](Ref* sender) {
+        CCLOG("ç‚¹å‡»äº†æ‹†é™¤æŒ‰é’®");
+
+        // 1. å¦‚æœæ˜¯å­˜å‚¨å»ºç­‘
+        if (building->type == BuildingType::GOLD_STORAGE ||
+            building->type == BuildingType::ELIXIR_STORAGE) {
+
+            auto& list = this->_storageList;
+            auto it = std::find(list.begin(), list.end(), building);
+            if (it != list.end()) {
+                list.erase(it);
+                this->refreshTotalCapacity(); // åˆ·æ–°ä¸Šé™
+                CCLOG("Storage removed from list.");
+            }
+        }
+
+        // 2. é‡Šæ”¾åœ°å›¾å ç”¨ 
+        Size tileSize = _MainVillageMap->getTileSize();
+        Size mapSize = _MainVillageMap->getMapSize();
+
+        // è·å–å»ºç­‘å½“å‰åœ¨åœ°å›¾ä¸Šçš„åæ ‡
+        Vec2 buildingPos = building->getPosition();
+
+        // è®¡ç®—ç½‘æ ¼åæ ‡
+        int tileX = (int)(buildingPos.x / tileSize.width);
+        int tileY = (int)(mapSize.height - (buildingPos.y / tileSize.height));
+
+        std::string key = StringUtils::format("%d_%d", tileX, tileY);
+
+        // å°†è¯¥ä½ç½®æ ‡è®°ä¸ºâ€œæœªå ç”¨â€
+        _occupiedTiles[key] = false;
+        CCLOG("Tile (%d, %d) freed.", tileX, tileY);
+
+        // 3. ç§»é™¤å¯¹è±¡
+        building->removeFromParent();
+        // 4. å…³é—­èœå•
+        this->closeBuildingMenu();
+        });
+
+    //----------- æŒ‰é’®3ï¼šæ˜¾ç¤ºä¿¡æ¯ -------------
+    auto labelInfo = Label::createWithSystemFont("Info", "Arial", 20);
+    auto btnInfo = MenuItemLabel::create(labelInfo, [=](Ref* sender) {
+
+        // 1. å…ˆå…³é—­åŸæ¥çš„æ“ä½œèœå•
+        this->closeBuildingMenu();
+
+        // 2. åˆ›ç«‹ä¸€ä¸ªèœå•æ ¹èŠ‚ç‚¹
+        _activeMenuNode = Node::create();
+        // è®¾ç½®åå‘ç¼©æ”¾ 
+        float mapScaleX = _MainVillageMap->getScaleX();
+        float mapScaleY = _MainVillageMap->getScaleY();
+        _activeMenuNode->setScaleX(1.0f / mapScaleX);
+        _activeMenuNode->setScaleY(1.0f / mapScaleY);
+
+        // å®šä½åˆ°å»ºç­‘ä½ç½®
+        _activeMenuNode->setPosition(building->getPosition());
+
+        // åŠ åˆ°åœ°å›¾ä¸Šï¼Œå±‚çº§æé«˜
+        _MainVillageMap->addChild(_activeMenuNode, 20000);
+
+        // 3. åˆ›å»ºåŠé€æ˜èƒŒæ™¯ 
+        float bgWidth = 300;
+        float bgHeight = 200;
+        auto bg = LayerColor::create(Color4B(0, 0, 0, 200), bgWidth, bgHeight);
+        bg->setName("InfoBackground");//è®¾ç½®èœå•ç½²å
+        bg->ignoreAnchorPointForPosition(false);
+        bg->setAnchorPoint(Vec2(0, 0.5));
+        bg->setPosition(Vec2(60, 0));
+        _activeMenuNode->addChild(bg);//å°†èƒŒæ™¯æ¿æ·»åŠ åˆ°æŒ‡é’ˆ
+
+        // 4. æ˜¾ç¤ºé€šç”¨ä¿¡æ¯ (åå­—ã€ç­‰çº§ã€HP)
+        std::string nameStr = building->name;
+
+        std::string commonText = StringUtils::format(
+            "Name: %s\nLevel: %d\nHP: %d / %d",
+            nameStr.c_str(),
+            building->level,
+            (int)building->currentHP,
+            (int)building->maxHP 
+        );
+
+        auto labelCommon = Label::createWithSystemFont(commonText, "Arial", 24);
+        labelCommon->setPosition(bgWidth / 2, bgHeight / 2 + 20); // é ä¸Š
+        bg->addChild(labelCommon);
+
+        // 5. æ˜¾ç¤ºç‰¹æ®Šä¿¡æ¯ (æ ¹æ®ç±»å‹åˆ¤æ–­)
+        std::string specialText = "";
+        BuildingStats stats = BaseBuilding::getStatsConfig(building->type, building->level);//è·å–å»ºç­‘ä¿¡æ¯
+        if (building->type == BuildingType::GOLD_MINE || building->type == BuildingType::ELIXIR_PUMP) {
+            specialText = StringUtils::format("Production: %d / hour", stats.productionRate);
+        }
+        else {
+            specialText = StringUtils::format("Capacity: %d", stats.capacity);
+        }
+        
+        if (!specialText.empty()) {
+            auto labelSpecial = Label::createWithSystemFont(specialText, "Arial", 24);
+            labelSpecial->setColor(Color3B::YELLOW); //ä»¥æ­¤åŒºåˆ†
+            labelSpecial->setPosition(bgWidth / 2, bgHeight / 2 -40 );
+            bg->addChild(labelSpecial);
+        }
+
+        // 6. æ·»åŠ ä¸€ä¸ªå…³é—­æŒ‰é’®
+        auto closeLabel = Label::createWithSystemFont("[ Close ]", "Arial", 26);
+        auto closeItem = MenuItemLabel::create(closeLabel, [=](Ref* sender) {
+            this->closeBuildingMenu();
+            });
+        closeItem->setPosition(bgWidth - 60, bgHeight - 20);
+
+        auto menu = Menu::create(closeItem, nullptr);
+        menu->setPosition(Vec2::ZERO);
+        bg->addChild(menu);
+        CCLOG("ä¿¡æ¯å±•ç¤ºï¼š");
+        });
+
+    auto menu = Menu::create(btnUpgrade, btnRemove, btnInfo, nullptr); //å»ºç«‹æ•´ä½“èœå•
+    menu->alignItemsVerticallyWithPadding(20); //ç«–å‘æ’åˆ— åœ¨å»ºç­‘å¤´é¡¶
+    menu->setName("BuildingMenu");
+    menu->setPosition(Vec2::ZERO); 
+    _activeMenuNode->addChild(menu);
+}
+
+void MainVillage::createBuildUI() {
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 1. åˆ›å»ºåº•éƒ¨é¢æ¿å®¹å™¨ 
+    _buildMenuNode = Node::create();
+    _buildMenuNode->setVisible(false);
+    this->addChild(_buildMenuNode, 1000);
+
+    // A. åŠé€æ˜é»‘åº•
+    float panelHeight = 280; 
+    auto bg = LayerColor::create(Color4B(0, 0, 0, 220), visibleSize.width, panelHeight);
+    bg->setName("BuildPanelBG");
+    _buildMenuNode->addChild(bg);
+
+    // B. åˆ›å»ºé¡¶éƒ¨çš„åˆ†ç±»é¡µç­¾ (èµ„æº | é˜²å¾¡)
+    // 1. å…ˆæŠŠ Label å’Œ Item åˆ›å»ºå‡ºæ¥ 
+    auto labelRes = Label::createWithSystemFont("Resources", "Arial", 28);
+    auto itemRes = MenuItemLabel::create(labelRes, nullptr);
+
+    auto labelDef = Label::createWithSystemFont("Defense", "Arial", 28);
+    auto itemDef = MenuItemLabel::create(labelDef, nullptr);
+
+    // 2. è®¾ç½® [èµ„æº] æŒ‰é’®çš„å›è°ƒ
+    itemRes->setCallback([=](Ref*) {
+        // è§†è§‰å˜åŒ–ï¼šè‡ªå·±å˜ç»¿ï¼Œåˆ«äººå˜ç°
+        itemRes->setColor(Color3B::GREEN);
+        itemDef->setColor(Color3B::GRAY);
+
+        // é€»è¾‘å˜åŒ–
+        this->switchBuildCategory(0);
+        });
+
+    // 3. è®¾ç½® [é˜²å¾¡] æŒ‰é’®çš„å›è°ƒ
+    itemDef->setCallback([=](Ref*) {
+        // è§†è§‰å˜åŒ–ï¼šè‡ªå·±å˜ç»¿ï¼Œåˆ«äººå˜ç°
+        itemDef->setColor(Color3B::GREEN);
+        itemRes->setColor(Color3B::GRAY);
+
+        // é€»è¾‘å˜åŒ–
+        this->switchBuildCategory(1);
+        });
+
+    // 4. è®¾ç½®åˆå§‹çŠ¶æ€ 
+    itemRes->setColor(Color3B::GREEN); //(é»˜è®¤é€‰ä¸­èµ„æº)
+    itemDef->setColor(Color3B::GRAY);  //(é»˜è®¤æœªé€‰ä¸­èµ„æº)
+
+    // 5. æ”¾å…¥èœå•
+    auto tabMenu = Menu::create(itemRes, itemDef, nullptr);
+    tabMenu->alignItemsHorizontallyWithPadding(100);
+    tabMenu->setPosition(visibleSize.width / 2, panelHeight - 30);
+    _buildMenuNode->addChild(tabMenu);
+
+    // C. åˆ›å»ºå†…å®¹å®¹å™¨ (å­˜æ”¾å»ºç­‘å›¾æ ‡)
+    _iconContainer = Node::create();
+    _iconContainer->setPosition(0, 0); 
+    _buildMenuNode->addChild(_iconContainer);
+
+    // é»˜è®¤åŠ è½½èµ„æºç±»
+    switchBuildCategory(0);
+}
+
+void MainVillage::switchBuildCategory(int category) {
+    if (!_iconContainer) return;
+
+    // 1. æ¸…ç©ºå½“å‰æ˜¾ç¤ºçš„å›¾æ ‡
+    _iconContainer->removeAllChildren();
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    float panelHeight = 280;
+
+    // 2. å®šä¹‰è¾…åŠ© lambdaï¼šåˆ›å»ºå¤§å›¾æ ‡ 
+    auto createBtn = [&](std::string name, std::string img, BuildingType type) {
+        // åˆ›å»ºå›¾
+        auto sprite = Sprite::create(img);
+        if (!sprite) sprite = Sprite::create(); 
+
+        // ç¼©æ”¾å›¾ç‰‡åˆ°åˆé€‚å¤§å° 
+        float s = 80.0f / MAX(sprite->getContentSize().width, sprite->getContentSize().height);
+        sprite->setScale(s);
+
+        // åˆ›å»ºå­—
+        auto lbl = Label::createWithSystemFont(name, "Arial", 18);
+
+        // ç»„åˆæˆ MenuItemSprite
+        auto nodeNormal = Node::create();
+        nodeNormal->setContentSize(Size(120, 150));
+        sprite->setPosition(60, 60);
+        lbl->setPosition(60, 130);
+        nodeNormal->addChild(sprite);
+        nodeNormal->addChild(lbl);
+
+        // ç‚¹å‡»å›è°ƒ
+        return MenuItemSprite::create(nodeNormal, nodeNormal, [=](Ref*) {
+            _selectedBuildingType = type;
+            CCLOG("é€‰ä¸­å»ºç­‘: %s", name.c_str());
+            _buildMenuNode->setVisible(false); // é€‰å®Œè‡ªåŠ¨å…³é—­
+            });
+        };
+
+    // 3. æ ¹æ®åˆ†ç±»åˆ›å»ºä¸åŒçš„æŒ‰é’®
+    Vector<MenuItem*> items;
+
+    if (category == 0) {
+        // === èµ„æºç±» ===
+        items.pushBack(createBtn("Gold Mine", "Gold_Mine1.png", BuildingType::GOLD_MINE));
+        items.pushBack(createBtn("Elixir Pump", "Elixir_Pump1.png", BuildingType::ELIXIR_PUMP));
+        items.pushBack(createBtn("Gold Store", "Gold_Storage1.png", BuildingType::GOLD_STORAGE));
+        items.pushBack(createBtn("Elixir Store", "Elixir_Storage1.png", BuildingType::ELIXIR_STORAGE));
+    }
+    else if (category == 1) {
+        // === é˜²å¾¡ç±» ===
+
+        items.pushBack(createBtn("Cannon", "Cannon1.png", BuildingType::GOLD_MINE));
+        items.pushBack(createBtn("Archer Tower", "Archer_Tower1.png", BuildingType::GOLD_MINE));
+        items.pushBack(createBtn("Wall", "Wall1.png", BuildingType::GOLD_MINE));
+        items.pushBack(createBtn("Barracks", "Barracks1.png", BuildingType::BARRACKS));
+    }
+
+    // 4. åˆ›å»ºèœå•å¹¶æ·»åŠ åˆ°å®¹å™¨
+    auto menu = Menu::createWithArray(items);
+    menu->alignItemsHorizontallyWithPadding(20);
+
+    // æ”¾åœ¨é¢æ¿ä¸­é—´ç¨å¾®åä¸‹ (å› ä¸ºé¡¶éƒ¨æœ‰é¡µç­¾)
+    menu->setPosition(visibleSize.width / 2, (panelHeight - 50) / 2);
+
+    _iconContainer->addChild(menu);
 }

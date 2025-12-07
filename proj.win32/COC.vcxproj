@@ -151,12 +151,22 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Classes\AppDelegate.cpp" />
+    <ClCompile Include="..\Classes\BaseBuilding.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
+    <ClCompile Include="..\Classes\MainVillage.cpp" />
+    <ClCompile Include="..\Classes\PlayerData.cpp" />
+    <ClCompile Include="..\Classes\ResourceProducer.cpp" />
+    <ClCompile Include="..\Classes\ResourceStorage.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Classes\AppDelegate.h" />
+    <ClInclude Include="..\Classes\BaseBuilding.h" />
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
+    <ClInclude Include="..\Classes\MainVillage.h" />
+    <ClInclude Include="..\Classes\PlayerData.h" />
+    <ClInclude Include="..\Classes\ResourceProducer.h" />
+    <ClInclude Include="..\Classes\ResourceStorage.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>
   <ItemGroup>
@@ -173,6 +183,38 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="game.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resources\Buildings\DefenceBuilding\Archer_Tower1.png" />
+    <Image Include="..\Resources\Buildings\DefenceBuilding\Barracks1.png" />
+    <Image Include="..\Resources\Buildings\DefenceBuilding\Cannon1.png" />
+    <Image Include="..\Resources\Buildings\DefenceBuilding\Wall1.png" />
+    <Image Include="..\Resources\Buildings\Icon\Elixir.png" />
+    <Image Include="..\Resources\Buildings\Icon\Gold.png" />
+    <Image Include="..\Resources\Buildings\ResourceProducer\Elixir_Pump1.png" />
+    <Image Include="..\Resources\Buildings\ResourceProducer\Elixir_Pump2.png" />
+    <Image Include="..\Resources\Buildings\ResourceProducer\Elixir_Pump3.png" />
+    <Image Include="..\Resources\Buildings\ResourceProducer\Gold_Mine1.png" />
+    <Image Include="..\Resources\Buildings\ResourceProducer\Gold_Mine2.png" />
+    <Image Include="..\Resources\Buildings\ResourceProducer\Gold_Mine3.png" />
+    <Image Include="..\Resources\Buildings\ResourceStorage\Elixir_Storage1.png" />
+    <Image Include="..\Resources\Buildings\ResourceStorage\Elixir_Storage2.png" />
+    <Image Include="..\Resources\Buildings\ResourceStorage\Elixir_Storage3.png" />
+    <Image Include="..\Resources\Buildings\ResourceStorage\Gold_Storage1.png" />
+    <Image Include="..\Resources\Buildings\ResourceStorage\Gold_Storage2.png" />
+    <Image Include="..\Resources\Buildings\ResourceStorage\Gold_Storage3.png" />
+    <Image Include="..\Resources\CloseNormal.png" />
+    <Image Include="..\Resources\CloseSelected.png" />
+    <Image Include="..\Resources\HelloWorld.png" />
+    <Image Include="..\Resources\mainvillage\LayerRes.png" />
+    <Image Include="..\Resources\mainvillage\newpac.png" />
+    <Image Include="..\Resources\R-C.jpg" />
+    <Image Include="Debug.win32\itemBuild.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Resources\mainvillage\LayerRes.tsx" />
+    <None Include="..\Resources\mainvillage\MainVillage1.tmx" />
+    <None Include="..\Resources\mainvillage\newpac.tsx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

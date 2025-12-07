@@ -21,6 +21,21 @@
     <ClCompile Include="..\Classes\HelloWorldScene.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\MainVillage.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\BaseBuilding.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\PlayerData.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\ResourceProducer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\ResourceStorage.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -32,10 +47,113 @@
     <ClInclude Include="..\Classes\HelloWorldScene.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\Classes\MainVillage.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\BaseBuilding.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\PlayerData.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\ResourceProducer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\ResourceStorage.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="game.rc">
       <Filter>resource</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resources\mainvillage\LayerRes.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\mainvillage\newpac.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\CloseNormal.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\CloseSelected.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\HelloWorld.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\R-C.jpg">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceProducer\Gold_Mine1.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceProducer\Elixir_Pump1.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\Icon\Elixir.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\Icon\Gold.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceStorage\Elixir_Storage1.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceStorage\Gold_Storage1.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceStorage\Elixir_Storage2.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceStorage\Elixir_Storage3.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceStorage\Gold_Storage2.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceStorage\Gold_Storage3.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceProducer\Elixir_Pump2.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceProducer\Elixir_Pump3.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceProducer\Gold_Mine2.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\ResourceProducer\Gold_Mine3.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="Debug.win32\itemBuild.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\DefenceBuilding\Archer_Tower1.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\DefenceBuilding\Barracks1.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\DefenceBuilding\Cannon1.png">
+      <Filter>resource</Filter>
+    </Image>
+    <Image Include="..\Resources\Buildings\DefenceBuilding\Wall1.png">
+      <Filter>resource</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Resources\mainvillage\LayerRes.tsx">
+      <Filter>resource</Filter>
+    </None>
+    <None Include="..\Resources\mainvillage\MainVillage1.tmx">
+      <Filter>resource</Filter>
+    </None>
+    <None Include="..\Resources\mainvillage\newpac.tsx">
+      <Filter>resource</Filter>
+    </None>
   </ItemGroup>
 </Project>

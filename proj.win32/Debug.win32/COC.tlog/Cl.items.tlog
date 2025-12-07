@@ -1,3 +1,8 @@
-D:\cocoswork\COC\Classes\AppDelegate.cpp;D:\cocoswork\COC\proj.win32\Debug.win32\AppDelegate.obj
-D:\cocoswork\COC\Classes\HelloWorldScene.cpp;D:\cocoswork\COC\proj.win32\Debug.win32\HelloWorldScene.obj
-D:\cocoswork\COC\proj.win32\main.cpp;D:\cocoswork\COC\proj.win32\Debug.win32\main.obj
+G:\Clash-of-Clans\Classes\AppDelegate.cpp;G:\Clash-of-Clans\proj.win32\Debug.win32\AppDelegate.obj
+G:\Clash-of-Clans\Classes\BaseBuilding.cpp;G:\Clash-of-Clans\proj.win32\Debug.win32\BaseBuilding.obj
+G:\Clash-of-Clans\Classes\HelloWorldScene.cpp;G:\Clash-of-Clans\proj.win32\Debug.win32\HelloWorldScene.obj
+G:\Clash-of-Clans\Classes\MainVillage.cpp;G:\Clash-of-Clans\proj.win32\Debug.win32\MainVillage.obj
+G:\Clash-of-Clans\Classes\PlayerData.cpp;G:\Clash-of-Clans\proj.win32\Debug.win32\PlayerData.obj
+G:\Clash-of-Clans\Classes\ResourceProducer.cpp;G:\Clash-of-Clans\proj.win32\Debug.win32\ResourceProducer.obj
+G:\Clash-of-Clans\Classes\ResourceStorage.cpp;G:\Clash-of-Clans\proj.win32\Debug.win32\ResourceStorage.obj
+G:\Clash-of-Clans\proj.win32\main.cpp;G:\Clash-of-Clans\proj.win32\Debug.win32\main.obj

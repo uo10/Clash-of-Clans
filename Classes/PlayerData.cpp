@@ -1,12 +1,14 @@
 #include "PlayerData.h"
 
+USING_NS_CC;
+
 PlayerData* PlayerData::_instance = nullptr;
 
 PlayerData::PlayerData() {
-    _totalGold = 0;   // 初始金币
-    _totalElixir = 0; // 初始圣水
-    _maxGold = 1000;  // 初始最大值
-    _maxElixir = 1000;// 初始最大值
+    _totalGold = 1000;   // 初始金币
+    _totalElixir = 1000; // 初始圣水
+    _maxGold = 2000;  // 初始最大值
+    _maxElixir = 2000;// 初始最大值
 }
 
 void PlayerData::updateMaxLimits(int maxGold, int maxElixir) {
@@ -18,7 +20,7 @@ void PlayerData::updateMaxLimits(int maxGold, int maxElixir) {
     if (_totalElixir > _maxElixir) _totalElixir = _maxElixir;
 
     // 发送UI更新事件
-    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI_GOLD");
+    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
 }
 
 PlayerData* PlayerData::getInstance() {
@@ -33,7 +35,7 @@ int PlayerData::getGold() {
 }
 
 int PlayerData::addGold(int amount) {
-    int space = getGoldSpace();
+    const int space = getGoldSpace();
 
     // 如果已经没有可用的空间
     if (space <= 0) return 0;
@@ -42,7 +44,7 @@ int PlayerData::addGold(int amount) {
     int realAdd = std::min(amount, space);
 
     _totalGold += realAdd;
-    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI_GOLD");
+    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
 
     return realAdd; //在collectResource() 里面UI显示收集的大小
 }
@@ -50,7 +52,7 @@ int PlayerData::addGold(int amount) {
 bool PlayerData::consumeGold(int amount) {
     if (_totalGold >= amount) {
         _totalGold -= amount;
-        cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI_GOLD");
+        cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
         return true;
     }
     return false;
@@ -61,7 +63,7 @@ int PlayerData::getElixir() {
 }
 
 int PlayerData::addElixir(int amount) {
-    int space = getElixirSpace();
+    const int space = getElixirSpace();
 
     // 如果没有空间
     if (space <= 0) return 0;
@@ -70,15 +72,15 @@ int PlayerData::addElixir(int amount) {
     int realAdd = std::min(amount, space);
 
     _totalElixir += realAdd;
-    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI_ELIXIR");
+    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
 
-    return realAdd; // 告诉调用者实际上加了多少
+    return realAdd; 
 }
 
 bool PlayerData::consumeElixir(int amount) {
     if (_totalElixir >= amount) {
         _totalElixir -= amount;
-        cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI_ELIXIR");
+        cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
         return true;
     }
     return false;

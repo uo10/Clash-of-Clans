@@ -26,22 +26,29 @@ bool ResourceProducer::init(BuildingType type, int level) {
     this->isBubbleShowing = false;
 
     // 3. 创建气泡图标 (一开始隐藏)
-    // 现在没有图，用黄色圆圈代替
     std::string iconName = "Gold.png";
     if (this->type == BuildingType::ELIXIR_PUMP) {
-        iconName = "Elixir.png"; // 确保你有这个图片
+        iconName = "Elixir.png"; 
     }
     bubbleIcon = Sprite::create(iconName);
-    if (!bubbleIcon) {
-        // 容错代码：画一个黄色圆形
-        auto drawNode = DrawNode::create();
-        drawNode->drawDot(Vec2(0, 0), 15, Color4F::ORANGE);
-        bubbleIcon = Sprite::create();
-        bubbleIcon->addChild(drawNode);
+
+    float centerX = 0;
+    float topY = 60; // 默认高度
+
+    if (this->mainSprite) {
+        // 获取主图片的尺寸
+        Size spriteSize = this->mainSprite->getContentSize();
+        float scaleY = this->mainSprite->getScaleY();
+
+        // 1. 计算 X 轴中心
+        centerX = this->mainSprite->getPositionX();
+
+        // 2. 计算 Y 轴头顶
+        topY = this->mainSprite->getPositionY() + (spriteSize.height * scaleY / 2);
     }
 
-    // 放在建筑头顶 这里先写死 可以根据建筑高度动态调整
-    bubbleIcon->setPosition(Vec2(0, 80));
+    // 设置位置
+    bubbleIcon->setPosition(Vec2(centerX, topY));
     bubbleIcon->setVisible(false);
 
     // 气泡浮动动画
@@ -51,7 +58,7 @@ bool ResourceProducer::init(BuildingType type, int level) {
         nullptr
     ));
     bubbleIcon->runAction(moveAction);
-    this->addChild(bubbleIcon, 100); // 层级要高
+    this->addChild(bubbleIcon,999); // 层级要高
 
     // 4. 开启 Update
     this->scheduleUpdate();
@@ -60,20 +67,7 @@ bool ResourceProducer::init(BuildingType type, int level) {
     auto listener = EventListenerTouchOneByOne::create();
     listener->setSwallowTouches(true);
 
-    listener->onTouchBegan = [this](Touch* touch, Event* event) {
-        // 获取点击位置
-        Vec2 p = this->convertTouchToNodeSpace(touch);
-        Rect rect = this->mainSprite->getBoundingBox();
-
-        if (rect.containsPoint(p)) {
-            // 如果处于可收集状态 (资源 > 1)
-            if (this->currentRes >= 1.0f) {
-                this->collectResource();
-            }
-            return true; // 吞噬点击
-        }
-        return false;
-        };
+    listener->onTouchBegan = CC_CALLBACK_2(ResourceProducer::onTouchBegan, this);
 
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
@@ -92,7 +86,7 @@ void ResourceProducer::update(float dt) {
     }
 
     // 气泡逻辑：满 20% 就显示
-    bool shouldShow = (currentRes >= maxCapacity * 0.2f);
+    bool shouldShow = (currentRes >= 1.0f);
 
     if (shouldShow && !isBubbleShowing) {
         bubbleIcon->setVisible(true);
@@ -133,11 +127,8 @@ void ResourceProducer::collectResource() {
     else {
         // 仓库满了，没有收入
         CCLOG("仓库已满！");
-        showFloatText(0); // 或者显示 "Full!"
+        showFloatText(0); 
     }
-
-    // 4. 气泡状态会在 update 中自动刷新，这里不需要强制隐藏
-    // 因为如果没收完（仓库满了），气泡应该继续显示
 }
 
 void ResourceProducer::showFloatText(int amount) {
@@ -149,7 +140,6 @@ void ResourceProducer::showFloatText(int amount) {
 
     auto label = Label::createWithSystemFont(text, "Arial", 28);
     label->setColor(color);
-    // 加个描边看更清楚
     label->enableOutline(Color4B::BLACK, 2);
 
     label->setPosition(Vec2(0, 80));
@@ -161,8 +151,31 @@ void ResourceProducer::showFloatText(int amount) {
     label->runAction(seq);
 }
 
-void ResourceProducer::updateSpecialProperties() override {
+void ResourceProducer::updateSpecialProperties() {
     // 从父类已更新的 _stats 中获取新值
     this->productionRate = _stats.productionRate;
     this->maxCapacity = _stats.capacity;
+}
+
+bool ResourceProducer::onTouchBegan(Touch* touch, Event* event) {
+    // 1. 获取点击位置 (转换为节点内的相对坐标)
+    Vec2 p = this->convertTouchToNodeSpace(touch);
+
+    // 2. 获取主图片的包围盒
+    Rect rect;
+    if (this->mainSprite) {
+        rect = this->mainSprite->getBoundingBox();
+    }
+    // 3. 判断点击点是否在图片矩形内
+    if (rect.containsPoint(p)) {
+        // 如果处于可收集状态 (资源 >= 1)
+        if (this->currentRes >= 1.0f) {
+            this->collectResource();
+        }
+        // 返回 true 表示吞噬这次点击，不再向下传递
+        return true;
+    }
+
+    // 点击在建筑外面，返回 false，让点击事件继续传递给地图或其他物体
+    return false;
 }

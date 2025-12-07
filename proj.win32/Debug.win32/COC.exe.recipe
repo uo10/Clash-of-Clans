@@ -2,10 +2,10 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\cocoswork\COC\proj.win32\Debug.win32\libcocos2d.dll</FullPath>
+      <FullPath>G:\Clash-of-Clans\proj.win32\Debug.win32\libcocos2d.dll</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>D:\cocoswork\COC\proj.win32\Debug.win32\COC.exe</FullPath>
+      <FullPath>G:\Clash-of-Clans\proj.win32\Debug.win32\COC.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
