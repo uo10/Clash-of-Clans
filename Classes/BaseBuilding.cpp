@@ -85,7 +85,14 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
         data.buildTime = 30 + (level * 30); 
         data.capacity = 1500 * level;
     }
-
+    // 5. 兵营配置
+    else if (type == BuildingType::BARRACKS) {
+        data.name = "Barracks";
+        data.hp = 800 + (level * 200);
+        data.costElixir = 500 * level;
+        data.buildTime = 30 + (level * 30);
+        data.capacity = 30 * level;
+    }
     return data;
 }
 
@@ -137,7 +144,8 @@ std::string BaseBuilding::getTextureName(BuildingType type, int level) {
     case BuildingType::GOLD_MINE:     prefix = "Gold_Mine"; break;
     case BuildingType::ELIXIR_PUMP:   prefix = "Elixir_Pump"; break;
     case BuildingType::GOLD_STORAGE:  prefix = "Gold_Storage"; break;
-    case BuildingType::ELIXIR_STORAGE: prefix = "Elixir_Storage"; break;
+    case BuildingType::ELIXIR_STORAGE:prefix = "Elixir_Storage"; break;
+    case BuildingType::BARRACKS:      prefix = "Barracks"; break;
     default: prefix = "building"; break;
     }
     return StringUtils::format("%s%d.png", prefix.c_str(), level);
@@ -280,7 +288,7 @@ void BaseBuilding::upgradeLevel() {
     this->updateSpecialProperties();
 
     // 4. 通知系统 (刷新容量等)
-    if (type == BuildingType::GOLD_STORAGE || type == BuildingType::ELIXIR_STORAGE) {
+    if (type == BuildingType::GOLD_STORAGE || type == BuildingType::ELIXIR_STORAGE || type == BuildingType::BARRACKS) {
         Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_MAX_CAPACITY");
     }
 

@@ -7,17 +7,21 @@ PlayerData* PlayerData::_instance = nullptr;
 PlayerData::PlayerData() {
     _totalGold = 1000;   // 初始金币
     _totalElixir = 1000; // 初始圣水
+    _totalPeople = 0;    // 初始人口容量
     _maxGold = 2000;  // 初始最大值
     _maxElixir = 2000;// 初始最大值
+    _maxPeople = 0;   // 初始最大值
 }
 
-void PlayerData::updateMaxLimits(int maxGold, int maxElixir) {
+void PlayerData::updateMaxLimits(int maxGold, int maxElixir, int maxPeople) {
     _maxGold = maxGold;
     _maxElixir = maxElixir;
+    _maxPeople = maxPeople;
 
     // 如果当前资源超过了新上限 进行截断处理
     if (_totalGold > _maxGold) _totalGold = _maxGold;
     if (_totalElixir > _maxElixir) _totalElixir = _maxElixir;
+    if (_totalPeople > _maxPeople) _totalPeople = _maxPeople;
 
     // 发送UI更新事件
     Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
@@ -85,3 +89,27 @@ bool PlayerData::consumeElixir(int amount) {
     }
     return false;
 }
+
+int PlayerData::getPeople() {
+    return _totalPeople;
+}
+
+bool PlayerData::addPeople(int amount,int cost) {
+    if (amount + _totalPeople <= _maxPeople) {
+        _totalPeople += amount;
+        cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
+        return true;
+    }
+    else {
+        _totalElixir += cost;
+        cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
+        return 0;
+    }
+}
+
+void PlayerData::removePeople(int amount) {
+    _totalPeople -= amount;
+    cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
+
+}
+

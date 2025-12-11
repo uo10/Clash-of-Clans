@@ -22,9 +22,11 @@ private:
 
     int _totalGold;   // 当前持有的金币数量
     int _totalElixir; // 当前持有的圣水数量
+    int _totalPeople; // 当前拥有的人口数量
 
     int _maxGold;     // 金币存储上限 (由金库等级决定)
     int _maxElixir;   // 圣水存储上限 (由圣水瓶等级决定)
+    int _maxPeople;   // 人口存储上限 (由兵营等级决定) 
 
 public:
     /**
@@ -38,8 +40,9 @@ public:
      * 当存储类建筑（金库/圣水瓶）建造完成或升级后调用此函数。
      * @param maxGold 新的金币总容量
      * @param maxElixir 新的圣水总容量
+     * @param maxPeople 新的人口总容量
      */
-    void updateMaxLimits(int maxGold, int maxElixir);
+    void updateMaxLimits(int maxGold, int maxElixir, int maxPeople);
 
     /**
      * @brief 获取金币剩余存储空间
@@ -99,6 +102,30 @@ public:
      * @return true: 余额充足且扣除成功; false: 余额不足，扣除失败。
      */
     bool consumeElixir(int amount);
+
+    // ================== 人口相关操作 ==================
+
+    /**
+    * @brief 获取当前圣水数量
+    * @return 当前人口数量
+    */
+    int getPeople();
+
+    /**
+     * @brief 增加人口 (例如：生产士兵增加人口)
+     * 会自动处理上限溢出。
+     * @param amount 尝试增加的数量
+     * @param amount 这次造兵需要的圣水
+     * @return true: 容量充足且增加成功; false: 容量不足，增加失败。
+     */
+    bool addPeople(int amount,int cost);
+
+    /**
+     * @brief 返还人口 (点击减号 减少人口)
+     * @param amount 返还的数量
+     */
+    void removePeople(int amount);
+
 };
 
 #endif
