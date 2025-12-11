@@ -251,8 +251,31 @@ bool MainVillage::init()
                     return true;
                 }
             }
+            // --- 情况 C: 兵营士兵窗口 ---
+            auto info = _activeMenuNode->getChildByName("TrainPanel");
+            if (info) {
+                Vec2 localPos = info->convertToNodeSpace(mousePos);
+
+                Size s = info->getContentSize();
+                Rect bgRect = Rect(0, 0, s.width, s.height);
+
+                // 判断鼠标是否在背景板范围内
+                if (bgRect.containsPoint(localPos)) {
+                    // 点在面板上 -> 拦截
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+                else {
+                    // 点在面板外面 -> 关闭面板，并拦截这次点击
+                    this->closeBuildingMenu();
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+            }
         }
-        // --- 情况C：建筑选择菜单 ---
+        // --- 情况D：建筑选择菜单 ---
         if (_buildMenuNode && _buildMenuNode->isVisible()) {
             auto bg = _buildMenuNode->getChildByName("BuildPanelBG");
             if (bg) {
@@ -354,7 +377,8 @@ bool MainVillage::init()
                         }
                         //如果是存储类
                         else if (_selectedBuildingType == BuildingType::GOLD_STORAGE ||
-                            _selectedBuildingType == BuildingType::ELIXIR_STORAGE) {
+                            _selectedBuildingType == BuildingType::ELIXIR_STORAGE ||
+                            _selectedBuildingType == BuildingType::BARRACKS) {
                             // 1. 使用具体的子类指针来创建
                             // auto 会自动推导为 ResourceStorage*
                             ResourceStorage* storageBuilding = ResourceStorage::create(_selectedBuildingType, 1);
@@ -502,7 +526,7 @@ bool MainVillage::init()
 
 	this->addChild(_MainVillageMap, 0);
 
-    PlayerData::getInstance()->updateMaxLimits(1000, 1000);
+    // 创立Icon右上角 UI
     createResourceUI();
 
     return true;
@@ -535,6 +559,16 @@ void MainVillage::createResourceUI() {
     _elixirLabel->setPosition(visibleSize.width - 120, visibleSize.height - 80);
     this->addChild(_elixirLabel, 9999);
 
+    // 3. 人口 UI (圣水下方)
+    auto peopleIcon = Sprite::create("People.png");
+    peopleIcon->setPosition(visibleSize.width - 150, visibleSize.height - 120);
+    this->addChild(peopleIcon, 9999);
+
+    _peopleLabel = Label::createWithSystemFont("0", "Arial", 24);
+    _peopleLabel->setAnchorPoint(Vec2(0, 0.5));
+    _peopleLabel->setPosition(visibleSize.width - 120, visibleSize.height - 120);
+    this->addChild(_peopleLabel, 9999);
+
     // 3. 初始刷新一次
     updateResourceUI();
 
@@ -548,15 +582,18 @@ void MainVillage::createResourceUI() {
 void MainVillage::updateResourceUI() {
     int gold = PlayerData::getInstance()->getGold();
     int elixir = PlayerData::getInstance()->getElixir();
+    int people = PlayerData::getInstance()->getPeople();
 
     if (_goldLabel) _goldLabel->setString(std::to_string(gold));
     if (_elixirLabel) _elixirLabel->setString(std::to_string(elixir));
+    if (_peopleLabel) _peopleLabel->setString(std::to_string(people));
 }
 
 void MainVillage::refreshTotalCapacity()
 {
     long long totalGoldCapacity = 1000;
     long long totalElixirCapacity = 1000;
+    long long totalPeopleCapacity = 0;
 
     // 1. 遍历容器中的每一个建筑
     for (auto building : _storageList) {
@@ -570,12 +607,16 @@ void MainVillage::refreshTotalCapacity()
             else if (building->type == BuildingType::ELIXIR_STORAGE) {
                 totalElixirCapacity += building->maxLimit;
             }
+            else if (building->type == BuildingType::BARRACKS) {
+                totalPeopleCapacity += building->maxLimit;
+            }
         }
     }
-    PlayerData::getInstance()->updateMaxLimits(totalGoldCapacity, totalElixirCapacity);
+    PlayerData::getInstance()->updateMaxLimits(totalGoldCapacity, totalElixirCapacity, totalPeopleCapacity);
     CCLOG("=== 刷新完成 ===");
     CCLOG("当前金币总上限: %lld", totalGoldCapacity);
     CCLOG("当前圣水总上限: %lld", totalElixirCapacity);
+    CCLOG("当前人口总上限: %lld", totalPeopleCapacity);
 }
 
 void MainVillage::closeBuildingMenu() {
@@ -750,10 +791,190 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
         CCLOG("信息展示：");
         });
 
-    auto menu = Menu::create(btnUpgrade, btnRemove, btnInfo, nullptr); //建立整体菜单
-    menu->alignItemsVerticallyWithPadding(20); //竖向排列 在建筑头顶
+    // 定义训练按钮指针 (因为不确定是否是军营，使用指针，初始化为空)
+    MenuItemLabel* btnTrain = nullptr;
+    // ----------- 按钮4：训练士兵 -------------
+    if (building->type == BuildingType::BARRACKS) {
+
+        auto labelTrain = Label::createWithSystemFont("Train Troops", "Arial", 24);
+        labelTrain->setColor(Color3B(0, 255, 0));
+
+        btnTrain = MenuItemLabel::create(labelTrain, [=](Ref* sender) {
+
+            // 1. 清空当前菜单
+            if (_activeMenuNode) {
+                _activeMenuNode->removeAllChildren();
+            }
+            else {
+                return;
+            }
+
+            // 2. 创建训练面板背景
+            float panelW = 400;
+            float panelH = 140;
+            auto bg = LayerColor::create(Color4B(0, 0, 0, 220), panelW, panelH);
+            bg->setName("TrainPanel");
+            bg->setIgnoreAnchorPointForPosition(false);
+            bg->setAnchorPoint(Vec2(0.5, 1));
+            bg->setPosition(Vec2(0, -200)); // 放在建筑下方
+            _activeMenuNode->addChild(bg);
+
+            // 3. 定义辅助函数
+            auto createTroopNode = [&](TroopInfo info, int index) -> Node* {
+
+                // --- 容器 ---
+                auto container = Node::create();
+                container->setContentSize(Size(70, 90));
+
+                // --- A. 人物头像大按钮 ---
+                auto iconWrapper = Node::create();
+                iconWrapper->setContentSize(Size(60, 60)); // 使用Wrapper强行包裹按钮大小
+                iconWrapper->setAnchorPoint(Vec2(0.5, 0.5));
+
+                auto sprite = Sprite::create(info.img);
+
+                float s = 60.0f / MAX(sprite->getContentSize().width, sprite->getContentSize().height);
+                sprite->setScale(s);
+                sprite->setPosition(30, 30); // 放在 Wrapper 的正中心
+                iconWrapper->addChild(sprite);
+
+                auto btnAdd = MenuItemSprite::create(iconWrapper, nullptr, [=](Ref*) {
+                    // 先判断容量
+                    if ( PlayerData::getInstance()->consumeElixir(info.cost)&& PlayerData::getInstance()->addPeople(info.weight)) {
+                        // +1 逻辑
+                        _trainingQueue[info.name]++;
+
+                        // 动画 
+                        sprite->stopAllActions();
+                        sprite->runAction(Sequence::create(ScaleTo::create(0.05f, s * 1.1f), ScaleTo::create(0.05f, s), nullptr));
+
+                        // 刷新 UI
+                        auto countLbl = (Label*)container->getChildByTag(101);
+                        auto menu = (Menu*)container->getChildByTag(102);
+                        if (countLbl) countLbl->setString(StringUtils::format("x%d", _trainingQueue[info.name]));
+                        if (menu) {
+                            auto minItem = menu->getChildByTag(200);
+                            if (minItem) minItem->setVisible(true);
+                        }
+                        CCLOG("增加: %s", info.name.c_str());
+                    }
+                    });
+                btnAdd->setPosition(35, 60); // 按钮在容器中的位置
+
+                // --- B. 左上角减号按钮 ---
+                auto minusWrapper = Node::create();
+                minusWrapper->setContentSize(Size(30, 30)); // 增大点击区域
+                minusWrapper->setAnchorPoint(Vec2(0.5, 0.5));
+
+                auto minLbl = Label::createWithSystemFont("-", "Arial", 60);
+                minLbl->setColor(Color3B::RED);
+                minLbl->enableOutline(Color4B::WHITE, 2);
+                minLbl->setPosition(15, 15); // 文字居中
+                minusWrapper->addChild(minLbl);
+
+                auto btnMinus = MenuItemSprite::create(minusWrapper, nullptr, [=](Ref*) {
+                    // -1 逻辑
+                    if (_trainingQueue[info.name] > 0) {
+                        _trainingQueue[info.name]--;
+                        PlayerData::getInstance()->removePeople(info.weight);// 返还人口容量
+                        auto countLbl = (Label*)container->getChildByTag(101);
+                        if (countLbl) countLbl->setString(StringUtils::format("x%d", _trainingQueue[info.name]));
+
+                        if (_trainingQueue[info.name] <= 0) {
+                            auto menu = (Menu*)container->getChildByTag(102);
+                            auto minItem = menu->getChildByTag(200);
+                            if (minItem) minItem->setVisible(false);
+                        }
+                        CCLOG("减少: %s", info.name.c_str());
+                    }
+                    });
+                // 减号位置：稍微往左上角挪一点，避免和头像重叠
+                btnMinus->setPosition(10, 85);
+                btnMinus->setTag(200);
+
+                // --- C. 组装 Menu ---
+                auto localMenu = Menu::create(btnAdd, btnMinus, nullptr);
+                localMenu->setPosition(Vec2::ZERO);
+                localMenu->setTag(102);
+                container->addChild(localMenu);
+
+                // --- D. 标签 (右上角) ---
+                int currentCount = _trainingQueue[info.name];
+                auto countLbl = Label::createWithSystemFont(StringUtils::format("x%d", currentCount), "Arial", 16);
+                countLbl->setColor(Color3B::GREEN);
+                countLbl->setAnchorPoint(Vec2(1, 0.5));
+                countLbl->setPosition(68, 90);
+                countLbl->setTag(101);
+                container->addChild(countLbl);
+
+                // 初始隐藏减号
+                btnMinus->setVisible(currentCount > 0);
+
+                // --- E. 名字与权重 ---
+                auto weightLbl = Label::createWithSystemFont(StringUtils::format("%d", info.weight), "Arial", 14);
+                weightLbl->setColor(Color3B::YELLOW);
+                weightLbl->setAnchorPoint(Vec2(1, 0));
+                weightLbl->setPosition(65, 10);
+                container->addChild(weightLbl);
+
+                auto nameLbl = Label::createWithSystemFont(info.name, "Arial", 14);
+                nameLbl->setPosition(35, 5);
+                container->addChild(nameLbl);
+
+                // --- F. 消耗圣水值 ---
+                auto costLbl = Label::createWithSystemFont(StringUtils::format("%d", info.cost), "Arial", 14);
+                costLbl->setColor(Color3B::GREEN);
+                costLbl->setAnchorPoint(Vec2(1, 0));
+                costLbl->setPosition(45, -20);
+                container->addChild(costLbl);
+
+                return container;
+                };
+
+            // 5. 循环创建并排列 
+            float startX = 30;
+            float gapX = 90;
+            float posY = panelH / 2 - 40;
+
+            for (int i = 0; i < troops.size(); ++i) {
+                // 调用上面的 lambda 创建
+                auto troopNode = createTroopNode(troops[i], i);
+                troopNode->setPosition(startX + i * gapX, posY);
+                bg->addChild(troopNode);
+            }
+
+            // 7. 添加关闭按钮 (X)
+            auto closeLbl = Label::createWithSystemFont("X", "Arial", 26);
+            closeLbl->setColor(Color3B::RED);
+            auto closeItem = MenuItemLabel::create(closeLbl, [=](Ref*) {
+                this->closeBuildingMenu();
+                });
+            closeItem->setPosition(panelW - 20, panelH - 20);
+
+            auto closeMenu = Menu::create(closeItem, nullptr);
+            closeMenu->setPosition(Vec2::ZERO);
+            bg->addChild(closeMenu);
+
+            CCLOG("打开了兵营训练面板");
+            });
+    }
+
+    // ----------- 组装最终的主菜单 (使用 Vector 动态添加) -------------
+    Vector<MenuItem*> menuItems;
+    menuItems.pushBack(btnUpgrade);
+    menuItems.pushBack(btnRemove);
+
+    // 如果是兵营，就把训练按钮加进去
+    if (btnTrain != nullptr) {
+        menuItems.pushBack(btnTrain);
+    }
+
+    menuItems.pushBack(btnInfo);
+
+    auto menu = Menu::createWithArray(menuItems); // 使用数组创建菜单
+    menu->alignItemsVerticallyWithPadding(20);
     menu->setName("BuildingMenu");
-    menu->setPosition(Vec2::ZERO); 
+    menu->setPosition(Vec2::ZERO);
     _activeMenuNode->addChild(menu);
 }
 

@@ -90,8 +90,9 @@ private:
     cocos2d::TMXTiledMap* _MainVillageMap; 
     BuildingType _selectedBuildingType;
 
-    cocos2d::Label* _goldLabel;
-    cocos2d::Label* _elixirLabel;
+    cocos2d::Label* _goldLabel;   // 金币UI
+    cocos2d::Label* _elixirLabel; // 圣水UI
+    cocos2d::Label* _peopleLabel; // 人口UI
 
    
     std::vector<ResourceStorage*> _storageList; //用来储存所有建造的存储类建筑(用于计算当前资源量)
@@ -100,5 +101,21 @@ private:
 
     cocos2d::Node* _buildMenuNode = nullptr;    // 建筑选择菜单指针
     cocos2d::Node* _iconContainer = nullptr;    // 用于存放建筑(资源/防御)图标的容器
+
+    std::map<std::string, int> _trainingQueue;  // 记录存放士兵信息，用于攻击地图时使用
+     
+    // 简单定义士兵结构体，后面有了士兵类可以删掉
+    struct TroopInfo {
+        std::string name;
+        std::string img;
+        int weight;
+        int cost;
+    };
+    std::vector<TroopInfo> troops = {
+        {"Barbarian",   "Barbarian.png",    1,    25},
+        {"Archer",      "Archer.png",       1,    30},
+        {"Giant",       "Giant.png",        5,   250},
+        {"WallBreaker", "Wall_Breaker.png", 2,   100}
+    };
 };
 #endif // __MAIN_VILLAGE_H__
