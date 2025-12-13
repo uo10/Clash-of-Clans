@@ -6,6 +6,10 @@
 #include "ResourceProducer.h"
 #include "ResourceStorage.h"
 #include "PlayerData.h"
+#include "Wall.h"
+#include "ArcherTower.h"
+#include "TownHall.h"
+#include "Cannon.h"
 //Ö÷´å×¯³¡¾°
 class MainVillage :public cocos2d::Scene
 {

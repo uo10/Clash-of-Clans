@@ -93,6 +93,29 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
         data.buildTime = 30 + (level * 30);
         data.capacity = 30 * level;
     }
+    // 6. 加农炮配置
+    else if (type == BuildingType::CANNON) {
+        if (level == 1) {
+            data.name = "Cannon Lv1";
+            data.hp = 300;
+            data.costGold = 250;     
+            data.costElixir = 0;
+            data.buildTime = 10;     
+            // 特有战斗属性 (虽然 BuildingStats 没定义 damage，我们可以暂时存在 BaseBuilding 子类里，或者扩展 struct)
+        }
+        else if (level == 2) {
+            data.name = "Cannon Lv2";
+            data.hp = 360;           
+            data.costGold = 1000;    
+            data.buildTime = 60;
+        }
+        else if (level == 3) {
+            data.name = "Cannon Lv3";
+            data.hp = 420;
+            data.costGold = 4000;
+            data.buildTime = 180;
+        }
+    }
     return data;
 }
 
@@ -146,6 +169,10 @@ std::string BaseBuilding::getTextureName(BuildingType type, int level) {
     case BuildingType::GOLD_STORAGE:  prefix = "Gold_Storage"; break;
     case BuildingType::ELIXIR_STORAGE:prefix = "Elixir_Storage"; break;
     case BuildingType::BARRACKS:      prefix = "Barracks"; break;
+    case BuildingType::WALL:      prefix = "Wall"; break;
+    case BuildingType::CANNON:      prefix = "Cannon"; break;
+    case BuildingType::ARCHER_TOWER:      prefix = "ArcherTower"; break;
+    case BuildingType::TOWN_HALL:      prefix = "TownHall"; break;
     default: prefix = "building"; break;
     }
     return StringUtils::format("%s%d.png", prefix.c_str(), level);

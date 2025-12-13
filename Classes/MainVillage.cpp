@@ -56,7 +56,8 @@ bool MainVillage::init()
 	_isDragging = false;// 初始化未在拖拽状态
 	_isClickValid = false;// 初始化点击无效
     _selectedSpritePath = "R-C.jpg";//默认选择图片
-    _selectedBuildingType = BuildingType::GOLD_MINE;
+    //_selectedBuildingType = BuildingType::GOLD_MINE;
+    _selectedBuildingType = BuildingType::NONE;
 
 	// ================  设置初始化地图  ======================
     // 
@@ -350,6 +351,12 @@ bool MainVillage::init()
                     int tileX = (int)(nodePos.x / tileSize.width);
                     int tileY = (int)(mapSize.height - (nodePos.y / tileSize.height));
 
+                    // 如果当前没有选中要建造的类型，直接返回，不执行建造逻辑
+                    if (_selectedBuildingType == BuildingType::NONE) {
+                        _isDragging = false;
+                        return;
+                    }
+
                     // 3、边界检查
                     if (tileX >= 0 && tileX < mapSize.width && tileY >= 0 && tileY < mapSize.height) {
 						Vec2 targetCoord = Vec2(tileX, tileY);// 目标瓦片坐标
@@ -388,11 +395,58 @@ bool MainVillage::init()
 
                             this->refreshTotalCapacity();
                         }
-                        //其他未定义建筑类型
+                        //其他建筑类型
                         else {
-                            newBuilding = BaseBuilding::create(_selectedBuildingType, 1);
+                                if (_selectedBuildingType == BuildingType::WALL) {
+                                    newBuilding = Wall::create(1);
+                                }
+                                if (_selectedBuildingType == BuildingType::CANNON) {
+                                    newBuilding = Cannon::create(1);
+                                }
+                                if (_selectedBuildingType == BuildingType::ARCHER_TOWER) {
+                                    newBuilding = ArcherTower::create(1);
+                                }
+                                if (_selectedBuildingType == BuildingType::TOWN_HALL) {
+                                    newBuilding = TownHall::create(1); 
+                                }
                         }
                         if (newBuilding) {
+
+                            // --- 获取当前大本营等级 ---
+                            int currentTHLevel = 0;
+                            for (auto child : map->getChildren()) {
+                                // 因为所有建筑 Tag 都是 999，我们要区分出谁是 TownHall
+                                if (child->getTag() == 999) {
+                                    // 使用 dynamic_cast 尝试转换
+                                    TownHall* th = dynamic_cast<TownHall*>(child);
+                                    if (th) {
+                                        currentTHLevel = th->level;
+                                        break; // 找到了，退出循环
+                                    }
+                                }
+                            }
+
+                            int maxLimit = TownHall::getMaxBuildingCount(_selectedBuildingType, currentTHLevel);
+
+                            // --- 统计当前地图上该类建筑的数量 ---
+                            int currentCount = 0;
+                            for (auto child : map->getChildren()) {
+                                if (child->getTag() == 999) {
+                                    BaseBuilding* b = dynamic_cast<BaseBuilding*>(child);
+                                    // 统计同类型且未被摧毁的建筑
+                                    if (b && b->type == _selectedBuildingType && b->state != BuildingState::DESTROYED) {
+                                        currentCount++;
+                                    }
+                                }
+                            }
+
+                            // --- 判断是否超限 ---
+                            if (currentCount >= maxLimit) {
+                                CCLOG("建造失败：数量已达上限！当前: %d / %d (大本营 Lv.%d)", currentCount, maxLimit, currentTHLevel);
+                                _isDragging = false;
+                                return; // 拦截，不准建造
+                            }
+
                             // 1. 获取该建筑的造价
                             int costGold = newBuilding->buildCostGold;
                             int costElixir = newBuilding->buildCostElixir;
@@ -436,6 +490,8 @@ bool MainVillage::init()
                                 }
                             }
                         }
+                        // 造完一个就退出建造模式
+                        _selectedBuildingType = BuildingType::NONE;
                     }
                 }
             }
@@ -591,8 +647,8 @@ void MainVillage::updateResourceUI() {
 
 void MainVillage::refreshTotalCapacity()
 {
-    long long totalGoldCapacity = 1000;
-    long long totalElixirCapacity = 1000;
+    long long totalGoldCapacity = 20000000;
+    long long totalElixirCapacity = 20000000;
     long long totalPeopleCapacity = 0;
 
     // 1. 遍历容器中的每一个建筑
@@ -656,6 +712,27 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
 
         // --- 扣费升级逻辑 ---
         int nextLevel = building->level + 1;
+
+        // 大本营等级限制
+        // 1. 寻找当前地图上的大本营等级
+        int currentTHLevel = 1;
+        for (auto child : _MainVillageMap->getChildren()) {
+            if (child->getTag() == 999) {
+                auto th = dynamic_cast<TownHall*>(child);
+                if (th) {
+                    currentTHLevel = th->level;
+                    break;
+                }
+            }
+        }
+
+        // 2. 检查是否允许升级
+        if (!TownHall::isUpgradeAllowed(building->type, nextLevel, currentTHLevel)) {
+            CCLOG("升级失败：需要大本营 Lv.%d 才能升级到 Lv.%d", currentTHLevel + 1, nextLevel);
+            // 这里最好弹出一个 Label 提示玩家
+            return; // 直接拦截，不扣钱
+        }
+
         BuildingStats nextStats = BaseBuilding::getStatsConfig(building->type, nextLevel);//获取升级花费
 
         int upgradeCostGold = nextStats.costGold; 
@@ -1082,6 +1159,7 @@ void MainVillage::switchBuildCategory(int category) {
     Vector<MenuItem*> items;
 
     if (category == 0) {
+        items.pushBack(createBtn("Tower Hall", "TownHall1.png", BuildingType::TOWN_HALL));
         // === 资源类 ===
         items.pushBack(createBtn("Gold Mine", "Gold_Mine1.png", BuildingType::GOLD_MINE));
         items.pushBack(createBtn("Elixir Pump", "Elixir_Pump1.png", BuildingType::ELIXIR_PUMP));
@@ -1091,9 +1169,9 @@ void MainVillage::switchBuildCategory(int category) {
     else if (category == 1) {
         // === 防御类 ===
 
-        items.pushBack(createBtn("Cannon", "Cannon1.png", BuildingType::GOLD_MINE));
-        items.pushBack(createBtn("Archer Tower", "Archer_Tower1.png", BuildingType::GOLD_MINE));
-        items.pushBack(createBtn("Wall", "Wall1.png", BuildingType::GOLD_MINE));
+        items.pushBack(createBtn("Cannon", "Cannon1.png", BuildingType::CANNON));
+        items.pushBack(createBtn("Archer Tower", "ArcherTower1.png", BuildingType::ARCHER_TOWER));
+        items.pushBack(createBtn("Wall", "Wall1.png", BuildingType::WALL));
         items.pushBack(createBtn("Barracks", "Barracks1.png", BuildingType::BARRACKS));
     }
 

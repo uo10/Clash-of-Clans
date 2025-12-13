@@ -17,7 +17,12 @@ enum class BuildingType {
     ELIXIR_PUMP,    // 圣水收集器 (生产圣水)
     GOLD_STORAGE,   // 金库 (存储金币)
     ELIXIR_STORAGE, // 圣水瓶 (存储圣水)
-    BARRACKS        // 兵营 (训练士兵)
+    BARRACKS,        // 兵营 (训练士兵)
+    CANNON,         // 加农炮
+    ARCHER_TOWER,   // 箭塔
+    WALL,            // 围墙
+	TOWN_HALL,     // 大本营
+    NONE = 0 // empty states
 };
 
 /**

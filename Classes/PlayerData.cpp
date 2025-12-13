@@ -5,11 +5,11 @@ USING_NS_CC;
 PlayerData* PlayerData::_instance = nullptr;
 
 PlayerData::PlayerData() {
-    _totalGold = 1000;   // 初始金币
-    _totalElixir = 1000; // 初始圣水
+    _totalGold = 20000000;   // 初始金币
+    _totalElixir = 20000000; // 初始圣水
     _totalPeople = 0;    // 初始人口容量
-    _maxGold = 2000;  // 初始最大值
-    _maxElixir = 2000;// 初始最大值
+    _maxGold = 20000000;  // 初始最大值
+    _maxElixir = 20000000;// 初始最大值
     _maxPeople = 0;   // 初始最大值
 }
 
