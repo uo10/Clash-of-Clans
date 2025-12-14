@@ -78,6 +78,7 @@ protected:
     BuildingStats _stats;
 
 public:
+
     // ------------------------------------------------
     // 基础属性 (从配置中读取)
     // ------------------------------------------------
@@ -109,10 +110,15 @@ public:
     // ------------------------------------------------
     // UI 组件 (需在 updateUI 中刷新)
     // ------------------------------------------------
-    cocos2d::ui::LoadingBar* hpBar;       // 位于头顶的绿色血条
+    cocos2d::Sprite* hpBar;               // 改用 Sprite，更灵活且不需要 loadingbar 图片
+    cocos2d::Sprite* hpBarBg;
     cocos2d::ui::LoadingBar* buildBar;    // 建造/升级时的黄色进度条
     cocos2d::Label* timeLabel;            // 显示剩余时间的文字 (如 "10s")
     cocos2d::Sprite* mainSprite;          // 建筑的主体图片精灵
+
+    // Key: 兵种名字 (如 "Barbarian"), Value: 士兵节点列表
+    std::map<std::string, std::vector<cocos2d::Node*>> _visualTroops; //用来存储可视化军营士兵容器
+    // 同时存在BaseBuilding里，和MainVillage里面的list区分开
 
     // ------------------------------------------------
     // 核心函数
@@ -176,10 +182,15 @@ public:
     virtual void updateSpecialProperties() {};
 
     /**
-     * @brief 帧刷新 UI
+     * @brief 帧刷新 血条
      * 通常在 scheduleUpdate 中调用，用于平滑更新血条和进度条的百分比。
      */
-    void updateUI();
+    void updateHPBar();
+
+    /**
+     * @brief 初始化血条
+     */
+    void initHPBar();
 
     /**
      * @brief 静态配置读取器

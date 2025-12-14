@@ -111,6 +111,7 @@ private:
     cocos2d::Node* _iconContainer = nullptr;    // 用于存放建筑(资源/防御)图标的容器
 
     std::map<std::string, int> _trainingQueue;  // 记录存放士兵信息，用于攻击地图时使用
+
      
     // 简单定义士兵结构体，后面有了士兵类可以删掉
     struct TroopInfo {

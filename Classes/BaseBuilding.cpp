@@ -251,23 +251,36 @@ std::string BaseBuilding::getTextureName(BuildingType type, int level) {
 }
 
 bool BaseBuilding::takeDamage(float damage) {
-    if (state == BuildingState::DESTROYED) return true;
+    // 1. 状态检查
+    if (state == BuildingState::DESTROYED || state == BuildingState::PREVIEW) return false;
 
+    // 2. 扣血
     currentHP -= damage;
     if (currentHP < 0) currentHP = 0;
 
-    if (hpBar) {
-        hpBar->setVisible(true);
-        float percent = (currentHP / maxHP) * 100.0f;
-        hpBar->setPercent(percent);
+    // 3. 【关键】刷新 UI (这里会自动处理血条的显示和进度)
+    this->updateHPBar();
+
+    // 4. 受击反馈动画 (变红闪烁)
+    // 只有当主图存在时才跑动画
+    if (mainSprite) {
+        // 停止之前的变色动作，防止连续攻击导致颜色卡住
+        mainSprite->stopAllActionsByTag(999);
+
+        auto tintRed = TintTo::create(0.1f, 255, 100, 100);
+        auto tintBack = TintTo::create(0.1f, 255, 255, 255);
+        auto seq = Sequence::create(tintRed, tintBack, nullptr);
+        seq->setTag(999); // 设置Tag以便打断
+        mainSprite->runAction(seq);
     }
 
-    auto tintRed = TintTo::create(0.1f, 255, 100, 100);
-    auto tintBack = TintTo::create(0.1f, 255, 255, 255);
-    mainSprite->runAction(Sequence::create(tintRed, tintBack, nullptr));
-
+    // 5. 死亡检测
     if (currentHP <= 0) {
         changeState(BuildingState::DESTROYED);
+        // 确保血条隐藏
+        if (hpBarBg) hpBarBg->setVisible(false);
+        updateView();
+        
         CCLOG("建筑 ID:%d 被摧毁了！", instanceID);
         return true;
     }
@@ -398,4 +411,61 @@ void BaseBuilding::upgradeLevel() {
     this->updateView();
 
     CCLOG("升级完成 Lv.%d, 新名称: %s", level, name.c_str());
+}
+
+void BaseBuilding::updateHPBar() {
+    // 1. 确保血条已经创建
+    if (!hpBar || !hpBarBg) {
+        initHPBar();
+    }
+
+    // 2. 如果被摧毁了，或者满血，隐藏血条
+    if (state == BuildingState::DESTROYED || currentHP >= maxHP) {
+        hpBarBg->setVisible(false);
+        return;
+    }
+
+    // 3. 否则显示血条
+    hpBarBg->setVisible(true);
+
+    // 4. 计算百分比
+    float percent = 0;
+    if (maxHP > 0) {
+        percent = currentHP / maxHP;
+    }
+
+    // 限制在 0~1 之间
+    if (percent < 0) percent = 0;
+    if (percent > 1) percent = 1;
+
+    // 5. 设置进度
+    hpBar->setScaleX(percent);
+
+    // 6. 颜色变化 (可选)：血量低时变红
+    if (percent < 0.3f) {
+        hpBar->setColor(Color3B::RED);
+    }
+    else {
+        hpBar->setColor(Color3B::GREEN);
+    }
+}
+
+void BaseBuilding::initHPBar() {
+    if (hpBarBg) return;
+
+    // 1. 背景 (黑底)
+    hpBarBg = Sprite::create();
+    hpBarBg->setTextureRect(Rect(0, 0, 64, 10)); // 略大一点做边框
+    hpBarBg->setColor(Color3B::BLACK);
+    hpBarBg->setPosition(Vec2(0, 60)); // 建筑头顶高度，根据需要调整
+    this->addChild(hpBarBg, 100);
+    hpBarBg->setVisible(false); // 默认隐藏
+
+    // 2. 血条 (绿条)
+    hpBar = Sprite::create();
+    hpBar->setTextureRect(Rect(0, 0, 60, 6)); // 比背景略小
+    hpBar->setColor(Color3B::GREEN);
+    hpBar->setAnchorPoint(Vec2(0, 0.5)); // 锚点设在左侧，这样缩放时会向右延伸
+    hpBar->setPosition(2, 5); // 相对背景左对齐，留出2像素边框
+    hpBarBg->addChild(hpBar);
 }

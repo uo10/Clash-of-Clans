@@ -1,5 +1,9 @@
 ﻿#include "MainVillage.h"
 #include "SimpleAudioEngine.h"
+#include "Barbarian.h"   
+#include "Archer.h"
+#include "Giant.h"
+#include "WallBreaker.h" 
 
 
 USING_NS_CC;
@@ -952,7 +956,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
             _activeMenuNode->addChild(bg);
 
             // 3. 定义辅助函数
-            auto createTroopNode = [&](TroopInfo info, int index) -> Node* {
+            auto createTroopNode = [=](TroopInfo info, int index) -> Node* {
 
                 // --- 容器 ---
                 auto container = Node::create();
@@ -990,9 +994,8 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                         }
                         CCLOG("增加: %s", info.name.c_str());
 
-
-                        /*Soldier* newSoldier = nullptr;
-
+                        // 可视化处理
+                        Soldier* newSoldier = nullptr;
                         // 根据名字判断创建哪种兵
                         if (info.name == "Barbarian") {
                             newSoldier = Barbarian::create();
@@ -1008,23 +1011,80 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                         }
 
                         if (newSoldier) {
-                            // A. 设置生成位置：兵营的位置
-                            // 为了不重叠，加一点点随机偏移 (-20 到 20 像素)
-                            float offsetX = (rand() % 40) - 20;
-                            float offsetY = (rand() % 40) - 20;
+                            // 1. 确定“出生点” (兵营大门位置)
+                            // 假设兵营图片的“门”在中心点向下 20 像素的位置
+                            Vec2 doorPos = building->getPosition() + Vec2(0, -20);
 
-                            Vec2 spawnPos = building->getPosition() + Vec2(offsetX, offsetY - 50);
+                            // 2. 计算“目标点” (扇形随机分布)
+                            // 我们希望士兵站在兵营下方，呈扇形散开
+                            // 角度范围：180度(左) 到 360/0度(右)，即下方半圆。
+                            // 为了美观，限制在 210度 ~ 330度 之间 (避免站得太靠水平两侧)
 
-                            newSoldier->setPosition(spawnPos);
+                            // 将角度转换为弧度 (Cocos数学库用弧度)
+                            float minAngle = CC_DEGREES_TO_RADIANS(210);
+                            float maxAngle = CC_DEGREES_TO_RADIANS(330);
 
-                            // B. 添加到地图层
-                            // Z轴给高一点，防止被地面遮挡，或者使用动态 ZOrder (2000 - y)
-                            _MainVillageMap->addChild(newSoldier, 3000 - spawnPos.y);
+                            // 随机角度
+                            float randomAngle = minAngle + (maxAngle - minAngle) * CCRANDOM_0_1();
 
-                            CCLOG("士兵实体 %s 已生成在 (%f, %f)", info.name.c_str(), spawnPos.x, spawnPos.y);
-                        }*/
+                            // 随机距离 (半径)：距离兵营中心 50 到 90 像素之间
+                            float minRadius = 50.0f;
+                            float maxRadius = 90.0f;
+                            float randomRadius = minRadius + (maxRadius - minRadius) * CCRANDOM_0_1();
 
+                            // 极坐标转笛卡尔坐标：计算偏移量
+                            float offsetX = cos(randomAngle) * randomRadius;
+                            float offsetY = sin(randomAngle) * randomRadius;
 
+                            // 最终待机位置
+                            Vec2 targetPos = building->getPosition() + Vec2(offsetX, offsetY);
+
+                            // 3. 设置初始状态
+                            // 先把兵放在门口，且设为极小（刚训练出来）
+                            newSoldier->setPosition(doorPos);
+                            newSoldier->setScale(0.01f);
+
+                            // 根据目标点在左边还是右边，调整朝向
+                            if (targetPos.x < doorPos.x) {
+                                // 如果目标在左边，可能需要翻转 
+                                newSoldier->setScaleX(-0.01f); // 用负 Scale 实现翻转
+                            }
+
+                            // 4. 添加到地图层 (处理遮挡)
+                            // Z轴动态计算：Y越小(越靠下)，Z越大(越靠前)
+                            _MainVillageMap->addChild(newSoldier, 3000 - (int)doorPos.y);
+
+                            // 5. 播放“出击”动画
+                            // 效果：从门里蹦出来，落地变大
+                            float jumpHeight = 20.0f;
+                            float duration = 0.5f;
+
+                            // 动作A: 跳跃移动到目标点
+                            auto jumpAct = JumpTo::create(duration, targetPos, jumpHeight, 1);
+
+                            // 动作B: 变大恢复正常 (根据素材调整缩放)
+                            float targetScale = 0.2f; // 你的士兵标准大小
+                            if (targetPos.x < doorPos.x) targetScale = -0.2f; // 保持翻转
+
+                            auto scaleAct = ScaleTo::create(duration, fabs(targetScale), fabs(targetScale)); 
+
+                            // 组合动作
+                            auto spawnSeq = Sequence::create(
+                                Spawn::create(jumpAct, scaleAct, nullptr),
+                                CallFunc::create([=]() {
+                                    // 落地后，更新 ZOrder 
+                                    newSoldier->setLocalZOrder(3000 - (int)targetPos.y);
+                                    }),
+                                nullptr
+                            );
+
+                            newSoldier->runAction(spawnSeq);
+
+                            // 加入到可视化容器里
+                            building->_visualTroops[info.name].push_back(newSoldier);
+
+                            CCLOG("士兵实体 %s 扇形生成在 (%f, %f)", info.name.c_str(), targetPos.x, targetPos.y);
+                        }
                     }
                     });
                 btnAdd->setPosition(35, 60); // 按钮在容器中的位置
@@ -1041,12 +1101,51 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                 minusWrapper->addChild(minLbl);
 
                 auto btnMinus = MenuItemSprite::create(minusWrapper, nullptr, [=](Ref*) {
-                    // -1 逻辑
+
                     if (_trainingQueue[info.name] > 0) {
+                        // -1 逻辑
                         _trainingQueue[info.name]--;
+
                         PlayerData::getInstance()->removePeople(info.weight);// 返还人口容量
                         auto countLbl = (Label*)container->getChildByTag(101);
                         if (countLbl) countLbl->setString(StringUtils::format("x%d", _trainingQueue[info.name]));
+
+                        // --- 【核心：视觉删除逻辑】 ---
+
+                        // 1. 找到该兵种的列表
+                        // 引用 building 指针，因为 troops 存在 building 里
+                        auto& soldierList = building->_visualTroops[info.name];
+
+                        if (!soldierList.empty()) {
+                            // 2. 取出最后生成的那个兵 (LIFO: 后进先出)
+                            Node* soldierToRemove = soldierList.back();
+
+                            // 3. 从列表中移除 (这样下次就不会再取到它了)
+                            soldierList.pop_back();
+
+                            // 4. 执行删除动画
+                            if (soldierToRemove) {
+                                soldierToRemove->stopAllActions(); // 停止它当前的动作
+
+                                // 创建“完美删除”动画序列
+                                auto deleteSeq = Sequence::create(
+                                    // 步骤A: 瞬间变红，提示玩家它被删除了
+                                    TintTo::create(0.1f, 255, 0, 0),
+
+                                    // 步骤B: 同时缩小和淡出
+                                    Spawn::create(
+                                        ScaleTo::create(0.3f, 0.0f), // 缩小到没了
+                                        FadeOut::create(0.3f)        // 变透明
+                                    ),
+
+                                    // 步骤C: 【彻底移除】 从父节点(_MainVillageMap)上删掉
+                                    RemoveSelf::create(),
+                                    nullptr
+                                );
+
+                                soldierToRemove->runAction(deleteSeq);
+                            }
+                        }
 
                         if (_trainingQueue[info.name] <= 0) {
                             auto menu = (Menu*)container->getChildByTag(102);
