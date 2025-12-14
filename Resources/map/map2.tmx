@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="39">
+ <tileset firstgid="1" source="newpac.tsx"/>
+ <tileset firstgid="65" source="LayerRes.tsx"/>
+ <tileset firstgid="81" source="Building.tsx"/>
+ <layer id="1" name="BackGround" width="16" height="16">
+  <data encoding="base64" compression="zlib">
+   eJyTYGBg4IViPiAWIID5GRgatIFYGcjWgehTIKQHXb8IkBaBsEH6E0jVb0wF/SAsTaSfkTHQzweAfncAYaBZC0jRO4oHH9ahUD8/lDYBYmUyzJOG6gPmKXCa5CdRvzVUnzGZ+gHhjBeX
+  </data>
+ </layer>
+ <layer id="2" name="ForeGround" width="16" height="16">
+  <data encoding="base64" compression="zlib">
+   eJxjYEAFzkRgGPBhoC3wGAC9TlDsgUUMl1ps9nogYUJ2wUAAmhnI5oBAGAF3BTCQBoixnxz96ABZnFj3I/sbl3vwuR+XHmLilVgA0+tPoX5y9WLTT0z+hWGQfgAnshQo
+  </data>
+ </layer>
+ <objectgroup id="3" name="PlaceGround">
+  <object id="11" name="Cannon" x="239" y="145">
+   <point/>
+  </object>
+  <object id="12" name="Hut" x="177" y="204">
+   <point/>
+  </object>
+  <object id="13" name="TownHall" x="239" y="201">
+   <point/>
+  </object>
+  <object id="14" name="Hut" x="305" y="203">
+   <point/>
+  </object>
+  <object id="15" name="Hut" x="306" y="233">
+   <point/>
+  </object>
+  <object id="16" name="Hut" x="176" y="233">
+   <point/>
+  </object>
+  <object id="17" name="Cannon" x="241" y="302">
+   <point/>
+  </object>
+  <object id="26" name="Fence" x="274" y="275">
+   <point/>
+  </object>
+  <object id="27" name="Fence" x="242" y="271">
+   <point/>
+  </object>
+  <object id="28" name="Fence" x="208" y="269">
+   <point/>
+  </object>
+  <object id="32" x="129" y="-322" width="23" height="8"/>
+  <object id="33" x="130" y="288" width="1" height="1"/>
+  <object id="35" x="-206" y="-446"/>
+ </objectgroup>
+ <objectgroup id="5" name="ForbiddenGround">
+  <object id="38" name="NoPlace" x="60.5" y="157.5" width="360" height="231"/>
+ </objectgroup>
+ <layer id="4" name="BuildingGround" width="16" height="16">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFMBBGgI8PBJKAcYEQKB0KtTsMiQ+Vb8DnBph+ZL0MSGxi9SObEYYqT5R+mLowHOLE6ickTm39IxEAAN/5EkA=
+  </data>
+ </layer>
+</map>
