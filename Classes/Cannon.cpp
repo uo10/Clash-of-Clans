@@ -1,0 +1,146 @@
+#include "Cannon.h"
+#include "Soldier.h" // 引用 Soldier 头文件以便识别
+
+USING_NS_CC;
+
+Cannon* Cannon::create(int level)
+{
+    Cannon* pRet = new (std::nothrow) Cannon();
+    // 强制类型为 CANNON
+    if (pRet && pRet->init(level))
+    {
+        pRet->autorelease();
+        return pRet;
+    }
+    delete pRet;
+    return nullptr;
+}
+
+bool Cannon::init(int level)
+{
+    // 1. 调用父类 BaseBuilding 初始化 (它会处理图片、血条、状态机)
+    if (!BaseBuilding::init(BuildingType::CANNON, level)) return false;
+
+    // 2. 初始化战斗属性
+    this->_attackTimer = 0;
+    this->_targetSoldier = nullptr;
+
+    // 根据等级初始化伤害 (可以在这里写，也可以在 updateSpecialProperties 里写)
+    updateSpecialProperties();
+
+    // 3. 开启 update 寻找敌人
+    this->scheduleUpdate();
+
+    return true;
+}
+
+void Cannon::updateSpecialProperties()
+{
+    // 这里处理父类 BuildingStats 里没有的“伤害”和“射程”属性
+    if (this->level == 1) {
+        _damage = 20.0f;
+        _attackRange = 150.0f;
+        _attackInterval = 1.0f;
+    }
+    else if (this->level == 2) {
+        _damage = 35.0f;
+        _attackRange = 160.0f;
+        _attackInterval = 0.9f;
+    }
+    else {
+        _damage = 50.0f;
+        _attackRange = 170.0f;
+        _attackInterval = 0.8f;
+    }
+    CCLOG("Cannon Updated: Dmg=%.0f, Range=%.0f", _damage, _attackRange);
+}
+
+void Cannon::update(float dt)
+{
+    // 只有在 IDLE 或 ATTACKING 状态才工作
+    // 如果正在建造(BUILDING)或被毁(DESTROYED)，不能攻击
+    if (this->state != BuildingState::IDLE && this->state != BuildingState::ATTACKING) return;
+
+    // 1. 校验目标有效性
+    if (_targetSoldier) {
+        // 如果敌人死了，或者被移除了，或者超出了射程
+        if (!_targetSoldier->getParent() ||
+            _targetSoldier->getPosition().distance(this->getPosition()) > _attackRange) {
+            _targetSoldier = nullptr;
+            this->state = BuildingState::IDLE;
+        }
+    }
+
+    // 2. 如果没有目标，寻找最近的
+    if (!_targetSoldier) {
+        findEnemy();
+    }
+
+    // 3. 如果有目标，攻击
+    if (_targetSoldier) {
+        this->state = BuildingState::ATTACKING; // 切换状态(虽然BaseBuilding目前对Attack没特殊表现，但这符合逻辑)
+
+        _attackTimer += dt;
+        if (_attackTimer >= _attackInterval) {
+            _attackTimer = 0;
+            fireAtEnemy();
+        }
+    }
+}
+
+void Cannon::findEnemy()
+{
+    Node* map = this->getParent();
+    if (!map) return;
+
+    Soldier* closest = nullptr;
+    float minDst = 999999.0f;
+    Vec2 myPos = this->getPosition();
+
+    // 遍历地图寻找 Soldier
+    for (auto child : map->getChildren()) {
+        // 假设 Soldier 没有特定 Tag，我们用 dynamic_cast 识别
+        // 或者你可以给 Soldier 设置一个特定 Tag (比如 2000)
+        Soldier* s = dynamic_cast<Soldier*>(child);
+
+        if (s) {
+            // 还需要判断士兵是否活着 (假设 Soldier 有 isDead() 或者通过HP判断)
+            // 这里简单通过 parent 判断
+            float dist = myPos.distance(s->getPosition());
+            if (dist <= _attackRange && dist < minDst) {
+                minDst = dist;
+                closest = s;
+            }
+        }
+    }
+
+    if (closest) {
+        _targetSoldier = closest;
+        // CCLOG("Cannon found target!");
+    }
+}
+
+void Cannon::fireAtEnemy()
+{
+    if (!_targetSoldier) return;
+
+    // 1. 炮口特效 (可选)
+    // auto boom = ParticleExplosion::create(); ...
+
+    // 2. 发射炮弹动画 (简易版：直接扣血)
+    // 如果你想做炮弹飞行，需要创建一个 Sprite 飞过去，在回调里扣血
+
+    // 这里直接造成伤害
+    // 假设 Soldier 类有个 takeDamage 函数
+    // _targetSoldier->takeDamage(_damage); 
+
+    // 模拟一下：
+    CCLOG("Boom! Cannon hit soldier for %.0f damage", _damage);
+
+    // 简单的缩放反馈
+    this->mainSprite->runAction(Sequence::create(
+        ScaleTo::create(0.05f, 1.1f),
+        ScaleTo::create(0.05f, 1.0f),
+        nullptr
+    ));
+}
