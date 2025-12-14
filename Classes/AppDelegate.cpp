@@ -25,6 +25,7 @@
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
 #include "MainVillage.h"
+#include "GameMap.h"
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
@@ -120,10 +121,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = HelloWorld::createScene();
-	auto mainvillage = MainVillage::createScene();
+    // auto scene = HelloWorld::createScene();
+	//auto mainvillage = MainVillage::createScene();
+    auto map1 = GameMap::create("map/map1.tmx");
+    auto map2 = GameMap::create("map/map2.tmx");
     // run
-    director->runWithScene(mainvillage);
+    director->runWithScene(map1);
 
     return true;
 }
