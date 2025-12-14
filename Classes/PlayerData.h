@@ -115,9 +115,10 @@ public:
      * @brief 增加人口 (例如：生产士兵增加人口)
      * 会自动处理上限溢出。
      * @param amount 尝试增加的数量
+     * @param amount 这次造兵需要的圣水
      * @return true: 容量充足且增加成功; false: 容量不足，增加失败。
      */
-    bool addPeople(int amount);
+    bool addPeople(int amount,int cost);
 
     /**
      * @brief 返还人口 (点击减号 减少人口)

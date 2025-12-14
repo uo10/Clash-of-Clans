@@ -94,13 +94,15 @@ int PlayerData::getPeople() {
     return _totalPeople;
 }
 
-bool PlayerData::addPeople(int amount) {
+bool PlayerData::addPeople(int amount,int cost) {
     if (amount + _totalPeople <= _maxPeople) {
         _totalPeople += amount;
         cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
         return true;
     }
     else {
+        _totalElixir += cost;
+        cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
         return 0;
     }
 }
@@ -108,5 +110,6 @@ bool PlayerData::addPeople(int amount) {
 void PlayerData::removePeople(int amount) {
     _totalPeople -= amount;
     cocos2d::Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_UI");
+
 }
 

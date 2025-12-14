@@ -917,7 +917,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
 
                 auto btnAdd = MenuItemSprite::create(iconWrapper, nullptr, [=](Ref*) {
                     // 先判断容量
-                    if ( PlayerData::getInstance()->consumeElixir(info.cost)&& PlayerData::getInstance()->addPeople(info.weight)) {
+                    if (PlayerData::getInstance()->consumeElixir(info.cost) && PlayerData::getInstance()->addPeople(info.weight, info.cost)) {
                         // +1 逻辑
                         _trainingQueue[info.name]++;
 
@@ -940,7 +940,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
 
                 // --- B. 左上角减号按钮 ---
                 auto minusWrapper = Node::create();
-                minusWrapper->setContentSize(Size(30, 30)); // 增大点击区域
+                minusWrapper->setContentSize(Size(50, 50)); // 增大点击区域
                 minusWrapper->setAnchorPoint(Vec2(0.5, 0.5));
 
                 auto minLbl = Label::createWithSystemFont("-", "Arial", 60);
