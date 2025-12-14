@@ -28,13 +28,16 @@ void WallBreaker::attackTarget(float dt) {
 
         CCLOG("WallBreaker BOOM!");
 
-        // 2. 这里可以加一个爆炸特效 (ParticleSystem)
-        // auto boom = ParticleExplosion::create();
-        // boom->setPosition(getPosition());
-        // getParent()->addChild(boom, 4000);
+        // 2. 将状态设为 DEAD，停止一切逻辑
+        state = State::DEAD;
 
-        // 3. 自杀 (从父节点移除)
-        this->removeFromParent();
+        // 3. 播放自爆特效并移除
+        this->runAction(Sequence::create(
+            // 如果有爆炸动画，在这里播放
+            // DelayTime::create(0.1f), 
+            RemoveSelf::create(),
+            nullptr
+        ));
     }
 }
 
