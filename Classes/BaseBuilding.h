@@ -13,7 +13,7 @@
  * 用于区分不同的建筑逻辑（如：只有 GOLD_MINE 会产金币，只有 BARRACKS 能造兵）
  */
 enum class BuildingType {
-    GOLD_MINE,      // 金矿 (生产金币)
+    GOLD_MINE = 1,      // 金矿 (生产金币)
     ELIXIR_PUMP,    // 圣水收集器 (生产圣水)
     GOLD_STORAGE,   // 金库 (存储金币)
     ELIXIR_STORAGE, // 圣水瓶 (存储圣水)
