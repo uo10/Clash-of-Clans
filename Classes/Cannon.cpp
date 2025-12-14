@@ -63,9 +63,14 @@ void Cannon::update(float dt)
 
     // 1. 校验目标有效性
     if (_targetSoldier) {
-        // 如果敌人死了，或者被移除了，或者超出了射程
-        if (!_targetSoldier->getParent() ||
-            _targetSoldier->getPosition().distance(this->getPosition()) > _attackRange) {
+        // 1. 检查士兵状态是否为 DEAD
+        // 只要士兵宣判死亡，塔就应该立刻停手，哪怕士兵尸体还在播动画
+        if (_targetSoldier->getState() == Soldier::State::DEAD) {
+            _targetSoldier = nullptr;
+            this->state = BuildingState::IDLE;
+        }
+        // 2. 检查指针指向的对象是否还在场景树上 (防止野指针)
+        else if (!_targetSoldier->getParent()) {
             _targetSoldier = nullptr;
             this->state = BuildingState::IDLE;
         }
@@ -104,8 +109,10 @@ void Cannon::findEnemy()
         Soldier* s = dynamic_cast<Soldier*>(child);
 
         if (s) {
-            // 还需要判断士兵是否活着 (假设 Soldier 有 isDead() 或者通过HP判断)
-            // 这里简单通过 parent 判断
+
+            if (s->getState() == Soldier::State::DEAD) {
+                continue; // 跳过这个死人
+            }
             float dist = myPos.distance(s->getPosition());
             if (dist <= _attackRange && dist < minDst) {
                 minDst = dist;
@@ -128,11 +135,10 @@ void Cannon::fireAtEnemy()
     // auto boom = ParticleExplosion::create(); ...
 
     // 2. 发射炮弹动画 (简易版：直接扣血)
-    // 如果你想做炮弹飞行，需要创建一个 Sprite 飞过去，在回调里扣血
 
     // 这里直接造成伤害
-    // 假设 Soldier 类有个 takeDamage 函数
-    // _targetSoldier->takeDamage(_damage); 
+    _targetSoldier->takeDamage(this->_damage); // 假设伤害变量叫 _damage 或 damage
+
 
     // 模拟一下：
     CCLOG("Boom! Cannon hit soldier for %.0f damage", _damage);

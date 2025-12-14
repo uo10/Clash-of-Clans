@@ -14,6 +14,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
     data.buildTime = 0;
     data.capacity = 0;
     data.productionRate = 0;
+    data.damage = 0.0f;
 
     // 1. 金矿配置
     if (type == BuildingType::GOLD_MINE) {
@@ -98,24 +99,95 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
         if (level == 1) {
             data.name = "Cannon Lv1";
             data.hp = 300;
-            data.costGold = 250;     
+            data.costGold = 250;
             data.costElixir = 0;
-            data.buildTime = 10;     
-            // 特有战斗属性 (虽然 BuildingStats 没定义 damage，我们可以暂时存在 BaseBuilding 子类里，或者扩展 struct)
+            data.buildTime = 5;
+            data.damage = 5.6;
         }
         else if (level == 2) {
             data.name = "Cannon Lv2";
-            data.hp = 360;           
-            data.costGold = 1000;    
-            data.buildTime = 60;
+            data.hp = 360;
+            data.costGold = 1000;
+            data.buildTime = 30;
+            data.damage = 8;
         }
         else if (level == 3) {
             data.name = "Cannon Lv3";
             data.hp = 420;
             data.costGold = 4000;
-            data.buildTime = 180;
+            data.buildTime = 120;
+            data.damage = 10.4;
         }
     }
+    // 7. 箭塔配置
+    else if (type == BuildingType::ARCHER_TOWER) {
+        if (level == 1) {
+            data.name = "Archer Tower Lv1";
+            data.hp = 380;
+            data.costGold = 1000;
+            data.costElixir = 0;
+            data.buildTime = 15;
+            data.damage = 5.5;
+        }
+        else if (level == 2) {
+            data.name = "Archer Tower Lv2";
+            data.hp = 420;
+            data.costGold = 2000;
+            data.buildTime = 120;
+            data.damage = 7.5;
+        }
+        else if (level == 3) {
+            data.name = "Archer Tower Lv3";
+            data.hp = 460;
+            data.costGold = 5000;
+            data.buildTime = 1200;
+            data.damage = 9.5;
+        }
+    }
+    // 8. 墙配置
+    else if (type == BuildingType::WALL) {
+        if (level == 1) {
+            data.name = "Wall Lv1";
+            data.hp = 100;
+            data.costGold = 0;
+            data.costElixir = 0;
+            data.buildTime = 15;
+        }
+        else if (level == 2) {
+            data.name = "Wall Lv2";
+            data.hp = 200;
+            data.costGold = 1000;
+            data.buildTime = 120;
+        }
+        else if (level == 3) {
+            data.name = "Wall Lv3";
+            data.hp = 400;
+            data.costGold = 5000;
+            data.buildTime = 1200;
+        }
+    }
+    // 9. 大本营配置
+    else if (type == BuildingType::TOWN_HALL) {
+        if (level == 1) {
+            data.name = "Town Hall Lv1";
+            data.hp = 400;
+            data.costGold = 0;
+            data.costElixir = 0;
+            data.buildTime = 0;
+        }
+        else if (level == 2) {
+            data.name = "Town Hall Lv2";
+            data.hp = 800;
+            data.costGold = 1000;
+            data.buildTime = 120;
+        }
+        else if (level == 3) {
+            data.name = "Town Hall Lv3";
+            data.hp = 1600;
+            data.costGold = 4000;
+            data.buildTime = 1200;
+        }
+        }
     return data;
 }
 

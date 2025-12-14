@@ -56,6 +56,10 @@ struct BuildingStats {
     // --- 资源类特有属性 ---
     int capacity;       // 资源存储容量
     int productionRate; // 资源生产效率 (每小时产量)
+
+    // --- 防御类特有属性 ---
+    double damage;       // 单次伤害
+
 };
 
 // ==========================================

@@ -491,7 +491,8 @@ bool MainVillage::init()
                             }
                         }
                         // 造完一个就退出建造模式
-                        _selectedBuildingType = BuildingType::NONE;
+                        if(_selectedBuildingType != BuildingType::WALL)
+                            _selectedBuildingType = BuildingType::NONE;
                     }
                 }
             }
@@ -584,6 +585,57 @@ bool MainVillage::init()
 
     // 创立Icon右上角 UI
     createResourceUI();
+
+
+
+    // ==========================================================
+    // 键盘调试生成士兵，方便测试攻击功能
+    // 按 1: 野蛮人, 2: 弓箭手, 3: 巨人, 4: 炸弹人
+    // ==========================================================
+    auto debugListener = EventListenerKeyboard::create();
+    debugListener->onKeyPressed = [=](EventKeyboard::KeyCode code, Event* event) {
+
+        // 1. 获取生成位置 (鼠标当前在地图内的位置)
+        // 注意：这里依赖 _lastMousePos，请确保你在 onMouseMove 里更新了这个变量
+        Vec2 spawnPos = _MainVillageMap->convertToNodeSpace(_lastMousePos);
+
+        Soldier* s = nullptr;
+        std::string name = "";
+
+        switch (code) {
+        case EventKeyboard::KeyCode::KEY_1:
+            s = Barbarian::create();
+            name = "野蛮人";
+            break;
+        case EventKeyboard::KeyCode::KEY_2:
+            s = Archer::create();
+            name = "弓箭手";
+            break;
+        case EventKeyboard::KeyCode::KEY_3:
+            s = Giant::create();
+            name = "巨人";
+            break;
+        case EventKeyboard::KeyCode::KEY_4:
+            s = WallBreaker::create();
+            name = "炸弹人";
+            break;
+        }
+
+        if (s) {
+            s->setPosition(spawnPos);
+            // 动态 ZOrder，保证兵在建筑前方或后方显示正确
+
+            Size tileSize = _MainVillageMap->getTileSize();
+            Size soldierSize = s->getContentSize();
+
+            float scaleRatio = (tileSize.height * 0.8f) / soldierSize.height;
+            s->setScale(scaleRatio);
+
+            _MainVillageMap->addChild(s, 3000 - (int)spawnPos.y);
+            CCLOG("调试生成: %s At (%f, %f)", name.c_str(), spawnPos.x, spawnPos.y);
+        }
+    };
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(debugListener, this);
 
     return true;
 }
@@ -844,7 +896,10 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
         if (building->type == BuildingType::GOLD_MINE || building->type == BuildingType::ELIXIR_PUMP) {
             specialText = StringUtils::format("Production: %d / hour", stats.productionRate);
         }
-        else {
+        if (building->type == BuildingType::CANNON || building->type == BuildingType::ARCHER_TOWER) {
+            specialText = StringUtils::format("Damage: %.1lf ", stats.damage);
+        }
+        else if (building->type != BuildingType::WALL && building->type != BuildingType::TOWN_HALL){
             specialText = StringUtils::format("Capacity: %d", stats.capacity);
         }
         
@@ -934,6 +989,42 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                             if (minItem) minItem->setVisible(true);
                         }
                         CCLOG("增加: %s", info.name.c_str());
+
+
+                        /*Soldier* newSoldier = nullptr;
+
+                        // 根据名字判断创建哪种兵
+                        if (info.name == "Barbarian") {
+                            newSoldier = Barbarian::create();
+                        }
+                        else if (info.name == "Archer") {
+                            newSoldier = Archer::create();
+                        }
+                        else if (info.name == "Giant") {
+                            newSoldier = Giant::create();
+                        }
+                        else if (info.name == "WallBreaker") { // 你的炸弹人名字
+                            newSoldier = WallBreaker::create();
+                        }
+
+                        if (newSoldier) {
+                            // A. 设置生成位置：兵营的位置
+                            // 为了不重叠，加一点点随机偏移 (-20 到 20 像素)
+                            float offsetX = (rand() % 40) - 20;
+                            float offsetY = (rand() % 40) - 20;
+
+                            Vec2 spawnPos = building->getPosition() + Vec2(offsetX, offsetY - 50);
+
+                            newSoldier->setPosition(spawnPos);
+
+                            // B. 添加到地图层
+                            // Z轴给高一点，防止被地面遮挡，或者使用动态 ZOrder (2000 - y)
+                            _MainVillageMap->addChild(newSoldier, 3000 - spawnPos.y);
+
+                            CCLOG("士兵实体 %s 已生成在 (%f, %f)", info.name.c_str(), spawnPos.x, spawnPos.y);
+                        }*/
+
+
                     }
                     });
                 btnAdd->setPosition(35, 60); // 按钮在容器中的位置

@@ -10,6 +10,10 @@
 #include "ArcherTower.h"
 #include "TownHall.h"
 #include "Cannon.h"
+#include "Archer.h"
+#include "Barbarian.h"
+#include "WallBreaker.h"
+#include "Giant.h"
 //Ö÷´å×¯³¡¾°
 class MainVillage :public cocos2d::Scene
 {
@@ -116,10 +120,10 @@ private:
         int cost;
     };
     std::vector<TroopInfo> troops = {
-        {"Barbarian",   "Barbarian.png",    1,    25},
-        {"Archer",      "Archer.png",       1,    30},
-        {"Giant",       "Giant.png",        5,   250},
-        {"WallBreaker", "Wall_Breaker.png", 2,   100}
+        {"Barbarian",   "Barbarian_head.png",    1,    25},
+        {"Archer",      "Archer_head.png",       1,    30},
+        {"Giant",       "Giant_head.png",        5,   250},
+        {"WallBreaker", "Wall_Breaker_head.png", 2,   100}
     };
 };
 #endif // __MAIN_VILLAGE_H__
