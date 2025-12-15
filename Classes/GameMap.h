@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 #include"GameUnit.h"
 #include"FindPath.h"
+#include "MainVillage.h"
 
 class GameMap : public cocos2d::Scene
 {
@@ -53,7 +54,7 @@ public:
 	* 
 	* @param pos 放置点的像素坐标
 	*/
-	void spawnSoldier(cocos2d::Vec2 pos);
+	void spawnSoldier(std::string troopName, cocos2d::Vec2 pos);
 	/**
 	* 检查该点是否可以放置士兵
 	* 
@@ -125,6 +126,16 @@ public:
 	//DEBUG使用，画出对象和地图预设的block区
 	void drawGrid(int x, int y, cocos2d::Color4F color);
 	void GameMap::debugDrawLogicGrid();
+
+	/**
+    * @brief 初始化士兵选择菜单
+    */
+	void createTroopMenu();
+
+	/**
+    * @brief 更新士兵数量label（调用士兵之后）
+    */
+	void updateTroopCountUI(std::string name);
 private:
 	std::string _MapName;//所要创建的地图名（tmx文件名）
 	cocos2d::TMXTiledMap* _Map;//创建的瓦块地图
@@ -137,6 +148,12 @@ private:
 	bool _isClickValid;     // 标记这次点击是否有效（用于生成精灵）
 	cocos2d::Vec2 _lastMousePos; // 上一帧鼠标位置（用于移动地图）
 	cocos2d::Vec2 _startClickPos;// 按下鼠标时的初始位置（用于判断距离）
+
+	cocos2d::Node* _troopMenuNode = nullptr;    // 士兵选择菜单容器
+	std::string _currentSelectedTroop = "";    	// 当前选中的兵种名字 (例如 "Barbarian")，为空代表没选
+	std::map<std::string, cocos2d::Label*> _troopCountLabels; 	// 记录 UI 上的数字标签，方便投放兵力后实时更新数量
+	cocos2d::Sprite* _selectionHighlight = nullptr;  	// 选中框精灵 (用于显示哪个被选中了)
+	std::map<std::string, int> _battleTroops;  // 战斗临时兵力表 进入战斗时copy PlayerData的数据
 };
 
 #endif // __GAMEMAP_H__

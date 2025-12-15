@@ -88,6 +88,27 @@ public:
      *                 1 = 防御类 (加农炮、箭塔、城墙等)
      */
     void switchBuildCategory(int category);
+
+    /**
+    * @brief 左下角Attack战斗按钮
+    */
+    void createAttackUI();
+
+    /**
+    * @brief 显示关卡选择弹窗
+    */
+    void showLevelSelection();
+
+    /**
+    * @brief 进攻之前存档 防止数据丢失
+    */
+    void saveVillageData();
+
+    /**
+    * @brief 返回大本营读档 获取建筑信息
+    */
+    void restoreVillageData();
+
 private:
     std::map<std::string, bool> _occupiedTiles;
     std::string _selectedSpritePath;
@@ -110,9 +131,7 @@ private:
     cocos2d::Node* _buildMenuNode = nullptr;    // 建筑选择菜单指针
     cocos2d::Node* _iconContainer = nullptr;    // 用于存放建筑(资源/防御)图标的容器
 
-    std::map<std::string, int> _trainingQueue;  // 记录存放士兵信息，用于攻击地图时使用
-
-     
+public:
     // 简单定义士兵结构体，后面有了士兵类可以删掉
     struct TroopInfo {
         std::string name;
@@ -120,11 +139,6 @@ private:
         int weight;
         int cost;
     };
-    std::vector<TroopInfo> troops = {
-        {"Barbarian",   "Barbarian_head.png",    1,    25},
-        {"Archer",      "Archer_head.png",       1,    30},
-        {"Giant",       "Giant_head.png",        5,   250},
-        {"WallBreaker", "Wall_Breaker_head.png", 2,   100}
-    };
+    static std::vector<TroopInfo> troops;
 };
 #endif // __MAIN_VILLAGE_H__

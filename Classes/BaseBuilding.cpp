@@ -469,3 +469,4 @@ void BaseBuilding::initHPBar() {
     hpBar->setPosition(2, 5); // 相对背景左对齐，留出2像素边框
     hpBarBg->addChild(hpBar);
 }
+

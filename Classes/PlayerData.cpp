@@ -113,3 +113,25 @@ void PlayerData::removePeople(int amount) {
 
 }
 
+void PlayerData::addTroop(std::string name, int count) {
+    _ownedTroops[name] += count;
+    CCLOG("PlayerData: %s 数量变更为 %d", name.c_str(), _ownedTroops[name]);
+}
+
+bool PlayerData::consumeTroop(std::string name, int count) {
+    if (_ownedTroops.find(name) != _ownedTroops.end()) {
+        if (_ownedTroops[name] >= count) {
+            _ownedTroops[name] -= count;
+            CCLOG("PlayerData: %s 消耗 %d, 剩余 %d", name.c_str(), count, _ownedTroops[name]);
+            return true;
+        }
+    }
+    return false;
+}
+
+int PlayerData::getTroopCount(std::string name) {
+    if (_ownedTroops.find(name) != _ownedTroops.end()) {
+        return _ownedTroops[name];
+    }
+    return 0;
+}

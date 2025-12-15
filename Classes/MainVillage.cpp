@@ -4,6 +4,7 @@
 #include "Archer.h"
 #include "Giant.h"
 #include "WallBreaker.h" 
+#include "GameMap.h"
 
 
 USING_NS_CC;
@@ -112,7 +113,12 @@ bool MainVillage::init()
     mainMenu->setPosition(Vec2(75, visibleSize.height - 70)); // 左上角
     this->addChild(mainMenu, 1000); // 加到 this，层级高
 
-    
+    // ====================最左下角战斗主按钮========================
+    this->createAttackUI();
+
+    // ==================== 恢复之前的存档 ========================
+    this->restoreVillageData();
+
 	//=============================================================
     auto mouseListener = EventListenerMouse::create();
 
@@ -929,6 +935,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
 
     // 定义训练按钮指针 (因为不确定是否是军营，使用指针，初始化为空)
     MenuItemLabel* btnTrain = nullptr;
+
     // ----------- 按钮4：训练士兵 -------------
     if (building->type == BuildingType::BARRACKS) {
 
@@ -978,7 +985,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                     // 先判断容量
                     if (PlayerData::getInstance()->consumeElixir(info.cost) && PlayerData::getInstance()->addPeople(info.weight, info.cost)) {
                         // +1 逻辑
-                        _trainingQueue[info.name]++;
+                        PlayerData::getInstance()->addTroop(info.name, 1);
 
                         // 动画 
                         sprite->stopAllActions();
@@ -987,7 +994,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                         // 刷新 UI
                         auto countLbl = (Label*)container->getChildByTag(101);
                         auto menu = (Menu*)container->getChildByTag(102);
-                        if (countLbl) countLbl->setString(StringUtils::format("x%d", _trainingQueue[info.name]));
+                        if (countLbl) countLbl->setString(StringUtils::format("x%d", PlayerData::getInstance()->getTroopCount(info.name)));
                         if (menu) {
                             auto minItem = menu->getChildByTag(200);
                             if (minItem) minItem->setVisible(true);
@@ -1101,16 +1108,13 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                 minusWrapper->addChild(minLbl);
 
                 auto btnMinus = MenuItemSprite::create(minusWrapper, nullptr, [=](Ref*) {
-
-                    if (_trainingQueue[info.name] > 0) {
-                        // -1 逻辑
-                        _trainingQueue[info.name]--;
-
+                    // -1 逻辑
+                    if (PlayerData::getInstance()->consumeTroop(info.name, 1)) {
                         PlayerData::getInstance()->removePeople(info.weight);// 返还人口容量
                         auto countLbl = (Label*)container->getChildByTag(101);
-                        if (countLbl) countLbl->setString(StringUtils::format("x%d", _trainingQueue[info.name]));
+                        if (countLbl) countLbl->setString(StringUtils::format("x%d", PlayerData::getInstance()->getTroopCount(info.name)));
 
-                        // --- 【核心：视觉删除逻辑】 ---
+                        // --- 视觉删除逻辑 ---
 
                         // 1. 找到该兵种的列表
                         // 引用 building 指针，因为 troops 存在 building 里
@@ -1147,7 +1151,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                             }
                         }
 
-                        if (_trainingQueue[info.name] <= 0) {
+                        if (PlayerData::getInstance()->getTroopCount(info.name) <= 0) {
                             auto menu = (Menu*)container->getChildByTag(102);
                             auto minItem = menu->getChildByTag(200);
                             if (minItem) minItem->setVisible(false);
@@ -1166,7 +1170,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                 container->addChild(localMenu);
 
                 // --- D. 标签 (右上角) ---
-                int currentCount = _trainingQueue[info.name];
+                int currentCount = PlayerData::getInstance()->getTroopCount(info.name);
                 auto countLbl = Label::createWithSystemFont(StringUtils::format("x%d", currentCount), "Arial", 16);
                 countLbl->setColor(Color3B::GREEN);
                 countLbl->setAnchorPoint(Vec2(1, 0.5));
@@ -1252,7 +1256,7 @@ void MainVillage::createBuildUI() {
     // 1. 创建底部面板容器 
     _buildMenuNode = Node::create();
     _buildMenuNode->setVisible(false);
-    this->addChild(_buildMenuNode, 1000);
+    this->addChild(_buildMenuNode, 1100);
 
     // A. 半透明黑底
     float panelHeight = 280; 
@@ -1373,4 +1377,273 @@ void MainVillage::switchBuildCategory(int category) {
     menu->setPosition(visibleSize.width / 2, (panelHeight - 50) / 2);
 
     _iconContainer->addChild(menu);
+}
+
+// 初始化士兵结构体
+std::vector<MainVillage::TroopInfo> MainVillage::troops = {
+       {"Barbarian",   "Barbarian_head.png",    1,    25},
+       {"Archer",      "Archer_head.png",       1,    30},
+       {"Giant",       "Giant_head.png",        5,   250},
+       {"WallBreaker", "Wall_Breaker_head.png", 2,   100}
+};
+
+// 左下角Attack按钮
+void MainVillage::createAttackUI() {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 1. 创建容器 (Wrapper)
+    // 设定按钮的逻辑 点击区域
+    float boxSize = 130.0f;
+    auto wrapper = Node::create();
+    wrapper->setContentSize(Size(boxSize, boxSize));
+    wrapper->setAnchorPoint(Vec2(0.5, 0.5)); // 中心锚点
+
+    // 2. 创建并处理图片
+    std::string iconPath = "Attack_Button.png";
+    auto sprite = Sprite::create(iconPath);
+
+    // --- 防崩处理 ---
+    if (!sprite) {
+        sprite = Sprite::create();
+        sprite->setTextureRect(Rect(0, 0, 80, 80));
+        sprite->setColor(Color3B::RED);
+        auto lbl = Label::createWithSystemFont("ATK", "Arial", 24);
+        lbl->setPosition(40, 40);
+        sprite->addChild(lbl);
+    }
+
+    // --- 缩放逻辑  ---
+    float targetIconSize = 100.0f;
+
+    // 获取图片的最长边 (宽或高)
+    float contentMax = std::max(sprite->getContentSize().width, sprite->getContentSize().height);
+
+    // 防止除以0
+    if (contentMax <= 0) contentMax = 100.0f;
+
+    // 计算缩放比例：目标大小 / 原始大小
+    float scale = 1.5 * targetIconSize / contentMax;
+
+    // 应用均匀缩放 
+    sprite->setScale(scale);
+
+    // --- 定位 ---
+    // 把图片放在容器的正中心
+    sprite->setPosition(boxSize / 2, boxSize / 2);
+
+    // --- 放入容器 ---
+    wrapper->addChild(sprite);
+
+    // 3. 创建按钮 (使用 wrapper)
+    auto btnAttack = MenuItemSprite::create(wrapper, nullptr, [=](Ref* sender) {
+
+        // 点击反馈：让里面的图片缩一下
+        sprite->stopAllActions();
+        sprite->runAction(Sequence::create(
+            ScaleTo::create(0.1f, scale * 0.9f), // 变小
+            ScaleTo::create(0.1f, scale),        // 弹回
+            nullptr
+        ));
+
+        // 点击逻辑
+        this->saveVillageData();   // 存档
+        this->showLevelSelection();// 选择关卡
+        });
+
+    // 4. 设置位置和整体动画
+    // 位置：距离左下角 (80, 80)
+    btnAttack->setPosition(Vec2(80, 80));
+
+    // 呼吸动画：对整个按钮(wrapper)进行缩放
+    btnAttack->runAction(RepeatForever::create(Sequence::create(
+        ScaleTo::create(0.8f, 1.1f), // 放大到 1.1 倍
+        ScaleTo::create(0.8f, 1.0f), // 恢复 1.0 倍
+        nullptr
+    )));
+
+    // 5. 添加到菜单
+    auto menu = Menu::create(btnAttack, nullptr);
+    menu->setPosition(Vec2::ZERO);
+    this->addChild(menu, 1000);
+}
+
+// 选择关卡弹窗
+void MainVillage::showLevelSelection() {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 1. 创建遮罩背景 (防止点击后面的建筑)
+    // 使用 LayerColor 创建半透明黑色
+    auto layer = LayerColor::create(Color4B(0, 0, 0, 200), visibleSize.width, visibleSize.height);
+
+    // 拦截点击事件 (吞噬触摸)
+    auto listener = EventListenerTouchOneByOne::create();
+    listener->setSwallowTouches(true);
+    listener->onTouchBegan = [](Touch*, Event*) { return true; };
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, layer);
+
+    this->addChild(layer, 20000); // 最高层级
+
+    // 2. 创建关卡按钮
+
+    // --- 关卡 1 按钮 ---
+    auto lblMap1 = Label::createWithSystemFont("Level 1: Goblin Forest", "Arial", 30);
+    auto btnMap1 = MenuItemLabel::create(lblMap1, [=](Ref*) {
+        CCLOG("进入关卡 1...");
+        // 核心跳转逻辑
+        // 切换场景到 GameMap，传入地图路径
+        auto scene = GameMap::create("map/map1.tmx");
+        // 使用过渡动画切换 (淡入淡出)
+        Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene));
+        });
+
+    // --- 关卡 2 按钮 ---
+    auto lblMap2 = Label::createWithSystemFont("Level 2: Desert Fortress", "Arial", 30);
+    auto btnMap2 = MenuItemLabel::create(lblMap2, [=](Ref*) {
+        CCLOG("进入关卡 2...");
+        auto scene = GameMap::create("map/map2.tmx");
+        Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene));
+        });
+
+    // --- 关闭/返回 按钮 ---
+    auto lblClose = Label::createWithSystemFont("[ Cancel ]", "Arial", 26);
+    lblClose->setColor(Color3B::YELLOW);
+    auto btnClose = MenuItemLabel::create(lblClose, [=](Ref*) {
+        // 移除遮罩层，回到大本营界面
+        layer->removeFromParent();
+        });
+
+    // 3. 排列菜单
+    auto menu = Menu::create(btnMap1, btnMap2, btnClose, nullptr);
+    menu->alignItemsVerticallyWithPadding(40);
+    menu->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+    layer->addChild(menu);
+}
+
+// 存档操作
+void MainVillage::saveVillageData() {
+    auto dataCenter = PlayerData::getInstance();
+
+    // 1. 清空旧存档
+    dataCenter->_villageLayout.clear();
+
+    // 2. 遍历地图子节点
+    auto& children = _MainVillageMap->getChildren();
+
+    Size tileSize = _MainVillageMap->getTileSize();
+    Size mapSize = _MainVillageMap->getMapSize();
+
+    for (const auto& child : children) {
+        // 转换类型
+        auto building = dynamic_cast<BaseBuilding*>(child);
+
+        // 排除无效建筑和预览虚影
+        if (building && building->state != BuildingState::PREVIEW && building->state != BuildingState::DESTROYED) {
+
+            BuildingData data;
+            data.type = building->type;
+            data.level = building->level;
+
+            // --- 根据位置反算网格坐标 ---
+            // X 轴:
+            int tX = (int)(building->getPositionX() / tileSize.width);
+
+            // Y 轴:
+            int tY = (int)mapSize.height - 1 - (int)(building->getPositionY() / tileSize.height);
+
+            data.tileX = tX;
+            data.tileY = tY;
+
+            // 存入单例
+            dataCenter->_villageLayout.push_back(data);
+        }
+    }
+
+    CCLOG("存档完成：保存了 %d 个单格建筑", (int)dataCenter->_villageLayout.size());
+}
+
+// 读档操作
+void MainVillage::restoreVillageData() {
+    auto dataCenter = PlayerData::getInstance();
+    Size tileSize = _MainVillageMap->getTileSize();
+    Size mapSize = _MainVillageMap->getMapSize();
+
+    // 遍历存档数据
+    for (const auto& data : dataCenter->_villageLayout) {
+
+        // 1. 创建建筑
+        BaseBuilding* newBuilding = nullptr;
+
+        // 根据类型创建具体的子类 
+        if (data.type == BuildingType::GOLD_MINE || data.type == BuildingType::ELIXIR_PUMP) {
+            newBuilding = ResourceProducer::create(data.type, data.level);
+        }
+        else if (data.type == BuildingType::GOLD_STORAGE ||
+            data.type == BuildingType::ELIXIR_STORAGE ||
+            data.type == BuildingType::BARRACKS) {
+            auto s = ResourceStorage::create(data.type, data.level);
+            _storageList.push_back(s); // 记得加回存储列表
+            newBuilding = s;
+        }
+        else if (data.type == BuildingType::TOWN_HALL) {
+            newBuilding = TownHall::create(data.level);
+        }
+        else if (data.type == BuildingType::ARCHER_TOWER) {
+            newBuilding = ArcherTower::create(data.level);
+        }
+        else if (data.type == BuildingType::CANNON) {
+            newBuilding = Cannon::create(data.level);
+        }
+        else if (data.type == BuildingType::WALL) {
+            newBuilding = Wall::create(data.level);
+        }
+        else {
+            // 兜底
+            newBuilding = BaseBuilding::create(data.type, data.level);
+        }
+
+        if (newBuilding) {
+            // 2. 恢复状态
+            newBuilding->changeState(BuildingState::IDLE);
+            newBuilding->setTag(999); // 设置 Tag
+
+            // 3. 压缩缩放 
+            Size spriteSize = newBuilding->getContentSize();
+            if (spriteSize.width > 0 && spriteSize.height > 0) {
+                newBuilding->setScaleX(tileSize.width / spriteSize.width);
+                newBuilding->setScaleY(tileSize.height / spriteSize.height);
+            }
+
+            // 4. 计算坐标 
+            float finalX = data.tileX * tileSize.width + tileSize.width / 2;
+            float finalY = (mapSize.height - 1 - data.tileY) * tileSize.height + tileSize.height / 2;
+            newBuilding->setPosition(Vec2(finalX, finalY));
+
+            // 5. 加回地图
+            // Z轴：Y越小 Z越大
+            _MainVillageMap->addChild(newBuilding, 3000 - (int)finalY);
+
+            // 6. 恢复占用标记
+            std::string key = StringUtils::format("%d_%d", data.tileX, data.tileY);
+            _occupiedTiles[key] = true;
+
+#if 0       // 还未实现该功能
+            // 7.  如果是兵营，恢复视觉上的小兵 
+            if (data.type == BuildingType::BARRACKS) {
+                // 逻辑：每种兵按数量画出来
+                auto allTroops = PlayerData::getAllTroopConfigs();
+                for (auto info : allTroops) {
+                    int count = PlayerData::getInstance()->getTroopCount(info.name);
+                    for (int k = 0; k < count; ++k) {
+                        newBuilding->addVisualTroop(info.name);
+                    }
+                }
+            }
+        }
+    }
+#endif
+        }
+    }
+    // 刷新全局容量上限
+    this->refreshTotalCapacity();
+    this->updateResourceUI();
 }

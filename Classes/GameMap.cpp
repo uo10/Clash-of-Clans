@@ -84,7 +84,6 @@ bool GameMap::isTileBlock(Vec2 tileCoord)
             return map.at("Block").asBool();
         }
     }
-
     return false; // 默认没有障碍
 }
 
@@ -120,6 +119,71 @@ bool GameMap::init(const std::string& MapName)
     _Map->setScaleX(scaleX);
     _Map->setScaleY(scaleY);
     if (!_Map) return false;
+    
+    // 5、设置临时士兵数据
+    _battleTroops = PlayerData::getInstance()->getTroopsCopy();
+
+    // 7、设置放置士兵菜单
+    createTroopMenu();
+
+    // 8、================== 右下角返回大本营 ======================
+    auto homeWrapper = Node::create();
+    homeWrapper->setContentSize(Size(220, 220)); // 设定点击热区大小
+    homeWrapper->setAnchorPoint(Vec2(0.5, 0.5)); // 中心锚点
+
+    auto homeSprite = Sprite::create("End_Battle.png");
+
+    // --- 防崩处理 ---
+    if (!homeSprite) {
+        homeSprite = Sprite::create();
+        homeSprite->setTextureRect(Rect(0, 0, 80, 80));
+        homeSprite->setColor(Color3B::BLUE); // 蓝色代表回家/结束
+        auto lbl = Label::createWithSystemFont("END", "Arial", 24);
+        lbl->setPosition(40, 40);
+        homeSprite->addChild(lbl);
+    }
+
+    // --- 自动缩放逻辑 ---
+    // 设定图标显示的视觉大小 (比如 80px)
+    float targetHomeSize = 200.0f;
+    float homeContentMax = std::max(homeSprite->getContentSize().width, homeSprite->getContentSize().height);
+
+    // 防止除以0
+    if (homeContentMax <= 0) homeContentMax = 200.0f;
+
+    float homeScale = targetHomeSize / homeContentMax;
+    homeSprite->setScale(homeScale);
+
+    // --- 定位 ---
+    homeSprite->setPosition(homeWrapper->getContentSize().width / 2, homeWrapper->getContentSize().height / 2);
+    homeWrapper->addChild(homeSprite);
+
+    // 创建按钮
+    auto btnHome = MenuItemSprite::create(homeWrapper, nullptr, [=](Ref* sender) {
+
+        // --- 点击反馈动画 ---
+        homeSprite->stopAllActions();
+        homeSprite->runAction(Sequence::create(
+            ScaleTo::create(0.1f, homeScale * 0.9f), // 按下变小
+            ScaleTo::create(0.1f, homeScale),        // 弹回
+            nullptr
+        ));
+
+        // --- 核心返回逻辑 ---
+        CCLOG("Battle Ended. Returning to MainVillage...");
+
+        // 重新创建 MainVillage 场景
+        auto homeScene = MainVillage::createScene();
+        Director::getInstance()->replaceScene(TransitionFade::create(1.0f, homeScene));
+        });
+
+    // 设置位置 (右下角)
+    btnHome->setPosition(Vec2(visibleSize.width - 100, 60));
+
+    // 添加到菜单
+    auto menuHome = Menu::create(btnHome, nullptr);
+    menuHome->setPosition(Vec2::ZERO);
+    this->addChild(menuHome, 1000); // UI 层
 
     // ==================== 鼠标操作  ==================
     auto mouseListener = EventListenerMouse::create();
@@ -201,6 +265,32 @@ bool GameMap::init(const std::string& MapName)
 
         };
 
+    // ------判断鼠标是否点到了右键菜单------
+    auto isMouseOnMenu = [=](Vec2 mousePos) -> bool {
+        if (_troopMenuNode) {
+            // --- 情况 B: 建筑信息弹窗 ---
+            auto infoBg = _troopMenuNode->getChildByName("TroopsInfo");
+            if (infoBg) {
+                Vec2 localPos = infoBg->convertToNodeSpace(mousePos);
+
+                Size s = infoBg->getContentSize();
+                Rect bgRect = Rect(0, 0, s.width, s.height);
+
+                // 判断鼠标是否在背景板范围内
+                if (bgRect.containsPoint(localPos)) {
+                    // 点在面板上 -> 拦截
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true;
+                }
+                else {
+                  // 士兵菜单要求一直打开，不用关闭
+                }
+            }
+        }
+        return false;
+        };
+
     // ==================  二、鼠标按下  ==================
     mouseListener->onMouseDown = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
@@ -211,6 +301,12 @@ bool GameMap::init(const std::string& MapName)
             _isDragging = false;
             return; // 点在菜单上了，忽略拖拽
         }*/
+        // 如果点在右键菜单上，直接结束，_isClickValid = false
+        if (isMouseOnMenu(mousePos)) {
+            _isDragging = false;
+            _isClickValid = false;
+            return;
+        }
         //2、如果是左键按下
         if (e->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
             _isDragging = true; // 只有没点在菜单上，才允许拖拽
@@ -257,8 +353,17 @@ bool GameMap::init(const std::string& MapName)
                         // 4、创建精灵                                                
                         float finalX = tileX * tileSize.width + tileSize.width / 2;
                         float finalY = (mapSize.height - 1 - tileY) * tileSize.height + tileSize.height / 2;
-                        //调整大小，适应屏幕
-                        spawnSoldier(Vec2(finalX, finalY));
+                        // 判断是否为有该种士兵
+                        if (_battleTroops.find(_currentSelectedTroop) != _battleTroops.end() &&
+                            _battleTroops[_currentSelectedTroop] > 0) {
+                            // 调整大小，适应屏幕
+                            spawnSoldier(_currentSelectedTroop, Vec2(finalX, finalY));
+                            // -1
+                            _battleTroops[_currentSelectedTroop]--;
+                            // 刷新 UI
+                            updateTroopCountUI(_currentSelectedTroop);
+                        }
+
                     }
                 }
             }
@@ -392,7 +497,22 @@ void GameMap::getBuildings()
 }
 
 //放置士兵
-void GameMap::spawnSoldier(Vec2 pos) {
+void GameMap::spawnSoldier(std::string troopName, Vec2 pos) {
+
+    /* 根据名字判断创建具体的兵种对象 
+    * 利用士兵类的初始化 这里先统一调用妙蛙种子
+    if (troopName == "Barbarian") {
+        soldier = Barbarian::create(); 
+    }
+    else if (troopName == "Archer") {
+        soldier = Archer::create();
+    }
+    else if (troopName == "Giant") {
+        soldier = Giant::create();
+    }
+    else if (troopName == "WallBreaker") {
+        soldier = WallBreaker::create();
+    }*/
     // 创建一个士兵(图像、血量、速度、伤害、攻击范围、阵营)
     auto soldier = GameUnit::create("R-C.jpg", 100, 100.0f, 20.0f, 50.0f, UnitType::SOLDIER);
     if (soldier) {
@@ -745,5 +865,139 @@ void GameMap::debugDrawLogicGrid() {
 
         // 绿色空心框
         drawNode->drawRect(origin, dest, Color4F::GREEN);
+    }
+}
+
+// 绘制士兵选择菜单
+void GameMap::createTroopMenu() {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 1. 创建底部面板容器
+    _troopMenuNode = Node::create();
+    _troopMenuNode->setPosition(Vec2(visibleSize.width / 2, 80)); // 屏幕底部居中
+    this->addChild(_troopMenuNode, 1000); // UI层级高
+
+    // 背景板 (半透明黑条)
+    auto bg = LayerColor::create(Color4B(0, 0, 0, 150), visibleSize.width, 140);
+    bg->ignoreAnchorPointForPosition(false);
+    bg->setAnchorPoint(Vec2(0.5, 0.5));
+    bg->setPosition(Vec2::ZERO);
+    bg->setName("TroopsInfo");
+    _troopMenuNode->addChild(bg);
+
+    // 2. 创建选中高亮框 (一开始隐藏)
+    _selectionHighlight = Sprite::create("selected_frame.png"); // 找一个发光的框图
+    if (!_selectionHighlight) {
+        // 这里先用用黄色框代替
+        _selectionHighlight = Sprite::create();
+        _selectionHighlight->setTextureRect(Rect(0, 0, 90, 110));
+        _selectionHighlight->setColor(Color3B::YELLOW);
+        _selectionHighlight->setOpacity(100);
+    }
+    _selectionHighlight->setVisible(false);
+    _troopMenuNode->addChild(_selectionHighlight, 0); // 层级在按钮下面，背景上面
+
+    // 3. 动态创建按钮的辅助函数 
+    auto createBtn = [&](MainVillage::TroopInfo info, int index)->Node* {
+
+        // 获取玩家拥有的该兵种数量
+        int count = 0;
+        if (_battleTroops.find(info.name) != _battleTroops.end()) {
+            count = _battleTroops[info.name];
+        }
+
+        // 如果数量为0，选择变灰显示。
+        bool hasTroops = (count > 0);
+
+        // --- 容器 ---
+        auto container = Node::create();
+        container->setContentSize(Size(80, 100)); // 稍微大一点
+
+        // --- Wrapper 和 Sprite ---
+        auto iconWrapper = Node::create();
+        iconWrapper->setContentSize(Size(70, 70));
+        iconWrapper->setAnchorPoint(Vec2(0.5, 0.5));
+
+        auto sprite = Sprite::create(info.img);
+
+        float s = 70.0f / MAX(sprite->getContentSize().width, sprite->getContentSize().height);
+        sprite->setScale(s);
+        sprite->setPosition(35, 35);
+        if (!hasTroops) sprite->setColor(Color3B::GRAY); // 没兵变灰
+        iconWrapper->addChild(sprite);
+
+        // --- 按钮逻辑 ---
+        auto btn = MenuItemSprite::create(iconWrapper, nullptr, [=](Ref* sender) {
+            // 点击回调
+            int currentCount = _battleTroops[info.name];
+            if (currentCount > 0) { // 只有有兵才能选中
+                _currentSelectedTroop = info.name; // 设置选兵
+
+                // 移动高亮框到当前按钮位置
+                _selectionHighlight->setVisible(true);
+                float btnX = (index - (MainVillage::troops.size() - 1) / 2.0f) * 100; 
+                _selectionHighlight->setPosition(btnX + 40, 10);
+
+                // 缩放动画反馈
+                sprite->stopAllActions();
+                sprite->runAction(Sequence::create(ScaleTo::create(0.1f, s * 1.2f), ScaleTo::create(0.1f, s), nullptr));
+
+                CCLOG("选中出战兵种: %s", info.name.c_str());
+            }
+            else {
+                CCLOG("该兵种数量为0，无法出战");
+            }
+            });
+        btn->setPosition(40, 20);
+        btn->setEnabled(hasTroops); // 没兵禁用点击
+
+        // --- 数量标签 ---
+        auto countLbl = Label::createWithSystemFont(StringUtils::format("x%d", count), "Arial", 20);
+        countLbl->setColor(hasTroops ? Color3B::GREEN : Color3B::RED); // 有兵为绿 没兵为红
+        countLbl->setPosition(40, -30); // 图标下方
+        container->addChild(countLbl);
+
+        // 存起来 用来更新UI
+        _troopCountLabels[info.name] = countLbl;
+
+        // --- 组装菜单 ---
+        auto menu = Menu::create(btn, nullptr);
+        menu->setPosition(Vec2::ZERO);
+        container->addChild(menu);
+
+        return container;
+        };
+
+    // 4. 排列按钮
+    float startX = -((MainVillage::troops.size() - 1) * 100.0f) / 2.0f; // 居中排列
+    for (int i = 0; i < MainVillage::troops.size(); ++i) {
+        auto itemNode = createBtn(MainVillage::troops[i], i);
+        itemNode->setPosition(startX + i * 100, 10);
+        _troopMenuNode->addChild(itemNode);
+    }
+}
+
+// 更新士兵数量label
+void GameMap::updateTroopCountUI(std::string name) {
+    // 1. 获取最新数量
+    int currentCount = 0;
+    // 这里用的是临时复制的数据
+    if (_battleTroops.find(name) != _battleTroops.end()) {
+        currentCount = _battleTroops[name];
+    }
+
+    // 2. 更新 Label
+    if (_troopCountLabels.count(name)) {
+        auto lbl = _troopCountLabels[name];
+        lbl->setString(StringUtils::format("x%d", currentCount));
+
+        if (currentCount <= 0) {
+            lbl->setColor(Color3B::RED);
+            // 如果当前选中的兵种用光了，取消选中状态
+            if (_currentSelectedTroop == name) {
+                _currentSelectedTroop = "";
+                _selectionHighlight->setVisible(false);
+            }
+        }
     }
 }

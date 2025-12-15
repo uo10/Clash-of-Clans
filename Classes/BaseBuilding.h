@@ -197,6 +197,7 @@ public:
      * 模拟从数据库/配置表中查询指定等级的数值。
      */
     static BuildingStats getStatsConfig(BuildingType type, int level);
+
 };
 
 #endif

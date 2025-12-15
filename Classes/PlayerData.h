@@ -2,8 +2,16 @@
 #define __PLAYER_DATA_H__
 
 #include "cocos2d.h"
+#include "BaseBuilding.h"
 
 USING_NS_CC;
+
+struct BuildingData {
+    BuildingType type; // 是什么建筑
+    int level;         // 几级
+    int tileX;         // 在地图第几列
+    int tileY;         // 在地图第几行
+};
 
 /**
  * @brief 玩家全局数据类 (单例模式)
@@ -27,6 +35,14 @@ private:
     int _maxGold;     // 金币存储上限 (由金库等级决定)
     int _maxElixir;   // 圣水存储上限 (由圣水瓶等级决定)
     int _maxPeople;   // 人口存储上限 (由兵营等级决定) 
+
+
+    // 存储玩家拥有的所有士兵数量
+    std::map<std::string, int> _ownedTroops;  // 兵力数据存储在Data里面，避免因为MainVillage的销毁而销毁
+
+public:
+    // 存储所有建筑布局的列表 
+    std::vector<BuildingData> _villageLayout; // 用于存档和读档
 
 public:
     /**
@@ -126,6 +142,35 @@ public:
      */
     void removePeople(int amount);
 
+    // ================= 士兵相关操作 ==================
+     /**
+     * @brief 增加士兵 (添加到全局士兵数据容器)
+     *  @param name 增加的士兵的名称
+     *  @param count 增加的士兵的数量
+     */
+    void addTroop(std::string name, int count);
+
+    /**
+    * @brief 消耗士兵 (从全局士兵数据容器中删除)
+    * @param count 消耗(调用)的士兵的数量
+    * @return true表示消耗成功 false表示数量不足 
+    */
+    bool consumeTroop(std::string name, int count);
+
+    /**
+    * @brief 获取士兵数量 (从全局士兵数据容器中寻找)
+    * @param name 查询数量的士兵的名称
+    * @return 该士兵的数量
+    */
+    int getTroopCount(std::string name);
+
+    /**
+    * @brief 拷贝士兵数据生成临时战斗数据 
+    * @return 现在全局PlayerData的士兵数据
+    */
+    std::map<std::string, int> getTroopsCopy() {
+        return _ownedTroops;
+    }
 };
 
 #endif

@@ -122,12 +122,17 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // create a scene. it's an autorelease object
     // auto scene = HelloWorld::createScene();
-	//auto mainvillage = MainVillage::createScene();
+#if 1
+	auto mainvillage = MainVillage::createScene();
+    // ´ó±¾Óª 
+    director->runWithScene(mainvillage);
+#endif
+#if 0
     auto map1 = GameMap::create("map/map1.tmx");
     auto map2 = GameMap::create("map/map2.tmx");
-    // run
+    // run 
     director->runWithScene(map1);
-
+#endif
     return true;
 }
 
