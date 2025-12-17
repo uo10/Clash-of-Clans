@@ -1,6 +1,8 @@
 #include "PlayerData.h"
 
+
 USING_NS_CC;
+using namespace cocos2d::experimental;
 
 PlayerData* PlayerData::_instance = nullptr;
 
@@ -134,4 +136,35 @@ int PlayerData::getTroopCount(std::string name) {
         return _ownedTroops[name];
     }
     return 0;
+}
+
+void PlayerData::setMusicVol(float vol) {
+    this->musicVolume = vol;
+
+    // 如果当前有音乐在放，实时调整它的音量
+    if (_currentBgmID != -1) {
+        AudioEngine::setVolume(_currentBgmID, vol);
+    }
+}
+
+void PlayerData::setEffectVol(float vol) {
+    this->effectVolume = vol;
+}
+
+void PlayerData::playBGM(std::string filename) {
+    // 1. 如果当前有音乐在放，先停掉旧的
+    if (_currentBgmID != -1) {
+        AudioEngine::stop(_currentBgmID);
+    }
+
+    // 2. 播放新的
+    // 参数: 文件名, 是否循环(true), 音量(0.0~1.0)
+    _currentBgmID = AudioEngine::play2d(filename, true, this->musicVolume);
+
+    CCLOG("正在播放 BGM: %s (ID: %d)", filename.c_str(), _currentBgmID);
+}
+
+void PlayerData::playEffect(std::string filename) {
+    // 播放时读取 effectVolume
+    AudioEngine::play2d(filename, false, this->effectVolume);
 }

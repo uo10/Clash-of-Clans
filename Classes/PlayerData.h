@@ -3,174 +3,244 @@
 
 #include "cocos2d.h"
 #include "BaseBuilding.h"
+#include "AudioEngine.h" // 引入音频引擎，用于控制声音播放
 
 USING_NS_CC;
 
+/**
+ * @brief 建筑存档数据结构体
+ * 用于序列化（Save）和反序列化（Load）地图上的建筑。
+ * 只存储恢复建筑所需的最核心数据，不存储临时状态（如当前血量）。
+ */
 struct BuildingData {
-    BuildingType type; // 是什么建筑
-    int level;         // 几级
-    int tileX;         // 在地图第几列
-    int tileY;         // 在地图第几行
+    BuildingType type; // 建筑类型 (枚举)
+    int level;         // 建筑等级
+    int tileX;         // 在瓦片地图上的 X 网格坐标
+    int tileY;         // 在瓦片地图上的 Y 网格坐标
 };
 
 /**
- * @brief 玩家全局数据类 (单例模式)
- * 负责管理玩家当前的资源数值（金币、圣水）以及资源容量上限。
- * 所有涉及到资源增加、消耗、显示的地方都应该调用此类。
+ * @brief 玩家全局数据管理类 (单例模式)
+ *
+ * 核心职责：
+ * 1. 数值管理：金币、圣水、人口的当前值与上限值。
+ * 2. 兵力管理：存储训练好的士兵数据，跨场景（大本营<->战斗地图）共享。
+ * 3. 存档管理：暂存建筑布局数据，用于场景切换时的销毁与重建。
+ * 4. 音频管理：全局背景音乐(BGM)和音效(SFX)的播放与音量控制。
  */
 class PlayerData {
 private:
     /**
      * @brief 私有构造函数
-     * 确保外部无法通过 new PlayerData() 创建实例，维持单例唯一性。
+     * 遵循单例模式原则，禁止外部直接使用 new PlayerData() 创建实例。
      */
     PlayerData();
 
-    static PlayerData* _instance; // 静态单例指针
+    /** 静态单例指针，全局唯一 */
+    static PlayerData* _instance;
 
-    int _totalGold;   // 当前持有的金币数量
-    int _totalElixir; // 当前持有的圣水数量
-    int _totalPeople; // 当前拥有的人口数量
+    // ================= 资源核心数据 =================
 
-    int _maxGold;     // 金币存储上限 (由金库等级决定)
-    int _maxElixir;   // 圣水存储上限 (由圣水瓶等级决定)
-    int _maxPeople;   // 人口存储上限 (由兵营等级决定) 
+    int _totalGold;   // 当前持有的金币数量 (资源)
+    int _totalElixir; // 当前持有的圣水数量 (资源)
+    int _totalPeople; // 当前已占用的人口数量 (兵力占用)
 
+    int _maxGold;     // 金币存储上限 (由所有金库等级累加决定)
+    int _maxElixir;   // 圣水存储上限 (由所有圣水瓶等级累加决定)
+    int _maxPeople;   // 人口总上限 (由所有兵营等级累加决定) 
 
-    // 存储玩家拥有的所有士兵数量
-    std::map<std::string, int> _ownedTroops;  // 兵力数据存储在Data里面，避免因为MainVillage的销毁而销毁
+    // ================= 兵力核心数据 =================
+
+    /**
+     * @brief 兵力库存容器
+     * Key: 士兵名称 (如 "Barbarian")
+     * Value: 数量
+     * 数据持久化存储在这里，不会因为场景切换而丢失。
+     */
+    std::map<std::string, int> _ownedTroops;
+
+    // ================= 音频核心数据 =================
+
+    /** 记录当前正在播放的背景音乐 ID，用于切换歌曲或调整音量 */
+    int _currentBgmID = -1;
 
 public:
-    // 存储所有建筑布局的列表 
-    std::vector<BuildingData> _villageLayout; // 用于存档和读档
+    // ================= 公共成员变量 =================
+
+    /**
+     * @brief 建筑布局存档列表
+     * 当玩家离开大本营进入战斗时，将所有建筑信息保存至此。
+     * 当玩家回到大本营时，读取此列表重建地图。
+     */
+    std::vector<BuildingData> _villageLayout;
+
+    float musicVolume = 1.0f;  // 全局背景音乐音量 (0.0 - 1.0)
+    float effectVolume = 1.0f; // 全局音效音量 (0.0 - 1.0)
 
 public:
     /**
-     * @brief 获取单例实例
-     * @return 返回 PlayerData 的全局唯一指针。如果尚未创建，则会自动创建一个。
+     * @brief 获取单例实例 (工厂方法)
+     * @return PlayerData* 全局唯一的指针。若未创建则自动创建。
      */
     static PlayerData* getInstance();
 
     /**
-     * @brief 更新资源上限
-     * 当存储类建筑（金库/圣水瓶）建造完成或升级后调用此函数。
+     * @brief 更新资源存储上限
+     * 通常在以下情况调用：
+     * 1. 读档恢复建筑后 (refreshTotalCapacity)。
+     * 2. 存储类建筑建造/升级完成时。
      * @param maxGold 新的金币总容量
      * @param maxElixir 新的圣水总容量
      * @param maxPeople 新的人口总容量
      */
     void updateMaxLimits(int maxGold, int maxElixir, int maxPeople);
 
+    // ================== 资源辅助查询 ==================
+
     /**
      * @brief 获取金币剩余存储空间
-     * 用于判断产出设施是否已满，或者是否还能收集资源。
-     * @return (上限 - 当前值)
+     * @return (最大容量 - 当前持有量)
      */
     int getGoldSpace() { return _maxGold - _totalGold; }
 
     /**
      * @brief 获取圣水剩余存储空间
-     * @return (上限 - 当前值)
+     * @return (最大容量 - 当前持有量)
      */
     int getElixirSpace() { return _maxElixir - _totalElixir; }
 
-    // ================== 金币相关操作 ==================
+    // ================== 金币操作 ==================
 
-    /**
-     * @brief 获取当前金币数量
-     * @return 当前金币数量
-     */
+    /** @return 当前拥有的金币数 */
     int getGold();
 
     /**
-     * @brief 增加金币 (例如：收集金矿产出)
-     * 会自动处理上限溢出，如果超过上限，则只取出最多数量
+     * @brief 增加金币
+     * 逻辑：currentGold = min(currentGold + amount, maxGold)
      * @param amount 尝试增加的数量
-     * @return 实际增加的数量 
+     * @return 实际增加的数量 (受上限限制)
      */
     int addGold(int amount);
 
     /**
-     * @brief 消耗金币 (例如：建造建筑、升级)
+     * @brief 消耗金币
+     * 用于建造、升级等。
      * @param amount 需要消耗的数量
-     * @return true: 余额充足且扣除成功; false: 余额不足，扣除失败。
+     * @return true: 余额充足，扣除成功; false: 余额不足，扣除失败。
      */
     bool consumeGold(int amount);
 
-    // ================== 圣水相关操作 ==================
+    // ================== 圣水操作 ==================
 
-    /**
-     * @brief 获取当前圣水数量
-     * @return 当前圣水数量
-     */
+    /** @return 当前拥有的圣水数 */
     int getElixir();
 
     /**
-     * @brief 增加圣水 (例如：收集圣水收集器产出)
-     * 会自动处理上限溢出。
+     * @brief 增加圣水
+     * 逻辑同 addGold，会自动处理溢出。
      * @param amount 尝试增加的数量
      * @return 实际增加的数量
      */
     int addElixir(int amount);
 
     /**
-     * @brief 消耗圣水 (例如：训练士兵、建造建筑)
+     * @brief 消耗圣水
+     * 用于造兵、科研等。
      * @param amount 需要消耗的数量
-     * @return true: 余额充足且扣除成功; false: 余额不足，扣除失败。
+     * @return true: 余额充足，扣除成功; false: 余额不足。
      */
     bool consumeElixir(int amount);
 
-    // ================== 人口相关操作 ==================
+    // ================== 人口操作 ==================
 
-    /**
-    * @brief 获取当前圣水数量
-    * @return 当前人口数量
-    */
+    /** @return 当前已占用的人口数量 */
     int getPeople();
 
     /**
-     * @brief 增加人口 (例如：生产士兵增加人口)
-     * 会自动处理上限溢出。
-     * @param amount 尝试增加的数量
-     * @param amount 这次造兵需要的圣水
-     * @return true: 容量充足且增加成功; false: 容量不足，增加失败。
+     * @brief 尝试占用人口并扣除造兵资源
+     * 这是一个组合操作，通常在点击训练士兵按钮时调用。
+     *
+     * 逻辑检查顺序：
+     * 1. 检查人口空间是否足够 (_totalPeople + amount <= _maxPeople)。
+     * 2. 检查圣水是否足够 (consumeElixir)。
+     *
+     * @param amount 该士兵占用的人口数
+     * @param cost 该士兵消耗的圣水数
+     * @return true: 资源和人口都充足，操作成功; false: 任一条件不满足。
      */
-    bool addPeople(int amount,int cost);
+    bool addPeople(int amount, int cost);
 
     /**
-     * @brief 返还人口 (点击减号 减少人口)
-     * @param amount 返还的数量
+     * @brief 释放人口
+     * 用于取消训练或士兵死亡时，归还占用的人口空间。
+     * @param amount 释放的数量
      */
     void removePeople(int amount);
 
-    // ================= 士兵相关操作 ==================
-     /**
-     * @brief 增加士兵 (添加到全局士兵数据容器)
-     *  @param name 增加的士兵的名称
-     *  @param count 增加的士兵的数量
+    // ================= 士兵管理操作 ==================
+
+    /**
+     * @brief 增加士兵库存
+     * 训练完成后调用，将士兵存入全局仓库。
+     * @param name 士兵名称
+     * @param count 增加数量
      */
     void addTroop(std::string name, int count);
 
     /**
-    * @brief 消耗士兵 (从全局士兵数据容器中删除)
-    * @param count 消耗(调用)的士兵的数量
-    * @return true表示消耗成功 false表示数量不足 
-    */
+     * @brief 消耗士兵库存
+     * 用于战斗投放或取消训练。
+     * @param name 士兵名称
+     * @param count 消耗数量
+     * @return true: 库存充足，扣除成功; false: 库存不足。
+     */
     bool consumeTroop(std::string name, int count);
 
     /**
-    * @brief 获取士兵数量 (从全局士兵数据容器中寻找)
-    * @param name 查询数量的士兵的名称
-    * @return 该士兵的数量
-    */
+     * @brief 查询士兵库存
+     * @param name 士兵名称
+     * @return 当前拥有的数量
+     */
     int getTroopCount(std::string name);
 
     /**
-    * @brief 拷贝士兵数据生成临时战斗数据 
-    * @return 现在全局PlayerData的士兵数据
-    */
+     * @brief 获取士兵数据的副本
+     * 用于进入战斗场景时，创建一个临时的兵力表。
+     * 这样在战斗中消耗兵力不会直接影响全局数据 (除非战斗结算时确认消耗)。
+     * @return 全局兵力 Map 的拷贝
+     */
     std::map<std::string, int> getTroopsCopy() {
         return _ownedTroops;
     }
+
+    // ================= 音频管理操作 ==================
+
+    /**
+     * @brief 设置背景音乐音量
+     * 同时更新变量并实时调整正在播放的 BGM 音量。
+     * @param vol 音量值 (0.0 ~ 1.0)
+     */
+    void setMusicVol(float vol);
+
+    /**
+     * @brief 设置音效音量
+     * 仅更新变量，下次播放音效时生效。
+     * @param vol 音量值 (0.0 ~ 1.0)
+     */
+    void setEffectVol(float vol);
+
+    /**
+     * @brief 播放背景音乐 (BGM)
+     * 会自动停止当前正在播放的 BGM (如果有)。
+     * @param filename 音乐文件路径 (如 "bgm_village.mp3")
+     */
+    void playBGM(std::string filename);
+
+    /**
+     * @brief 播放一次性音效 (SFX)
+     * @param filename 音效文件路径 (如 "click.mp3")
+     */
+    void playEffect(std::string filename);
 };
 
-#endif
+#endif // __PLAYER_DATA_H__

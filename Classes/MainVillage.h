@@ -35,11 +35,11 @@ public:
     CREATE_FUNC(MainVillage);
 
     /**
-    *   @brief 刷新资源上限
-        * 遍历地图上所有的存储类建筑（金库 / 圣水瓶），累加它们的容量，
-        * 并更新全局的 maxGold 和 maxElixir 变量。
-        * 在建筑建造完成或升级完成时调用。
-        */
+    * @brief 刷新资源上限
+    * 遍历地图上所有的存储类建筑（金库 / 圣水瓶），累加它们的容量
+    * 并更新全局的 maxGold 和 maxElixir 变量。
+    * 在建筑建造完成或升级完成时调用。
+    */
     void refreshTotalCapacity();
 
     /**
@@ -115,6 +115,12 @@ public:
     */
     void updateOccupiedGridVisual();
 
+    /**
+    * @brief 显示设置菜单
+    * 大本营的设置菜单
+    * 包括：BGM和音效音量 返回按钮
+    */
+    void showSettingsLayer();
 private:
     std::map<std::string, bool> _occupiedTiles;
     std::string _selectedSpritePath;
@@ -139,6 +145,8 @@ private:
 
     cocos2d::DrawNode* _gridDrawNode = nullptr;    // 用于绘制占用格子的画笔节点
 
+    cocos2d::LayerColor* _settingsLayer = nullptr;  // 设置覆盖层的指针
+
 public:
     // 简单定义士兵结构体，后面有了士兵类可以删掉
     struct TroopInfo {
@@ -147,7 +155,7 @@ public:
         int weight;
         int cost;
     };
-    static std::vector<TroopInfo> troops;
+    static std::vector<TroopInfo> troops; 
 
 
 };

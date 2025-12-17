@@ -5,6 +5,7 @@
 #include"GameUnit.h"
 #include"FindPath.h"
 #include "MainVillage.h"
+#include "ui/CocosGUI.h"
 
 class GameMap : public cocos2d::Scene
 {
@@ -152,6 +153,14 @@ public:
 	*/
 	void showGameOverLayer(bool isWin);
 
+	/**
+	* @brief 显示设置菜单
+	* 战斗地图的设置菜单 
+	* 包括：BGM和音效音量 结束战斗 返回按钮
+	* 同时包括暂停战斗
+	*/
+	void showSettingsLayer();
+
 private:
 	std::string _MapName;//所要创建的地图名（tmx文件名）
 	cocos2d::TMXTiledMap* _Map;//创建的瓦块地图
@@ -171,7 +180,11 @@ private:
 	cocos2d::Sprite* _selectionHighlight = nullptr;  	// 选中框精灵 (用于显示哪个被选中了)
 	std::map<std::string, int> _battleTroops;  // 战斗临时兵力表 进入战斗时copy PlayerData的数据
 
+	cocos2d::LayerColor* _settingsLayer = nullptr;  // 存储设置覆盖层的指针
 	bool _isGameOver = false; // 判断胜负逻辑
+	bool _isGamePaused = false; // 暂停标志位
+	bool _hasBattleStarted = false; // 标记是否开始战斗
+
 };
 
 #endif // __GAMEMAP_H__

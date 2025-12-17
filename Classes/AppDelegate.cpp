@@ -26,6 +26,7 @@
 #include "HelloWorldScene.h"
 #include "MainVillage.h"
 #include "GameMap.h"
+#include "LoadingScene.h"
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
@@ -122,8 +123,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // create a scene. it's an autorelease object
     // auto scene = HelloWorld::createScene();
-#if 1
-	auto mainvillage = MainVillage::createScene();
+
+    auto loadingscene = LoadingScene::createScene();
+    // 开始界面 
+    director->runWithScene(loadingscene);
+#if 0
+    auto mainvillage = MainVillage::createScene();
     // 大本营 
     director->runWithScene(mainvillage);
 #endif

@@ -126,64 +126,58 @@ bool GameMap::init(const std::string& MapName)
     // 7、设置放置士兵菜单
     createTroopMenu();
 
-    // 8、================== 右下角返回大本营 ======================
-    auto homeWrapper = Node::create();
-    homeWrapper->setContentSize(Size(220, 220)); // 设定点击热区大小
-    homeWrapper->setAnchorPoint(Vec2(0.5, 0.5)); // 中心锚点
+    // 8、================== 右上角设置按钮 ======================
 
-    auto homeSprite = Sprite::create("End_Battle.png");
+   // 1. 创建容器 (Wrapper)
+    auto settingWrapper = Node::create();
+    settingWrapper->setContentSize(Size(100, 100));
+    settingWrapper->setAnchorPoint(Vec2(0.5, 0.5));
 
-    // --- 防崩处理 ---
-    if (!homeSprite) {
-        homeSprite = Sprite::create();
-        homeSprite->setTextureRect(Rect(0, 0, 80, 80));
-        homeSprite->setColor(Color3B::BLUE); // 蓝色代表回家/结束
-        auto lbl = Label::createWithSystemFont("END", "Arial", 24);
-        lbl->setPosition(40, 40);
-        homeSprite->addChild(lbl);
-    }
+    // 2. 创建图标
+    auto settingSprite = Sprite::create("Settings_Icon.png"); 
 
     // --- 自动缩放逻辑 ---
-    // 设定图标显示的视觉大小 (比如 80px)
-    float targetHomeSize = 200.0f;
-    float homeContentMax = std::max(homeSprite->getContentSize().width, homeSprite->getContentSize().height);
+    float targetSetSize = 100.0f;
+    float setContentMax = std::max(settingSprite->getContentSize().width, settingSprite->getContentSize().height);
 
     // 防止除以0
-    if (homeContentMax <= 0) homeContentMax = 200.0f;
+    if (setContentMax <= 0) setContentMax = 80.0f;
 
-    float homeScale = targetHomeSize / homeContentMax;
-    homeSprite->setScale(homeScale);
+    float setScale = targetSetSize / setContentMax;
+    settingSprite->setScale(setScale);
 
     // --- 定位 ---
-    homeSprite->setPosition(homeWrapper->getContentSize().width / 2, homeWrapper->getContentSize().height / 2);
-    homeWrapper->addChild(homeSprite);
+    // 放在容器正中心
+    settingSprite->setPosition(settingWrapper->getContentSize().width / 2, settingWrapper->getContentSize().height / 2);
+    settingWrapper->addChild(settingSprite);
 
-    // 创建按钮
-    auto btnHome = MenuItemSprite::create(homeWrapper, nullptr, [=](Ref* sender) {
+    // 3. 创建按钮
+    auto btnSettings = MenuItemSprite::create(settingWrapper, nullptr, [=](Ref* sender) {
 
         // --- 点击反馈动画 ---
-        homeSprite->stopAllActions();
-        homeSprite->runAction(Sequence::create(
-            ScaleTo::create(0.1f, homeScale * 0.9f), // 按下变小
-            ScaleTo::create(0.1f, homeScale),        // 弹回
+        // 让内部的图标缩放一下
+        settingSprite->stopAllActions();
+        settingSprite->runAction(Sequence::create(
+            ScaleTo::create(0.1f, setScale * 1.2f), // 变大一点
+            ScaleTo::create(0.1f, setScale),        // 恢复
             nullptr
         ));
 
-        // --- 核心返回逻辑 ---
-        CCLOG("Battle Ended. Returning to MainVillage...");
-
-        // 重新创建 MainVillage 场景
-        auto homeScene = MainVillage::createScene();
-        Director::getInstance()->replaceScene(TransitionFade::create(1.0f, homeScene));
+        // --- 打开设置弹窗 ---
+        CCLOG("Clicked Settings");
+        this->showSettingsLayer();
         });
 
-    // 设置位置 (右下角)
-    btnHome->setPosition(Vec2(visibleSize.width - 100, 60));
+    // 4. 设置位置 (右上角)
+    btnSettings->setPosition(Vec2(visibleSize.width - 50, visibleSize.height - 50));
 
-    // 添加到菜单
-    auto menuHome = Menu::create(btnHome, nullptr);
-    menuHome->setPosition(Vec2::ZERO);
-    this->addChild(menuHome, 1000); // UI 层
+    // 5. 添加到菜单
+    auto settingsMenu = Menu::create(btnSettings, nullptr);
+    settingsMenu->setPosition(Vec2::ZERO);
+    this->addChild(settingsMenu, 2000); // UI层级，保证在最上层
+
+    // 9、================== 播放音乐 ======================
+        PlayerData::getInstance()->playBGM("bgm_battle_planning.mp3"); // 未放士兵 准备阶段
 
     // ==================== 鼠标操作  ==================
     auto mouseListener = EventListenerMouse::create();
@@ -268,7 +262,7 @@ bool GameMap::init(const std::string& MapName)
     // ------判断鼠标是否点到了右键菜单------
     auto isMouseOnMenu = [=](Vec2 mousePos) -> bool {
         if (_troopMenuNode) {
-            // --- 情况 B: 建筑信息弹窗 ---
+            // --- 情况 A: 士兵选择菜单 ---
             auto infoBg = _troopMenuNode->getChildByName("TroopsInfo");
             if (infoBg) {
                 Vec2 localPos = infoBg->convertToNodeSpace(mousePos);
@@ -287,6 +281,14 @@ bool GameMap::init(const std::string& MapName)
                   // 士兵菜单要求一直打开，不用关闭
                 }
             }
+        }
+        // --- 情况 B: 设置界面 ---
+        if (_settingsLayer) {
+            // 只要设置界面开着（指针不为空）
+            _isDragging = false;    // 禁止拖拽地图
+            _isClickValid = false;  // 禁止放置操作
+
+            return true; 
         }
         return false;
         };
@@ -362,6 +364,15 @@ bool GameMap::init(const std::string& MapName)
                             _battleTroops[_currentSelectedTroop]--;
                             // 刷新 UI
                             updateTroopCountUI(_currentSelectedTroop);
+                            // 第一次放兵 切换到激昂的战斗音乐
+                            if (!_hasBattleStarted) {
+                                _hasBattleStarted = true; // 标记已开战
+
+                                // 切换到激昂的战斗音乐
+                                PlayerData::getInstance()->playBGM("bgm_battle.mp3");
+
+                                CCLOG("战斗打响！切换 BGM");
+                            }
                         }
 
                     }
@@ -615,6 +626,9 @@ GameUnit* GameMap::findBestTarget(Vec2 pos) {
 //逐帧更新士兵状态
 void GameMap::update(float dt)
 {
+    // 先判断：如果暂停了，直接跳过所有逻辑
+    if (_isGamePaused || _isGameOver) return;
+
     Size tileSize = _Map->getTileSize();
     float mapHeight = _Map->getMapSize().height * tileSize.height;
 
@@ -1143,4 +1157,171 @@ void GameMap::showGameOverLayer(bool isWin) {
         nullptr
     );
     container->runAction(popUpSeq);
+}
+
+// 设置界面显示
+void GameMap::showSettingsLayer() {
+    // 防止重复打开
+    if (_settingsLayer) return;
+
+    // 1. 暂停游戏逻辑
+    this->_isGamePaused = true;
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 2. 遮罩层 
+    _settingsLayer = LayerColor::create(Color4B(0, 0, 0, 180), visibleSize.width, visibleSize.height);
+    _settingsLayer->setName("SettingsLayer"); // 命名
+
+    // 触摸拦截
+    auto listener = EventListenerTouchOneByOne::create();
+    listener->setSwallowTouches(true);
+    listener->onTouchBegan = [](Touch*, Event*) { return true; };
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _settingsLayer);
+    this->addChild(_settingsLayer, 20000); // 最顶层
+
+    // 3. 背景板
+    auto bg = Sprite::create("Settings_BG.png"); // 找个背景图，或者用 Scale9Sprite
+    if (!bg) {
+        bg = Sprite::create();
+        bg->setTextureRect(Rect(0, 0, 400, 300));
+        bg->setColor(Color3B(50, 50, 50));
+    }
+    bg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+
+    _settingsLayer->addChild(bg); // 注意：加在 layer 上
+
+    // 4. 标题
+    auto lblTitle = Label::createWithSystemFont("SETTINGS", "Arial", 30);
+    lblTitle->setPosition(bg->getContentSize().width / 2, bg->getContentSize().height - 40);
+    bg->addChild(lblTitle);
+
+  // ====================== 音量调节 (加减按钮模式) ======================
+
+    // =============================================================
+    // 定义一个通用的“创建音量控制条”函数
+    // 参数1: 标题 (Music/Effect)
+    // 参数2: Y坐标
+    // 参数3: 获取当前值的函数
+    // 参数4: 设置值的回调函数
+    // =============================================================
+    auto createVolumeControl = [&](std::string title, float posY, std::function<float()> getVal, std::function<void(float)> setVal) {
+
+        // 1. 标题
+        auto lbl = Label::createWithSystemFont(title, "Arial", 24);
+        lbl->setAnchorPoint(Vec2(0, 0.5));
+        lbl->setPosition(40, posY);
+        bg->addChild(lbl);
+
+        // 2. 格子容器
+        auto barNode = Node::create();
+        barNode->setPosition(140, posY);
+        bg->addChild(barNode);
+
+        // 刷新格子的辅助函数
+        auto refreshBar = [=](float percent) {
+            barNode->removeAllChildren();
+            int level = (int)(percent * 10 + 0.5f); // 0.5 -> 5
+
+            for (int i = 0; i < 10; i++) {
+                auto block = Sprite::create();
+                block->setTextureRect(Rect(0, 0, 15, 20));
+                // 亮色用绿色，暗色用深灰
+                block->setColor(i < level ? Color3B(0, 255, 0) : Color3B(50, 50, 50));
+                block->setPosition(i * 18, 0);
+                barNode->addChild(block);
+            }
+            };
+
+        // 初始刷新
+        refreshBar(getVal());
+
+        // 3. 减号按钮 [-]
+        auto lblMinus = Label::createWithSystemFont("-", "Arial", 40);
+        lblMinus->enableOutline(Color4B::BLACK, 2);
+        auto btnMinus = MenuItemLabel::create(lblMinus, [=](Ref*) {
+            float v = getVal();
+            int level = (int)(v * 10 + 0.5f);
+            if (level > 0) {
+                level--;
+                setVal(level / 10.0f); // 调用外部传入的设置函数
+                refreshBar(level / 10.0f); // 刷新显示
+
+                // 如果是调节音效，最好播放一下声音给玩家听听大小
+                if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
+            }
+            });
+        btnMinus->setPosition(120, posY);
+
+        // 4. 加号按钮 [+]
+        auto lblPlus = Label::createWithSystemFont("+", "Arial", 40);
+        lblPlus->enableOutline(Color4B::BLACK, 2);
+        auto btnPlus = MenuItemLabel::create(lblPlus, [=](Ref*) {
+            float v = getVal();
+            int level = (int)(v * 10 + 0.5f);
+            if (level < 10) {
+                level++;
+                setVal(level / 10.0f);
+                refreshBar(level / 10.0f);
+                if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
+            }
+            });
+        btnPlus->setPosition(140 + 180 + 20, posY);
+
+        // 返回菜单项，以便添加到主菜单
+        return Vector<MenuItem*>{btnMinus, btnPlus};
+        };
+
+    // =============================================================
+    // 使用上面的通用函数，创建两排控制器
+    // =============================================================
+
+    // 1. 音乐控制 (Music) - 放在 Y=220
+    auto musicItems = createVolumeControl("Music", 220,
+        []() { return PlayerData::getInstance()->musicVolume; }, // 获取
+        [](float v) { PlayerData::getInstance()->setMusicVol(v); } // 设置
+    );
+
+    // 2. 音效控制 (Effect) - 放在 Y=160
+    auto effectItems = createVolumeControl("Effect", 160,
+        []() { return PlayerData::getInstance()->effectVolume; }, // 获取
+        [](float v) { PlayerData::getInstance()->setEffectVol(v); } // 设置
+    );
+
+    // =============================================================
+    // 把所有按钮加到一个 Menu 里
+    // =============================================================
+    auto volMenu = Menu::create();
+    for (auto item : musicItems) volMenu->addChild(item);
+    for (auto item : effectItems) volMenu->addChild(item);
+
+    volMenu->setPosition(Vec2::ZERO);
+    bg->addChild(volMenu);
+
+    // 5. 继续游戏 (Resume)
+    auto btnResumeLabel = Label::createWithSystemFont("Resume", "Arial", 24);
+    auto btnResume = MenuItemLabel::create(btnResumeLabel, [=](Ref*) {
+        // 【恢复游戏逻辑】
+        this->_isGamePaused = false;
+        // 移除并置空
+        if (_settingsLayer) {
+            _settingsLayer->removeFromParent();
+            _settingsLayer = nullptr; // 置空，防止下次调用出错
+        }
+        });
+    btnResume->setPosition(Vec2(bg->getContentSize().width / 2, 50));
+
+    // 6. 退出战斗 (Quit)
+    auto btnQuitLabel = Label::createWithSystemFont("Quit Battle", "Arial", 24);
+    btnQuitLabel->setColor(Color3B::RED);
+    auto btnQuit = MenuItemLabel::create(btnQuitLabel, [=](Ref*) {
+        // 直接回大本营
+        auto homeScene = MainVillage::createScene();
+        Director::getInstance()->replaceScene(TransitionFade::create(1.0f, homeScene));
+        });
+    btnQuit->setPosition(Vec2(bg->getContentSize().width / 2, 100));
+
+    auto menu = Menu::create(btnResume, btnQuit, nullptr);
+    menu->setPosition(Vec2::ZERO);
+    bg->addChild(menu);
 }

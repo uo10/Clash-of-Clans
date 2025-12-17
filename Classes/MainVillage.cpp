@@ -116,6 +116,55 @@ bool MainVillage::init()
     // ====================最左下角战斗主按钮========================
     this->createAttackUI();
 
+    // ===================== 右下角设置按钮 ========================
+
+  // 1. 创建容器 (Wrapper)
+    auto settingWrapper = Node::create();
+    settingWrapper->setContentSize(Size(100, 100));
+    settingWrapper->setAnchorPoint(Vec2(0.5, 0.5));
+
+    // 2. 创建图标
+    auto settingSprite = Sprite::create("Settings_Icon.png");
+
+    // --- 自动缩放逻辑 ---
+    float targetSetSize = 100.0f;
+    float setContentMax = std::max(settingSprite->getContentSize().width, settingSprite->getContentSize().height);
+
+    // 防止除以0
+    if (setContentMax <= 0) setContentMax = 80.0f;
+
+    float setScale = targetSetSize / setContentMax;
+    settingSprite->setScale(setScale);
+
+    // --- 定位 ---
+    // 放在容器正中心
+    settingSprite->setPosition(settingWrapper->getContentSize().width / 2, settingWrapper->getContentSize().height / 2);
+    settingWrapper->addChild(settingSprite);
+
+    // 3. 创建按钮
+    auto btnSettings = MenuItemSprite::create(settingWrapper, nullptr, [=](Ref* sender) {
+
+        // --- 点击反馈动画 ---
+        // 让内部的图标缩放一下
+        settingSprite->stopAllActions();
+        settingSprite->runAction(Sequence::create(
+            ScaleTo::create(0.1f, setScale * 1.2f), // 变大一点
+            ScaleTo::create(0.1f, setScale),        // 恢复
+            nullptr
+        ));
+
+        // --- 打开设置弹窗 ---
+        CCLOG("Clicked Settings");
+        this->showSettingsLayer();
+        });
+
+    // 4. 设置位置 (右上角)
+    btnSettings->setPosition(Vec2(visibleSize.width - 50, 50));
+
+    // 5. 添加到菜单
+    auto settingsMenu = Menu::create(btnSettings, nullptr);
+    settingsMenu->setPosition(Vec2::ZERO);
+    this->addChild(settingsMenu, 2000); // UI层级，保证在最上层
     // ==================== 恢复之前的存档 ========================
     this->restoreVillageData();
 
@@ -306,6 +355,12 @@ bool MainVillage::init()
                     return true;
                 }
             }
+        }
+        // --- 情况E：有遮护罩(如选择关卡和设置) ---
+        if (_settingsLayer) {
+            _isDragging = false;
+            _isClickValid = false;
+            return true; 
         }
         return false;
         };
@@ -649,6 +704,8 @@ bool MainVillage::init()
     };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(debugListener, this);
 
+    // 播放音乐
+    PlayerData::getInstance()->playBGM("bgm_village.mp3");
     return true;
 }
 void MainVillage::menuCloseCallback(Ref* pSender)
@@ -1472,19 +1529,22 @@ void MainVillage::createAttackUI() {
 
 // 选择关卡弹窗
 void MainVillage::showLevelSelection() {
+    // 0. 防止重复打开 (如果已经打开了，就直接返回)
+    if (_settingsLayer) return;
+
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // 1. 创建遮罩背景 (防止点击后面的建筑)
-    // 使用 LayerColor 创建半透明黑色
-    auto layer = LayerColor::create(Color4B(0, 0, 0, 200), visibleSize.width, visibleSize.height);
+    // 1. 创建遮罩背景 (赋值给成员变量)
+    _settingsLayer = LayerColor::create(Color4B(0, 0, 0, 200), visibleSize.width, visibleSize.height);
+    _settingsLayer->setName("LevelSelectionLayer"); // 命名方便调试
 
-    // 拦截点击事件 (吞噬触摸)
+    // 拦截点击事件 (防止穿透到下面的建筑)
     auto listener = EventListenerTouchOneByOne::create();
     listener->setSwallowTouches(true);
     listener->onTouchBegan = [](Touch*, Event*) { return true; };
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, layer);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _settingsLayer);
 
-    this->addChild(layer, 20000); // 最高层级
+    this->addChild(_settingsLayer, 20000); // 最高层级
 
     // 2. 创建关卡按钮
 
@@ -1492,11 +1552,9 @@ void MainVillage::showLevelSelection() {
     auto lblMap1 = Label::createWithSystemFont("Level 1: Goblin Forest", "Arial", 30);
     auto btnMap1 = MenuItemLabel::create(lblMap1, [=](Ref*) {
         CCLOG("进入关卡 1...");
-        // 核心跳转逻辑
-        // 切换场景到 GameMap，传入地图路径
         auto scene = GameMap::create("map/map1.tmx");
-        // 使用过渡动画切换 (淡入淡出)
         Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene));
+        // 切换场景后，MainVillage 会被销毁，_settingsLayer 也会随之销毁，无需手动清理
         });
 
     // --- 关卡 2 按钮 ---
@@ -1511,15 +1569,19 @@ void MainVillage::showLevelSelection() {
     auto lblClose = Label::createWithSystemFont("[ Cancel ]", "Arial", 26);
     lblClose->setColor(Color3B::YELLOW);
     auto btnClose = MenuItemLabel::create(lblClose, [=](Ref*) {
-        // 移除遮罩层，回到大本营界面
-        layer->removeFromParent();
+        // 移除并置空
+        if (_settingsLayer) {
+            _settingsLayer->removeFromParent();
+            _settingsLayer = nullptr; 
+        }
         });
 
     // 3. 排列菜单
+    // 菜单加到 _settingsLayer 上
     auto menu = Menu::create(btnMap1, btnMap2, btnClose, nullptr);
     menu->alignItemsVerticallyWithPadding(40);
     menu->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-    layer->addChild(menu);
+    _settingsLayer->addChild(menu);
 }
 
 // 存档操作
@@ -1695,14 +1757,164 @@ void MainVillage::updateOccupiedGridVisual() {
             Vec2 dest(originX + tileSize.width, originY + tileSize.height);
 
             // --- C. 绘制 ---
-            // 画空心红框
-            // _gridDrawNode->drawRect(origin, dest, Color4F::RED);
-
-            // 画实心半透明红块 
+            // 实心半透明红块 
             _gridDrawNode->drawSolidRect(origin, dest, Color4F(1.0f, 0.0f, 0.0f, 0.3f)); // 红色，30%透明度
 
             // 空心框
             _gridDrawNode->drawRect(origin, dest, Color4F(1.0f, 0.0f, 0.0f, 0.8f));
         }
     }
+}
+
+void MainVillage::showSettingsLayer() {
+    // 1. 防止重复打开
+    if (_settingsLayer) return;
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 2. 遮罩层 
+    _settingsLayer = LayerColor::create(Color4B(0, 0, 0, 180), visibleSize.width, visibleSize.height);
+    _settingsLayer->setName("SettingsLayer"); // 命名
+
+    // 触摸拦截
+    auto listener = EventListenerTouchOneByOne::create();
+    listener->setSwallowTouches(true);
+    listener->onTouchBegan = [](Touch*, Event*) { return true; };
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _settingsLayer);
+    this->addChild(_settingsLayer, 20000); // 最顶层
+
+    // 3. 背景板
+    auto bg = Sprite::create("Settings_BG.png"); // 找个背景图，或者用 Scale9Sprite
+    if (!bg) {
+        bg = Sprite::create();
+        bg->setTextureRect(Rect(0, 0, 400, 300));
+        bg->setColor(Color3B(50, 50, 50));
+    }
+    bg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+
+    _settingsLayer->addChild(bg); // 注意：加在 layer 上
+
+    // 4. 标题
+    auto lblTitle = Label::createWithSystemFont("SETTINGS", "Arial", 30);
+    lblTitle->setPosition(bg->getContentSize().width / 2, bg->getContentSize().height - 40);
+    bg->addChild(lblTitle);
+
+    // ====================== 音量调节 (加减按钮模式) ======================
+
+      // =============================================================
+      // 定义一个通用的“创建音量控制条”函数
+      // 参数1: 标题 (Music/Effect)
+      // 参数2: Y坐标
+      // 参数3: 获取当前值的函数
+      // 参数4: 设置值的回调函数
+      // =============================================================
+    auto createVolumeControl = [&](std::string title, float posY, std::function<float()> getVal, std::function<void(float)> setVal) {
+
+        // 1. 标题
+        auto lbl = Label::createWithSystemFont(title, "Arial", 24);
+        lbl->setAnchorPoint(Vec2(0, 0.5));
+        lbl->setPosition(40, posY);
+        bg->addChild(lbl);
+
+        // 2. 格子容器
+        auto barNode = Node::create();
+        barNode->setPosition(140, posY);
+        bg->addChild(barNode);
+
+        // 刷新格子的辅助函数
+        auto refreshBar = [=](float percent) {
+            barNode->removeAllChildren();
+            int level = (int)(percent * 10 + 0.5f); // 0.5 -> 5
+
+            for (int i = 0; i < 10; i++) {
+                auto block = Sprite::create();
+                block->setTextureRect(Rect(0, 0, 15, 20));
+                // 亮色用绿色，暗色用深灰
+                block->setColor(i < level ? Color3B(0, 255, 0) : Color3B(50, 50, 50));
+                block->setPosition(i * 18, 0);
+                barNode->addChild(block);
+            }
+            };
+
+        // 初始刷新
+        refreshBar(getVal());
+
+        // 3. 减号按钮 [-]
+        auto lblMinus = Label::createWithSystemFont("-", "Arial", 40);
+        lblMinus->enableOutline(Color4B::BLACK, 2);
+        auto btnMinus = MenuItemLabel::create(lblMinus, [=](Ref*) {
+            float v = getVal();
+            int level = (int)(v * 10 + 0.5f);
+            if (level > 0) {
+                level--;
+                setVal(level / 10.0f); // 调用外部传入的设置函数
+                refreshBar(level / 10.0f); // 刷新显示
+
+                // 如果是调节音效，最好播放一下声音给玩家听听大小
+                if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
+            }
+            });
+        btnMinus->setPosition(120, posY);
+
+        // 4. 加号按钮 [+]
+        auto lblPlus = Label::createWithSystemFont("+", "Arial", 40);
+        lblPlus->enableOutline(Color4B::BLACK, 2);
+        auto btnPlus = MenuItemLabel::create(lblPlus, [=](Ref*) {
+            float v = getVal();
+            int level = (int)(v * 10 + 0.5f);
+            if (level < 10) {
+                level++;
+                setVal(level / 10.0f);
+                refreshBar(level / 10.0f);
+                if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
+            }
+            });
+        btnPlus->setPosition(140 + 180 + 20, posY);
+
+        // 返回菜单项，以便添加到主菜单
+        return Vector<MenuItem*>{btnMinus, btnPlus};
+        };
+
+    // =============================================================
+    // 使用上面的通用函数，创建两排控制器
+    // =============================================================
+
+    // 1. 音乐控制 (Music) - 放在 Y=220
+    auto musicItems = createVolumeControl("Music", 220,
+        []() { return PlayerData::getInstance()->musicVolume; }, // 获取
+        [](float v) { PlayerData::getInstance()->setMusicVol(v); } // 设置
+    );
+
+    // 2. 音效控制 (Effect) - 放在 Y=160
+    auto effectItems = createVolumeControl("Effect", 160,
+        []() { return PlayerData::getInstance()->effectVolume; }, // 获取
+        [](float v) { PlayerData::getInstance()->setEffectVol(v); } // 设置
+    );
+
+    // =============================================================
+    // 把所有按钮加到一个 Menu 里
+    // =============================================================
+    auto volMenu = Menu::create();
+    for (auto item : musicItems) volMenu->addChild(item);
+    for (auto item : effectItems) volMenu->addChild(item);
+
+    volMenu->setPosition(Vec2::ZERO);
+    bg->addChild(volMenu);
+
+    // 5. 继续游戏 (Resume)
+    auto btnResumeLabel = Label::createWithSystemFont("Resume", "Arial", 40);
+    auto btnResume = MenuItemLabel::create(btnResumeLabel, [=](Ref*) {
+        // 移除并置空
+        if (_settingsLayer) {
+            _settingsLayer->removeFromParent();
+            _settingsLayer = nullptr; // 置空，防止下次判断出错
+        }
+        });
+    btnResume->setPosition(Vec2(bg->getContentSize().width / 2, 100));
+
+    // 组装菜单
+    auto menu = Menu::create(btnResume, nullptr);
+    menu->setPosition(Vec2::ZERO);
+    bg->addChild(menu);
+
 }
