@@ -109,6 +109,12 @@ public:
     */
     void restoreVillageData();
 
+    /**
+    * @brief 绘制非法放置位置
+    * 红色绘制非法区域
+    */
+    void updateOccupiedGridVisual();
+
 private:
     std::map<std::string, bool> _occupiedTiles;
     std::string _selectedSpritePath;
@@ -131,6 +137,8 @@ private:
     cocos2d::Node* _buildMenuNode = nullptr;    // 建筑选择菜单指针
     cocos2d::Node* _iconContainer = nullptr;    // 用于存放建筑(资源/防御)图标的容器
 
+    cocos2d::DrawNode* _gridDrawNode = nullptr;    // 用于绘制占用格子的画笔节点
+
 public:
     // 简单定义士兵结构体，后面有了士兵类可以删掉
     struct TroopInfo {
@@ -140,5 +148,7 @@ public:
         int cost;
     };
     static std::vector<TroopInfo> troops;
+
+
 };
 #endif // __MAIN_VILLAGE_H__

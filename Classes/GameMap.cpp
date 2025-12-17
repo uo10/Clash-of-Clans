@@ -695,6 +695,11 @@ void GameMap::update(float dt)
         if (!it->second->isAlive()) it = _unitGridLookup.erase(it);
         else ++it;
     }
+
+    // --- 胜负判断检测 ---
+    if (_isGameOver) return;    // 如果游戏已经结束，就不再检测
+
+    checkGameState();    // 执行检测
 }
 
 //更新防御塔状态
@@ -1000,4 +1005,142 @@ void GameMap::updateTroopCountUI(std::string name) {
             }
         }
     }
+}
+
+// 判断游戏结束 
+void GameMap::checkGameState() {
+
+    // -------------- 1. 检测胜利 (除了墙以外的建筑全毁) --------------
+    bool hasLivingBuilding = false;
+
+    for (auto building : _buildings) {
+        // 排除空指针
+        if (!building) continue;
+
+        // 1. 如果是围墙，跳过
+        if (building->getUnitName() == "Fence") continue;
+
+        // 2. 检查是否存活 
+        if (building->getCurrentHP() > 0) {
+            hasLivingBuilding = true;
+            break; // 只要还有一个活着的，就不算赢，直接退出循环
+        }
+    }
+
+    if (!hasLivingBuilding) {
+        // 场上没有活着的关键建筑 说明胜利
+        _isGameOver = true;
+        CCLOG("============= VICTORY! =============");
+
+        // 停止所有战斗逻辑 
+        // this->unscheduleUpdate();
+
+         // 3. 呼叫弹窗 (参数 true 代表胜利)
+        this->showGameOverLayer(true);
+        return; // 赢了就不用检查是否失败
+    }
+
+    // ---------------- 2. 检测失败 (没库存兵 且 场上兵全死) -----------------
+
+    // Step A: 检查库存 (是否还有没放出来的兵)
+    bool hasReserves = false;
+    // 遍历 map
+    for (auto const& pair : _battleTroops) {
+        // pair.first  是 name
+        // pair.second 是 count
+
+        int count = pair.second; // 获取数量
+
+        if (count > 0) {
+            hasReserves = true;
+            break;
+        }
+    }
+
+    // 如果还有库存，说明还没输，直接返回
+    if (hasReserves) return;
+
+    // Step B: 检查场上 (是否还有活着的兵)
+    bool hasActiveSoldiers = false;
+    for (auto soldier : _soldiers) {
+        if (soldier && soldier->getCurrentHP() > 0) {
+            hasActiveSoldiers = true;
+            break;
+        }
+    }
+
+    // 如果没库存 且 场上没兵 说明失败
+    if (!hasActiveSoldiers) {
+        _isGameOver = true;
+        CCLOG("============= DEFEAT... =============");
+
+        // 呼叫弹窗 (参数 false 代表失败)
+        this->showGameOverLayer(false);
+    }
+}
+
+// 游戏结束UI弹窗
+void GameMap::showGameOverLayer(bool isWin) {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // --------------- 1. 创建半透明遮罩 ---------------
+    // 初始透明度设为 0，为了做渐变动画
+    auto layer = LayerColor::create(Color4B(0, 0, 0, 0), visibleSize.width, visibleSize.height);
+
+    // 保证盖住所有兵、建筑、UI菜单
+    this->addChild(layer, 20000);
+
+    // --- 添加触摸拦截 ---
+    auto listener = EventListenerTouchOneByOne::create();
+    listener->setSwallowTouches(true); // 吞噬事件
+    listener->onTouchBegan = [](Touch*, Event*) { return true; }; // 拦截所有点击
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, layer);
+
+    // --------------- 2. 创建内容容器 -----------------
+    auto container = Node::create();
+    container->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+    container->setScale(0.0f); // 初始缩放到0，准备弹出来
+    layer->addChild(container);
+
+    // -------------- 3. 根据胜负设置标题 --------------
+    std::string titleStr = isWin ? "VICTORY!" : "DEFEAT";
+    Color3B titleColor = isWin ? Color3B::YELLOW : Color3B::RED;
+
+    auto lblTitle = Label::createWithSystemFont(titleStr, "Arial", 120);
+    lblTitle->setColor(titleColor);
+    lblTitle->enableOutline(Color4B::BLACK, 4); 
+    lblTitle->setPosition(0, 50); // 居中偏上
+    container->addChild(lblTitle);
+
+    // ----------- 4. 创建 "返回大本营" 按钮 ------------
+    auto btnLabel = Label::createWithSystemFont("Return Home", "Arial", 30);
+    auto btnItem = MenuItemLabel::create(btnLabel, [=](Ref*) {
+        // 返回大本营逻辑
+        auto homeScene = MainVillage::createScene();
+        Director::getInstance()->replaceScene(TransitionFade::create(1.0f, homeScene));
+        });
+
+    // 呼吸动画吸引点击
+    btnItem->runAction(RepeatForever::create(Sequence::create(
+        ScaleTo::create(0.5f, 1.1f),
+        ScaleTo::create(0.5f, 1.0f),
+        nullptr
+    )));
+
+    auto menu = Menu::create(btnItem, nullptr);
+    menu->setPosition(0, -60); 
+    container->addChild(menu);
+
+    // 5. ------------- 执行入场动画 -------------
+
+    // 动画 A: 出现背景
+    layer->runAction(FadeTo::create(0.5f, 200)); // 设置透明度200
+
+    // 动画 B: 文字面板
+    auto popUpSeq = Sequence::create(
+        DelayTime::create(0.3f), // 延迟0.3s
+        EaseBackOut::create(ScaleTo::create(0.4f, 1.0f)), // 弹性放大
+        nullptr
+    );
+    container->runAction(popUpSeq);
 }

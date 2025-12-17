@@ -134,8 +134,24 @@ public:
 
 	/**
     * @brief 更新士兵数量label（调用士兵之后）
+	* @param name 更改label的士兵的名字
     */
 	void updateTroopCountUI(std::string name);
+
+	/**
+	* @brief 判断游戏结束函数
+	* 胜利：所有建筑HP为0
+	* 失败：士兵容器为空 创建的士兵HP均为0
+	*/
+	void checkGameState();
+
+	/**
+	* @brief 游戏结束画面处理
+	* @param isWin 是否胜利
+	* true 为胜利 false 为失败
+	*/
+	void showGameOverLayer(bool isWin);
+
 private:
 	std::string _MapName;//所要创建的地图名（tmx文件名）
 	cocos2d::TMXTiledMap* _Map;//创建的瓦块地图
@@ -154,6 +170,8 @@ private:
 	std::map<std::string, cocos2d::Label*> _troopCountLabels; 	// 记录 UI 上的数字标签，方便投放兵力后实时更新数量
 	cocos2d::Sprite* _selectionHighlight = nullptr;  	// 选中框精灵 (用于显示哪个被选中了)
 	std::map<std::string, int> _battleTroops;  // 战斗临时兵力表 进入战斗时copy PlayerData的数据
+
+	bool _isGameOver = false; // 判断胜负逻辑
 };
 
 #endif // __GAMEMAP_H__

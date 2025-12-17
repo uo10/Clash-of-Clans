@@ -503,6 +503,8 @@ bool MainVillage::init()
                         // 造完一个就退出建造模式
                         if(_selectedBuildingType != BuildingType::WALL)
                             _selectedBuildingType = BuildingType::NONE;
+                        // 清空非法区域
+                        updateOccupiedGridVisual();
                     }
                 }
             }
@@ -906,7 +908,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
         if (building->type == BuildingType::GOLD_MINE || building->type == BuildingType::ELIXIR_PUMP) {
             specialText = StringUtils::format("Production: %d / hour", stats.productionRate);
         }
-        if (building->type == BuildingType::CANNON || building->type == BuildingType::ARCHER_TOWER) {
+        else if (building->type == BuildingType::CANNON || building->type == BuildingType::ARCHER_TOWER) {
             specialText = StringUtils::format("Damage: %.1lf ", stats.damage);
         }
         else if (building->type != BuildingType::WALL && building->type != BuildingType::TOWN_HALL){
@@ -1344,6 +1346,7 @@ void MainVillage::switchBuildCategory(int category) {
         // 点击回调
         return MenuItemSprite::create(nodeNormal, nodeNormal, [=](Ref*) {
             _selectedBuildingType = type;
+            this->updateOccupiedGridVisual();
             CCLOG("选中建筑: %s", name.c_str());
             _buildMenuNode->setVisible(false); // 选完自动关闭
             });
@@ -1646,4 +1649,60 @@ void MainVillage::restoreVillageData() {
     // 刷新全局容量上限
     this->refreshTotalCapacity();
     this->updateResourceUI();
+}
+
+// 绘制非法放置边框
+void MainVillage::updateOccupiedGridVisual() {
+
+    // 如果手里没有预览建筑，就清空并返回
+    if (_selectedBuildingType == BuildingType::NONE) {
+        if (_gridDrawNode) _gridDrawNode->clear();
+        return;
+    }
+    // 1. 初始化画笔 
+    if (!_gridDrawNode) {
+        _gridDrawNode = DrawNode::create();
+        // Z轴设高，保证在所有建筑和地面之上
+        _MainVillageMap->addChild(_gridDrawNode, 20000);
+    }
+
+    // 2. 每次刷新前先清空旧的框框
+    _gridDrawNode->clear();
+
+    Size tileSize = _MainVillageMap->getTileSize();
+    Size mapSize = _MainVillageMap->getMapSize();
+
+    // 3. 遍历占用表
+    for (auto const& item : _occupiedTiles) {
+        // item.first 是 key "x_y"
+        // item.second 是 bool (是否占用)
+
+        if (item.second == true) {
+            // --- A. 解析 Key 字符串 "10_15" -> x=10, y=15 ---
+            std::string key = item.first;
+            size_t underscorePos = key.find('_');
+            if (underscorePos == std::string::npos) continue;
+
+            int tileX = std::stoi(key.substr(0, underscorePos));
+            int tileY = std::stoi(key.substr(underscorePos + 1));
+
+            // --- B. 坐标转换 (Tile -> Pixel) ---
+
+            float originX = tileX * tileSize.width;
+            float originY = (mapSize.height - 1 - tileY) * tileSize.height;
+
+            Vec2 origin(originX, originY);
+            Vec2 dest(originX + tileSize.width, originY + tileSize.height);
+
+            // --- C. 绘制 ---
+            // 画空心红框
+            // _gridDrawNode->drawRect(origin, dest, Color4F::RED);
+
+            // 画实心半透明红块 
+            _gridDrawNode->drawSolidRect(origin, dest, Color4F(1.0f, 0.0f, 0.0f, 0.3f)); // 红色，30%透明度
+
+            // 空心框
+            _gridDrawNode->drawRect(origin, dest, Color4F(1.0f, 0.0f, 0.0f, 0.8f));
+        }
+    }
 }

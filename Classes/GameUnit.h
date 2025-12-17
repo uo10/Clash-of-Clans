@@ -151,6 +151,14 @@ public:
 	* @return 1为我方 2为敌方
 	*/
 	int getTeam() const { return (_type == UnitType::SOLDIER) ? 1 : 2; } 
+	/**
+	* @brief 获取当前对象HP
+	* return 当前对象(建筑/士兵)HP
+	*/
+	float getCurrentHP() const {
+		return _currentHp;
+	}
+
 private:
 	float _maxHp, _currentHp, _speed, _damage, _attackRange;//最大血量、当前血量、移动速度、伤害、攻击范围
 	float _attackTimer;//攻速
