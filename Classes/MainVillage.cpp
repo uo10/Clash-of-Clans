@@ -1160,13 +1160,13 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
 
                             // 3. 设置初始状态
                             // 先把兵放在门口，且设为极小（刚训练出来）
-                            newSoldier->setPosition(doorPos);
-                            newSoldier->setScale(0.01f);
+                            newSoldier->setPosition(doorPos);                          
+                            newSoldier->setScale(0.2f);
 
                             // 根据目标点在左边还是右边，调整朝向
                             if (targetPos.x < doorPos.x) {
                                 // 如果目标在左边，可能需要翻转 
-                                newSoldier->setScaleX(-0.01f); // 用负 Scale 实现翻转
+                               newSoldier->setScaleX(-0.01f); // 用负 Scale 实现翻转
                             }
 
                             // 4. 添加到地图层 (处理遮挡)
