@@ -147,6 +147,11 @@ private:
 
     cocos2d::LayerColor* _settingsLayer = nullptr;  // 设置覆盖层的指针
 
+
+    // 取消建造按钮
+    cocos2d::Node* _cancelBuildMenu = nullptr;
+    void createCancelUI();
+
 public:
     // 简单定义士兵结构体，后面有了士兵类可以删掉
     struct TroopInfo {

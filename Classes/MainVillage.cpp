@@ -113,6 +113,8 @@ bool MainVillage::init()
     mainMenu->setPosition(Vec2(75, visibleSize.height - 70)); // 左上角
     this->addChild(mainMenu, 1000); // 加到 this，层级高
 
+    this->createCancelUI();
+
     // ====================最左下角战斗主按钮========================
     this->createAttackUI();
 
@@ -362,8 +364,23 @@ bool MainVillage::init()
             _isClickValid = false;
             return true; 
         }
+
+        // --- 情况F：建筑取消按钮 ---
+        if (_cancelBuildMenu && _cancelBuildMenu->isVisible()) {
+            // 将鼠标坐标转换为菜单内的相对坐标
+            Vec2 localPos = _cancelBuildMenu->convertToNodeSpace(mousePos);
+
+            for (auto child : _cancelBuildMenu->getChildren()) {
+                if (child->getBoundingBox().containsPoint(localPos)) {
+                    _isDragging = false;
+                    _isClickValid = false;
+                    return true; // 点到了取消按钮！拦截！
+                }
+            }
+        }
+
         return false;
-        };
+    };
 
     // ==================  二、鼠标按下  ==================
     mouseListener->onMouseDown = [=](Event* event) {
@@ -402,6 +419,34 @@ bool MainVillage::init()
         if (mainMenu->getBoundingBox().containsPoint(localPos)) {
             return; // 点在菜单上了，忽略拖拽
         }
+
+        if (_cancelBuildMenu && _cancelBuildMenu->isVisible()) {
+
+            // 将鼠标坐标转换到 Menu 的坐标系中
+            Vec2 menuSpacePos = _cancelBuildMenu->convertToNodeSpace(mousePos);
+
+            // 遍历 Menu 里的子节点 (也就是我们的那个文本框按钮)
+            for (auto child : _cancelBuildMenu->getChildren()) {
+
+                // 判定矩形范围
+                if (child->getBoundingBox().containsPoint(menuSpacePos)) {
+
+                    CCLOG("拦截成功：点击了取消文本框");
+
+                    // A. 停止地图拖拽
+                    _isDragging = false;
+
+                    // B. 执行取消逻辑 (手动执行，以防 MenuItem 回调没触发)
+                    _selectedBuildingType = BuildingType::NONE;
+                    this->updateOccupiedGridVisual();
+                    _cancelBuildMenu->setVisible(false);
+
+                    // C. 绝对返回，不执行下面的 map 放置逻辑
+                    return;
+                }
+            }
+        }
+
         // 2、如果是左键松开
         if (e->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
 
@@ -556,8 +601,12 @@ bool MainVillage::init()
                             }
                         }
                         // 造完一个就退出建造模式
-                        if(_selectedBuildingType != BuildingType::WALL)
+                        if (_selectedBuildingType != BuildingType::WALL){
                             _selectedBuildingType = BuildingType::NONE;
+                            if (_cancelBuildMenu) {
+                                _cancelBuildMenu->setVisible(false);
+                            }
+                        }
                         // 清空非法区域
                         updateOccupiedGridVisual();
                     }
@@ -1077,6 +1126,10 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                         }
 
                         if (newSoldier) {
+
+                            newSoldier->setHomeMode(true); // // 开启游走
+                            newSoldier->setHomePosition(building->getPosition());
+
                             // 1. 确定“出生点” (兵营大门位置)
                             // 假设兵营图片的“门”在中心点向下 20 像素的位置
                             Vec2 doorPos = building->getPosition() + Vec2(0, -20);
@@ -1370,6 +1423,58 @@ void MainVillage::createBuildUI() {
     switchBuildCategory(0);
 }
 
+void MainVillage::createCancelUI() {
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 1. 创建文字标签
+    auto label = Label::createWithSystemFont("Cancel Building", "Arial", 24);
+
+    // 2. 创建背景框
+    // 根据文字大小自动调整背景宽度，加一点内边距 (Padding)
+    float width = label->getContentSize().width + 40;
+    float height = 50;
+
+    auto bg = LayerColor::create(Color4B(200, 0, 0, 200), width, height);
+    bg->ignoreAnchorPointForPosition(false);
+    bg->setAnchorPoint(Vec2(0.5, 0.5)); // 中心锚点
+
+    // 3. 创建一个容器节点把它俩装起来
+    auto container = Node::create();
+    container->setContentSize(Size(width, height)); // 设置尺寸，以便检测点击
+    container->setAnchorPoint(Vec2(0.5, 0.5));
+
+    // 居中放置背景和文字
+    bg->setPosition(width / 2, height / 2);
+    label->setPosition(width / 2, height / 2);
+
+    container->addChild(bg);
+    container->addChild(label);
+
+    // 4. 创建按钮逻辑
+    auto btnItem = MenuItemSprite::create(container, container, [=](Ref* sender) {
+        CCLOG("UI回调：取消建造");
+
+        // 恢复状态
+        _selectedBuildingType = BuildingType::NONE;
+
+        // 清除辅助红绿网格
+        this->updateOccupiedGridVisual();
+
+        // 隐藏自己
+        _cancelBuildMenu->setVisible(false);
+        });
+
+    // 5. 创建菜单
+    _cancelBuildMenu = Menu::create(btnItem, nullptr);
+
+    // 6. 设置位置
+    _cancelBuildMenu->setPosition(Vec2(visibleSize.width / 2, visibleSize.height - 80));
+    _cancelBuildMenu->setVisible(false); // 默认隐藏
+
+    // 7. 添加到场景
+    this->addChild(_cancelBuildMenu, 9999);
+}
+
 void MainVillage::switchBuildCategory(int category) {
     if (!_iconContainer) return;
 
@@ -1406,6 +1511,14 @@ void MainVillage::switchBuildCategory(int category) {
             this->updateOccupiedGridVisual();
             CCLOG("选中建筑: %s", name.c_str());
             _buildMenuNode->setVisible(false); // 选完自动关闭
+
+            if (_cancelBuildMenu) {
+                _cancelBuildMenu->setVisible(true);
+                // 可以加个弹出来的动画
+                _cancelBuildMenu->setScale(0);
+                _cancelBuildMenu->runAction(EaseBackOut::create(ScaleTo::create(0.2f, 1.0f)));
+            }
+
             });
         };
 

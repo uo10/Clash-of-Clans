@@ -113,6 +113,11 @@ void Cannon::findEnemy()
             if (s->getState() == Soldier::State::DEAD) {
                 continue; // 跳过这个死人
             }
+
+            if (s->getIsHomeMode()) {
+                continue; // 跳过自己人
+            }
+
             float dist = myPos.distance(s->getPosition());
             if (dist <= _attackRange && dist < minDst) {
                 minDst = dist;
