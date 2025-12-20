@@ -30,7 +30,7 @@ bool LoadingScene::init() {
     }
 
     // 2. 游戏 Logo 
-    auto labelLogo = Label::createWithSystemFont("Clash of Codes", "Arial", 60);
+    auto labelLogo = Label::createWithSystemFont("Clash of Clans", "Kenney Future Narrow", 80);
     labelLogo->enableOutline(Color4B::BLACK, 3);
     labelLogo->setPosition(center + Vec2(0, 500));
     this->addChild(labelLogo);
@@ -58,7 +58,7 @@ bool LoadingScene::init() {
 
 
     // 5. 百分比文字
-    _percentLabel = Label::createWithSystemFont("0%", "Arial", 24);
+    _percentLabel = Label::createWithSystemFont("0%", "Kenney Future Narrow", 24);
     _percentLabel->setColor(Color3B::MAGENTA);
     _percentLabel->setPosition(center - Vec2(0, 500));
     this->addChild(_percentLabel);
@@ -72,7 +72,7 @@ bool LoadingScene::init() {
 void LoadingScene::update(float dt) {
 
     // 模拟加载速度：每秒增加 20% (即5秒加载完)
-    _currentPercent += dt * 20.0f;
+    _currentPercent += dt * 100.0f;
 
     if (_currentPercent > 100.0f) {
         _currentPercent = 100.0f;

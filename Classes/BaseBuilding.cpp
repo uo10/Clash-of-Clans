@@ -30,7 +30,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.name = "Gold Mine Lv2";
             data.hp = 480;
             data.costElixir = 300;
-            data.buildTime = 60;
+            data.buildTime = 5;// 60;
             data.capacity = 1000;
             data.productionRate = 400;
         }
@@ -38,7 +38,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.name = "Gold Mine Lv3";
             data.hp = 560;
             data.costElixir = 450;
-            data.buildTime = 120;
+            data.buildTime = 5;// 120;
             data.capacity = 2000;
             data.productionRate = 800;
         }
@@ -49,7 +49,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.name = "Elixir Pump Lv1";
             data.hp = 350;
             data.costGold = 150;
-            data.buildTime = 10;
+            data.buildTime = 5;// 10;
             data.capacity = 500;
             data.productionRate = 1000000;
         }
@@ -57,7 +57,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.name = "Elixir Pump Lv2";
             data.hp = 500;
             data.costGold = 300;
-            data.buildTime = 30;
+            data.buildTime = 5;//30;
             data.capacity = 1000;
             data.productionRate = 400;
         }
@@ -65,7 +65,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.name = "Elixir Pump Lv3";
             data.hp = 800;
             data.costGold = 600;
-            data.buildTime = 60;
+            data.buildTime = 5;// 60;
             data.capacity = 2000;
             data.productionRate = 800;
         }
@@ -75,7 +75,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
         data.name = "Gold Storage";
         data.hp = 800 + (level * 200);
         data.costElixir = 500 * level; // 金库通常消耗圣水
-        data.buildTime = 30 + (level * 30); 
+        data.buildTime = 5;// 30 + (level * 30);
         data.capacity = 1500 * level;
     }
     // 4. 圣水瓶配置
@@ -83,7 +83,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
         data.name = "Elixir Storage";
         data.hp = 800 + (level * 200);
         data.costGold = 500 * level;
-        data.buildTime = 30 + (level * 30); 
+        data.buildTime = 5;// 30 + (level * 30);
         data.capacity = 1500 * level;
     }
     // 5. 兵营配置
@@ -91,7 +91,7 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
         data.name = "Barracks";
         data.hp = 800 + (level * 200);
         data.costElixir = 500 * level;
-        data.buildTime = 30 + (level * 30);
+        data.buildTime = 5;// 30 + (level * 30);
         data.capacity = 30 * level;
     }
     // 6. 加农炮配置
@@ -108,14 +108,14 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.name = "Cannon Lv2";
             data.hp = 360;
             data.costGold = 1000;
-            data.buildTime = 30;
+            data.buildTime = 5;// 30;
             data.damage = 8;
         }
         else if (level == 3) {
             data.name = "Cannon Lv3";
             data.hp = 420;
             data.costGold = 4000;
-            data.buildTime = 120;
+            data.buildTime = 5;// 120;
             data.damage = 10.4;
         }
     }
@@ -126,21 +126,21 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.hp = 380;
             data.costGold = 1000;
             data.costElixir = 0;
-            data.buildTime = 15;
+            data.buildTime = 5;//15;
             data.damage = 5.5;
         }
         else if (level == 2) {
             data.name = "Archer Tower Lv2";
             data.hp = 420;
             data.costGold = 2000;
-            data.buildTime = 120;
+            data.buildTime = 5;//120;
             data.damage = 7.5;
         }
         else if (level == 3) {
             data.name = "Archer Tower Lv3";
             data.hp = 460;
             data.costGold = 5000;
-            data.buildTime = 1200;
+            data.buildTime = 5;//1200;
             data.damage = 9.5;
         }
     }
@@ -151,19 +151,19 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.hp = 100;
             data.costGold = 0;
             data.costElixir = 0;
-            data.buildTime = 15;
+            data.buildTime = 5;//15;
         }
         else if (level == 2) {
             data.name = "Wall Lv2";
             data.hp = 200;
             data.costGold = 1000;
-            data.buildTime = 120;
+            data.buildTime = 5;//120;
         }
         else if (level == 3) {
             data.name = "Wall Lv3";
             data.hp = 400;
             data.costGold = 5000;
-            data.buildTime = 1200;
+            data.buildTime = 5;//1200;
         }
     }
     // 9. 大本营配置
@@ -179,19 +179,21 @@ BuildingStats BaseBuilding :: getStatsConfig(BuildingType type, int level) {
             data.name = "Town Hall Lv2";
             data.hp = 800;
             data.costGold = 1000;
-            data.buildTime = 120;
+            data.buildTime = 5;//120;
         }
         else if (level == 3) {
             data.name = "Town Hall Lv3";
             data.hp = 1600;
             data.costGold = 4000;
-            data.buildTime = 1200;
+            data.buildTime = 5;//1200;
         }
         }
     return data;
 }
 
 bool BaseBuilding::init(BuildingType type, int level) {
+    // 【关键】开启帧循环
+    this->scheduleUpdate();
     // 1. 基础类初始化
     // 假设 BaseBuilding 继承自 Node (作为容器)，这是最稳妥的写法
     if (!Node::init()) return false;
@@ -277,11 +279,25 @@ bool BaseBuilding::takeDamage(float damage) {
     // 5. 死亡检测
     if (currentHP <= 0) {
         changeState(BuildingState::DESTROYED);
+
         // 确保血条隐藏
         if (hpBarBg) hpBarBg->setVisible(false);
-        updateView();
-        
-        CCLOG("建筑 ID:%d 被摧毁了！", instanceID);
+
+        // 播放一个缩放消失动画，然后隐藏
+        if (mainSprite) {
+            mainSprite->runAction(Sequence::create(
+                ScaleTo::create(0.2f, 0.0f), // 0.2秒缩放到0
+                CallFunc::create([this]() {
+                    this->setVisible(false); // 彻底隐藏整个节点
+                    }),
+                nullptr
+            ));
+        }
+        else {
+            this->setVisible(false);
+        }
+
+        CCLOG("建筑 ID:%d 被摧毁并消失！", instanceID);
         return true;
     }
 
@@ -292,12 +308,12 @@ bool BaseBuilding::takeDamage(float damage) {
         // 1. 获取图片名称
         std::string baseTextureName = getTextureName(this->type, this->level);
 
-        // 【Destroyed 状态的特殊处理】
+        /* 【Destroyed 状态的特殊处理】
         // 如果是废墟状态，我们要试图加载废墟图，而不是等级图
         if (this->state == BuildingState::DESTROYED) {
             if (this->type == BuildingType::GOLD_MINE) baseTextureName = "Gold_Mine_Ruin.png";
             else if (this->type == BuildingType::ELIXIR_PUMP) baseTextureName = "Elixir_Pump_Ruin.png";
-        }
+        }*/
 
         // 2. 精灵创建与纹理更新
         if (!mainSprite) {
@@ -355,10 +371,10 @@ bool BaseBuilding::takeDamage(float damage) {
             break;
 
         case BuildingState::DESTROYED:
-            // 已经在上面处理了图片更换 (Ruin.png)
-            mainSprite->setColor(Color3B::BLACK);
-            mainSprite->setOpacity(200);
+            // 直接隐藏整个建筑节点
+            this->setVisible(false);
             if (hpBar) hpBar->setVisible(false);
+            break;
             break;
         }
     }
@@ -406,6 +422,20 @@ void BaseBuilding::upgradeLevel() {
 
     // 5. 状态回归
     this->state = BuildingState::IDLE;
+
+    // 【新增】隐藏进度条
+    if (_progressNode) {
+        _progressNode->setVisible(false);
+    }
+
+    // 【新增】播放一个升级完成的特效 (可选)
+    // 比如闪一下
+    auto action = Sequence::create(
+        ScaleTo::create(0.1f, 1.2f),
+        ScaleTo::create(0.1f, 1.0f),
+        nullptr
+    );
+    mainSprite->runAction(action);
 
     // 6. 统一刷新画面
     this->updateView();
@@ -470,3 +500,278 @@ void BaseBuilding::initHPBar() {
     hpBarBg->addChild(hpBar);
 }
 
+void BaseBuilding::initBuildUI() {
+    if (_progressNode) return;
+
+    _progressNode = Node::create();
+    _progressNode->setVisible(false);
+    this->addChild(_progressNode, 100);
+
+    // 参数 1: 视觉缩放比例
+    float visualScale = 0.4f;
+
+    float sx = this->getScaleX();
+    float sy = this->getScaleY();
+
+    // 防崩保护
+    if (std::abs(sx) < 0.01f) sx = 1.0f;
+    if (std::abs(sy) < 0.01f) sy = 1.0f;
+
+    // 设置大小 (抵消建筑形变 * 视觉缩放)
+    _progressNode->setScaleX((1.0f / sx) * visualScale);
+    _progressNode->setScaleY((1.0f / sy) * visualScale);
+
+    // =============================================================
+    // 【位置与大小校准】(保留这一段即可)
+    // =============================================================
+
+    float centerX = 0;
+    float centerY = 0; // 改个名字，叫 centerY 更合适
+
+    if (this->mainSprite) {
+        // 1. 计算 X 轴中心 (保持不变)
+        centerX = this->mainSprite->getPositionX();
+
+        // 2. 计算 Y 轴中心
+        centerY = this->mainSprite->getPositionY();
+    }
+    // 根据不同建筑大小进行微调
+    if (this->type == BuildingType::GOLD_MINE || this->type == BuildingType::ELIXIR_STORAGE || this->type == BuildingType::GOLD_STORAGE) {
+        centerY += 50;
+    }
+    else if (this->type == BuildingType::BARRACKS || this->type == BuildingType::WALL || this->type == BuildingType::ELIXIR_PUMP) {
+        centerY += 100;
+    }
+    else {
+        centerY += 150;
+    }
+    _progressNode->setPosition(Vec2(centerX, centerY));
+
+    // =============================================================
+    // 2. 创建锤子图标 (像气泡一样浮动)
+    // =============================================================
+    _hammerIcon = Sprite::create("icon_hammer.png"); // 建造Icon
+
+    // 防崩：没图就画个圆
+    if (!_hammerIcon) {
+        auto draw = DrawNode::create();
+        draw->drawSolidCircle(Vec2::ZERO, 15, 0, 10, Color4F::ORANGE);
+        _hammerIcon = Sprite::create();
+        _hammerIcon->addChild(draw);
+    }
+
+    // 放在进度条上方
+    _hammerIcon->setPosition(0, 40);
+    _progressNode->addChild(_hammerIcon);
+
+    // --- 锤子动画 (上下浮动) ---
+    auto moveUp = MoveBy::create(0.6f, Vec2(0, 10)); // 向上飘10像素
+    auto moveDown = moveUp->reverse();               // 向下飘回
+    auto seq = Sequence::create(moveUp, moveDown, nullptr);
+    _hammerIcon->runAction(RepeatForever::create(seq));
+
+    // =============================================================
+   // 【新增】 时钟图标 (放在进度条左侧)
+   // =============================================================
+    auto clockIcon = Sprite::create("icon_clock.png"); // 请确保 Resources 下有这张图
+
+    // --- 设置位置 ---
+    // 背景条宽84，一半是42。我们放在 -60 的位置，留点空隙
+    clockIcon->setPosition(Vec2(-60, 0));
+
+    // --- 调整大小 ---
+    if (clockIcon->getContentSize().width > 25) {
+        float scale = 25.0f / clockIcon->getContentSize().width;
+        clockIcon->setScale(scale);
+    }
+
+    _progressNode->addChild(clockIcon);
+
+    // =============================================================
+    // 3. 进度条背景 (黑底) - 保持不变
+    // =============================================================
+    auto bg = Sprite::create();
+    bg->setTextureRect(Rect(0, 0, 84, 14));
+    bg->setColor(Color3B::BLACK);
+    _progressNode->addChild(bg);
+
+    // =============================================================
+    // 4. 进度条 (黄条) - 保持不变
+    // =============================================================
+    _progBar = Sprite::create();
+    _progBar->setTextureRect(Rect(0, 0, 80, 10));
+    _progBar->setColor(Color3B(255, 200, 0)); // 金黄
+    _progBar->setAnchorPoint(Vec2(0, 0.5f));
+    _progBar->setPosition(-40, 0);
+    _progressNode->addChild(_progBar);
+
+    // =============================================================
+    // 5. 文字 - 保持不变
+    // =============================================================
+    _timeLabel = Label::createWithSystemFont("0s", "Arial", 16);
+    _timeLabel->enableOutline(Color4B::BLACK, 1);
+    _timeLabel->setPosition(0, 0); // 放在条中间
+    _progressNode->addChild(_timeLabel);
+}
+
+void BaseBuilding::update(float dt) {
+    // 只有在“建造中”状态才倒计时
+    if (this->state == BuildingState::BUILDING) {
+        if (_buildLeftTime > 0) {
+            _buildLeftTime -= dt;
+
+            // 1. 计算比例 (0.0 ~ 1.0)
+            float ratio = 1.0f;
+            if (_buildTotalTime > 0) {
+                ratio = 1.0f - (_buildLeftTime / _buildTotalTime);
+            }
+
+            // 2. 【核心修改】使用 setScaleX 改变长度
+            if (_progBar) {
+                _progBar->setScaleX(ratio);
+            }
+
+            // 3. 刷新文字
+            int totalSeconds = (int)ceil(_buildLeftTime);
+            if (_timeLabel) _timeLabel->setString(StringUtils::format("%ds", totalSeconds));
+        }
+        else {
+            // 时间结束
+            _buildLeftTime = 0; // 时间结束
+            // 【核心修改】 分流处理
+            if (_isUpgradingTarget) {
+                // 如果是升级，执行升级逻辑 (level++ 并保存)
+                this->upgradeLevel();
+            }
+            else {
+                // 如果是初次建造，直接完工 (level 不变)
+               // 1. 状态回归正常
+                this->changeState(BuildingState::IDLE);
+
+                // 2. 隐藏进度条
+                if (_progressNode) {
+                    _progressNode->setVisible(false);
+                }
+
+                // 3. 播放完工特效 (比如建筑弹一下)
+                auto action = Sequence::create(
+                    ScaleTo::create(0.1f, this->getScaleX() * 1.2f, this->getScaleY() * 1.2f),
+                    ScaleTo::create(0.1f, this->getScaleX(), this->getScaleY()),
+                    nullptr
+                );
+                // 注意：这里要小心，如果用了 scaleX/Y 分离，最好分别获取
+                // 简单起见可以用 runAction(JumpBy...) 或者只播放音效
+
+                // 4. 【重要】如果是存储类建筑，建造完成后需要刷新容量
+                if (type == BuildingType::GOLD_STORAGE || type == BuildingType::ELIXIR_STORAGE || type == BuildingType::BARRACKS) {
+                    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("REFRESH_MAX_CAPACITY");
+                }
+
+                CCLOG("新建筑建造完成！");
+            }
+        }
+    }
+}
+
+void BaseBuilding::startUpgradeProcess() {
+
+    if (this->state != BuildingState::IDLE) return;
+
+    if (this->level >= 3) {
+        CCLOG("已达最高等级");
+        return;
+    }
+
+    BuildingStats nextStats = getStatsConfig(this->type, this->level + 1);
+
+    this->_buildTotalTime = (float)nextStats.buildTime;
+    this->_buildLeftTime = this->_buildTotalTime;
+
+    // 标记这是升级
+    this->_isUpgradingTarget = true;
+    this->changeState(BuildingState::BUILDING);
+
+    if (!_progressNode) initBuildUI();
+    _progressNode->setVisible(true);
+
+    // =============================================================
+    // 【位置与大小校准】(保留这一段即可)
+    // =============================================================
+    float centerX = 0;
+    float centerY = 0; // 改个名字，叫 centerY 更合适
+
+    if (this->mainSprite) {
+        // 1. 计算 X 轴中心 (保持不变)
+        centerX = this->mainSprite->getPositionX();
+
+        // 2. 计算 Y 轴中心
+        centerY = this->mainSprite->getPositionY();
+    }
+    // 根据不同建筑大小进行微调
+    if (this->type == BuildingType::GOLD_MINE || this->type == BuildingType::ELIXIR_STORAGE || this->type == BuildingType::GOLD_STORAGE) {
+        centerY += 50;
+    }
+    else if (this->type == BuildingType::BARRACKS || this->type == BuildingType::WALL || this->type == BuildingType::ELIXIR_PUMP) {
+        centerY += 100;
+    }
+    else {
+        centerY += 150;
+    }
+    _progressNode->setPosition(Vec2(centerX, centerY));
+
+    // 3. 重置进度
+    if (_progBar) _progBar->setScaleX(0.0f);
+
+    if (_timeLabel) _timeLabel->setString(StringUtils::format("%ds", (int)_buildTotalTime));
+
+    CCLOG("开始升级... 需耗时 %.1f 秒", _buildTotalTime);
+}
+
+void BaseBuilding::startConstruction() {
+    // 1. 获取当前等级 (Lv.1) 的配置
+    // 注意：这里取的是 this->level，因为是初次建造
+    BuildingStats stats = getStatsConfig(this->type, this->level);
+
+    // 2. 设置时间
+    this->_buildTotalTime = (float)stats.buildTime;
+    this->_buildLeftTime = this->_buildTotalTime;
+
+    // 3. 【关键】标记这不是升级，不需要 level++
+    this->_isUpgradingTarget = false;
+
+    // 4. 切换状态 (会自动触发 updateView 变灰)
+    this->changeState(BuildingState::BUILDING);
+
+    // 5. 显示进度条 UI
+    if (!_progressNode) initBuildUI();
+    _progressNode->setVisible(true);
+
+    // 6. 重新校准 UI 位置 (复用之前的逻辑)
+    float centerX = 0;
+    float centerY = 0; // 改个名字，叫 centerY 更合适
+
+    if (this->mainSprite) {
+        // 1. 计算 X 轴中心 (保持不变)
+        centerX = this->mainSprite->getPositionX();
+
+        // 2. 计算 Y 轴中心
+        centerY = this->mainSprite->getPositionY();
+    }
+    // 根据不同建筑大小进行微调
+    if (this->type == BuildingType::GOLD_MINE || this->type == BuildingType::ELIXIR_STORAGE || this->type == BuildingType::GOLD_STORAGE) {
+        centerY += 50;
+    }
+    else if (this->type == BuildingType::BARRACKS || this->type == BuildingType::WALL || this->type == BuildingType::ELIXIR_PUMP) {
+        centerY += 100;
+    }
+    else {
+        centerY += 150;
+    }
+    _progressNode->setPosition(Vec2(centerX, centerY));
+
+    // 7. 重置进度条显示
+    if (_progBar) _progBar->setScaleX(0.0f);
+    if (_timeLabel) _timeLabel->setString(StringUtils::format("%ds", (int)_buildTotalTime));
+
+    CCLOG("开始建造 Lv.%d %s... 需耗时 %.1f 秒", this->level, this->name.c_str(), _buildTotalTime);
+}

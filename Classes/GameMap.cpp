@@ -1180,19 +1180,35 @@ void GameMap::showSettingsLayer() {
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _settingsLayer);
     this->addChild(_settingsLayer, 20000); // 最顶层
 
-    // 3. 背景板
-    auto bg = Sprite::create("Settings_BG.png"); // 找个背景图，或者用 Scale9Sprite
-    if (!bg) {
-        bg = Sprite::create();
-        bg->setTextureRect(Rect(0, 0, 400, 300));
-        bg->setColor(Color3B(50, 50, 50));
-    }
-    bg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+    // =============================================================
+       // 3. 背景板 (修改为图片)
+       // =============================================================
+       // 请将 "Settings_Panel.png" 替换为你实际的背景图片文件名
+    std::string bgPath = "setting_panel.png";
 
-    _settingsLayer->addChild(bg); // 注意：加在 layer 上
+    // 使用九宫格 Scale9Sprite，这样可以随意拉伸大小而不变形
+    // 如果没有九宫格需求，直接用 Sprite::create 也可以，但 Scale9Sprite 更适合 UI 面板
+    // Rect(边距) 需要根据你的图片实际边框厚度调整，这里假设是 20px
+    auto bg = ui::Scale9Sprite::create(bgPath);
+
+    if (!bg) {
+        // 防崩处理：没图用色块
+        auto sprite = Sprite::create();
+        sprite->setTextureRect(Rect(0, 0, 100, 100));
+        sprite->setColor(Color3B(50, 50, 50));
+        bg = ui::Scale9Sprite::createWithSpriteFrame(sprite->getSpriteFrame());
+    }
+
+    // 设置面板大小 (宽450, 高350，根据内容调整)
+    bg->setContentSize(Size(450, 350));
+    bg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+    bg->setName("SettingsBackground"); // 用于点击检测
+
+    _settingsLayer->addChild(bg);
 
     // 4. 标题
     auto lblTitle = Label::createWithSystemFont("SETTINGS", "Arial", 30);
+    lblTitle->enableOutline(Color4B::BLACK, 2); // 加个描边更清晰
     lblTitle->setPosition(bg->getContentSize().width / 2, bg->getContentSize().height - 40);
     bg->addChild(lblTitle);
 
@@ -1205,17 +1221,38 @@ void GameMap::showSettingsLayer() {
     // 参数3: 获取当前值的函数
     // 参数4: 设置值的回调函数
     // =============================================================
-    auto createVolumeControl = [&](std::string title, float posY, std::function<float()> getVal, std::function<void(float)> setVal) {
+    auto createVolumeControl = [&](std::string title, std::string iconPath, float posY, std::function<float()> getVal, std::function<void(float)> setVal) {
 
+        // 0. 创建小喇叭图标 
+
+        auto icon = Sprite::create(iconPath);
+
+        if (!icon) {
+            // 防崩：没图画个黄圈
+            auto draw = DrawNode::create();
+            draw->drawSolidCircle(Vec2::ZERO, 10, 0, 10, Color4F::YELLOW);
+            icon = Sprite::create();
+            icon->addChild(draw);
+        }
+        else {
+            // 缩放图标到合适大小 (比如 30x30)
+            float targetSize = 30.0f;
+            float maxSide = std::max(icon->getContentSize().width, icon->getContentSize().height);
+            if (maxSide > 0) icon->setScale(targetSize / maxSide);
+        }
+
+        // 位置：放在最左边 (比如 X=30)
+        icon->setPosition(50, posY);
+        bg->addChild(icon);
         // 1. 标题
-        auto lbl = Label::createWithSystemFont(title, "Arial", 24);
+        auto lbl = Label::createWithSystemFont(title, "Kenney Future Narrow", 24);
         lbl->setAnchorPoint(Vec2(0, 0.5));
-        lbl->setPosition(40, posY);
+        lbl->setPosition(80, posY);
         bg->addChild(lbl);
 
         // 2. 格子容器
         auto barNode = Node::create();
-        barNode->setPosition(140, posY);
+        barNode->setPosition(200, posY);
         bg->addChild(barNode);
 
         // 刷新格子的辅助函数
@@ -1237,7 +1274,7 @@ void GameMap::showSettingsLayer() {
         refreshBar(getVal());
 
         // 3. 减号按钮 [-]
-        auto lblMinus = Label::createWithSystemFont("-", "Arial", 40);
+        auto lblMinus = Label::createWithSystemFont("-", "Kenney Future Narrow", 40);
         lblMinus->enableOutline(Color4B::BLACK, 2);
         auto btnMinus = MenuItemLabel::create(lblMinus, [=](Ref*) {
             float v = getVal();
@@ -1251,10 +1288,10 @@ void GameMap::showSettingsLayer() {
                 if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
             }
             });
-        btnMinus->setPosition(120, posY);
+        btnMinus->setPosition(170, posY);
 
         // 4. 加号按钮 [+]
-        auto lblPlus = Label::createWithSystemFont("+", "Arial", 40);
+        auto lblPlus = Label::createWithSystemFont("+", "Kenney Future Narrow", 40);
         lblPlus->enableOutline(Color4B::BLACK, 2);
         auto btnPlus = MenuItemLabel::create(lblPlus, [=](Ref*) {
             float v = getVal();
@@ -1266,7 +1303,7 @@ void GameMap::showSettingsLayer() {
                 if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
             }
             });
-        btnPlus->setPosition(140 + 180 + 20, posY);
+        btnPlus->setPosition(190 + 180 + 20, posY);
 
         // 返回菜单项，以便添加到主菜单
         return Vector<MenuItem*>{btnMinus, btnPlus};
@@ -1277,13 +1314,13 @@ void GameMap::showSettingsLayer() {
     // =============================================================
 
     // 1. 音乐控制 (Music) - 放在 Y=220
-    auto musicItems = createVolumeControl("Music", 220,
+    auto musicItems = createVolumeControl("Music", "icon_music.png", 220,
         []() { return PlayerData::getInstance()->musicVolume; }, // 获取
         [](float v) { PlayerData::getInstance()->setMusicVol(v); } // 设置
     );
 
     // 2. 音效控制 (Effect) - 放在 Y=160
-    auto effectItems = createVolumeControl("Effect", 160,
+    auto effectItems = createVolumeControl("Effect", "icon_effect.png", 160,
         []() { return PlayerData::getInstance()->effectVolume; }, // 获取
         [](float v) { PlayerData::getInstance()->setEffectVol(v); } // 设置
     );
@@ -1298,30 +1335,70 @@ void GameMap::showSettingsLayer() {
     volMenu->setPosition(Vec2::ZERO);
     bg->addChild(volMenu);
 
-    // 5. 继续游戏 (Resume)
-    auto btnResumeLabel = Label::createWithSystemFont("Resume", "Arial", 24);
+    // =============================================================
+     // 5. 继续游戏 (Resume) - 保持文字按钮，调整位置
+     // =============================================================
+    auto btnResumeLabel = Label::createWithSystemFont("Resume", "Kenney Future Narrow", 28);
+    // 加个描边让它好看点
+    btnResumeLabel->enableOutline(Color4B::BLACK, 2);
+
     auto btnResume = MenuItemLabel::create(btnResumeLabel, [=](Ref*) {
-        // 【恢复游戏逻辑】
         this->_isGamePaused = false;
-        // 移除并置空
         if (_settingsLayer) {
             _settingsLayer->removeFromParent();
-            _settingsLayer = nullptr; // 置空，防止下次调用出错
+            _settingsLayer = nullptr;
         }
         });
-    btnResume->setPosition(Vec2(bg->getContentSize().width / 2, 50));
+    // 放在底部偏上
+    btnResume->setPosition(Vec2(bg->getContentSize().width / 2, 110));
 
-    // 6. 退出战斗 (Quit)
-    auto btnQuitLabel = Label::createWithSystemFont("Quit Battle", "Arial", 24);
-    btnQuitLabel->setColor(Color3B::RED);
-    auto btnQuit = MenuItemLabel::create(btnQuitLabel, [=](Ref*) {
+    // =============================================================
+    // 6. 退出战斗 (End Battle) - 修改为图片按钮
+    // =============================================================
+
+    // --- 容器 ---
+    auto quitWrapper = Node::create();
+    quitWrapper->setContentSize(Size(160, 60)); // 设定点击区域大小
+    quitWrapper->setAnchorPoint(Vec2(0.5, 0.5));
+
+    // --- 图片 ---
+    auto quitSprite = Sprite::create("End_Battle.png");
+
+    // 防崩
+    if (!quitSprite) {
+        quitSprite = Sprite::create();
+        quitSprite->setTextureRect(Rect(0, 0, 140, 50));
+        quitSprite->setColor(Color3B::RED);
+        auto l = Label::createWithSystemFont("END BATTLE", "Kenney Future Narrow", 20);
+        l->setPosition(70, 25);
+        quitSprite->addChild(l);
+    }
+
+    // 缩放适应容器 (宽140, 高50)
+    float qScaleX = 140.0f / std::max(1.0f, quitSprite->getContentSize().width);
+    float qScaleY = 50.0f / std::max(1.0f, quitSprite->getContentSize().height);
+    // 保持等比缩放，取较小值，或者非等比拉伸
+    quitSprite->setScale(qScaleX, qScaleY);
+
+    quitSprite->setPosition(80, 30); // 居中
+    quitWrapper->addChild(quitSprite);
+
+    // --- 按钮 ---
+    auto btnQuit = MenuItemSprite::create(quitWrapper, nullptr, [=](Ref*) {
         // 直接回大本营
         auto homeScene = MainVillage::createScene();
         Director::getInstance()->replaceScene(TransitionFade::create(1.0f, homeScene));
         });
-    btnQuit->setPosition(Vec2(bg->getContentSize().width / 2, 100));
 
-    auto menu = Menu::create(btnResume, btnQuit, nullptr);
-    menu->setPosition(Vec2::ZERO);
-    bg->addChild(menu);
+    // 放在最下面
+    btnQuit->setPosition(Vec2(bg->getContentSize().width / 2, 50));
+
+    // 组装菜单
+    auto bottomMenu = Menu::create(btnResume, btnQuit, nullptr);
+    bottomMenu->setPosition(Vec2::ZERO);
+    bg->addChild(bottomMenu);
+
+    // 入场动画 (Q弹效果)
+    bg->setScale(0);
+    bg->runAction(EaseBackOut::create(ScaleTo::create(0.3f, 1.0f)));
 }

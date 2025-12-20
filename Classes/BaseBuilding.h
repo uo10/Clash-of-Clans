@@ -77,6 +77,25 @@ protected:
     // 保存当前等级的配置数据，供子类逻辑使用
     BuildingStats _stats;
 
+    // --- 倒计时 UI 组件 ---
+    cocos2d::Node* _progressNode;       // 进度条的父节点(容器)
+    cocos2d::Sprite* _progBar;          // 进度条
+    cocos2d::Label* _timeLabel;         // "10s" 文字
+    cocos2d::Sprite* _hammerIcon = nullptr; // 锤子图标
+    // 标记当前倒计时是为了升级还是为了建造
+    // true = 正在升级 (结束后 level++)
+    // false = 正在建造 (结束后 level 不变，只是进入 IDLE)
+    bool _isUpgradingTarget = false;
+
+
+    // --- 时间变量 ---
+    float _buildTotalTime = 0.0f;       // 总时间
+    float _buildLeftTime = 0.0f;        // 剩余时间
+
+    // 初始化进度条 UI 的辅助函数
+    void initBuildUI();
+
+
 public:
 
     // ------------------------------------------------
@@ -197,6 +216,15 @@ public:
      * 模拟从数据库/配置表中查询指定等级的数值。
      */
     static BuildingStats getStatsConfig(BuildingType type, int level);
+
+    // 【新增】开始建造/升级 (这是 UI 点击后调用的入口)
+    void startUpgradeProcess();
+
+    // 【重写】每帧更新 (Cocos 自动调用)
+    virtual void update(float dt) override;
+
+    // 开始初次建造 (放置时调用)
+    void startConstruction();
 
 };
 

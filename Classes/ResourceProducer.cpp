@@ -14,6 +14,7 @@ ResourceProducer* ResourceProducer::create(BuildingType type, int level) {
 }
 
 bool ResourceProducer::init(BuildingType type, int level) {
+
     // 1. 调用父类初始化
     if (!BaseBuilding::init(type, level)) return false;
 
@@ -75,25 +76,41 @@ bool ResourceProducer::init(BuildingType type, int level) {
 }
 
 void ResourceProducer::update(float dt) {
-    // 只有在 IDLE (正常工作) 状态下才生产
-    // 如果正在升级(BUILDING)或者被毁(DESTROYED)，不应该生产
-    if (this->state != BuildingState::IDLE) return;
 
+    BaseBuilding::update(dt); // 1. 先让父类处理倒计时
+
+    // =========================================================
+    // 【核心修复】 先检查状态，如果不是 IDLE，强制隐藏气泡并停止生产
+    // =========================================================
+    if (this->state != BuildingState::IDLE) {
+        // 如果当前气泡还亮着，赶紧把它关掉
+        if (isBubbleShowing) {
+            bubbleIcon->setVisible(false);
+            isBubbleShowing = false;
+        }
+        // 停止生产，直接返回
+        return;
+    }
+
+    // =========================================================
+    // 下面是 IDLE 状态下的正常生产逻辑
+    // =========================================================
+
+    // 2. 生产资源
     if (currentRes < maxCapacity) {
-        currentRes += (productionRate / 3600.0f) * dt;// Rate 是每秒产量
-
+        currentRes += (productionRate / 3600.0f) * dt;
         if (currentRes > maxCapacity) currentRes = maxCapacity;
     }
 
-    // 气泡逻辑：满 20% 就显示
-    bool shouldShow = (currentRes >= 1.0f);
+    // 3. 气泡显示逻辑 (只处理显示和因收菜导致的隐藏)
+    bool shouldShow = (currentRes >= 1.0f); // 只要有资源就显示，或者设定阈值
 
     if (shouldShow && !isBubbleShowing) {
         bubbleIcon->setVisible(true);
         isBubbleShowing = true;
     }
     else if (!shouldShow && isBubbleShowing) {
-        // 如果资源被收光了，或者被偷了，隐藏气泡
+        // 资源被收走了 (currentRes 变少了)，隐藏气泡
         bubbleIcon->setVisible(false);
         isBubbleShowing = false;
     }

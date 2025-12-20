@@ -63,6 +63,7 @@ bool MainVillage::init()
     _selectedSpritePath = "R-C.jpg";//默认选择图片
     //_selectedBuildingType = BuildingType::GOLD_MINE;
     _selectedBuildingType = BuildingType::NONE;
+    this->scheduleUpdate();
 
 	// ================  设置初始化地图  ======================
     // 
@@ -536,6 +537,9 @@ bool MainVillage::init()
                                 // 标记该瓦片为已占用
                                 std::string key = StringUtils::format("%d_%d", tileX, tileY);
                                 _occupiedTiles[key] = true;
+
+                                // 开始建造流程 (显示进度条，进入 BUILDING 状态)
+                                newBuilding->startConstruction();
                                 CCLOG("Sprite placed at tile (%d, %d)", tileX, tileY);
                             }
                             else {
@@ -589,11 +593,17 @@ bool MainVillage::init()
                         BaseBuilding* building = dynamic_cast<BaseBuilding*>(child);
 
                         if (building) {
-                            CCLOG("右键选中了建筑，弹出操作菜单");
+                            // 只有当状态是 IDLE 时才执行菜单逻辑
+                            if (building->state == BuildingState::IDLE) {
+                                CCLOG("右键选中了建筑，弹出操作菜单");
+                                this->showBuildingMenu(building);
+                            }
+                            else {
+                                // 如果不是 IDLE (比如正在建造)，打印日志
+                                CCLOG("建筑正在施工或被摧毁，无法打开菜单");
+                            }
 
-                            // 调用菜单显示函数，把 building 传过去
-                            this->showBuildingMenu(building);
-
+                            // 只要点中了建筑，无论是否打开菜单，都应该 break (停止检测重叠的物体)
                             break;
                         }
                     }
@@ -825,10 +835,172 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
     // 加到地图上，设置高Z轴，保证盖在所有建筑上面
     _MainVillageMap->addChild(_activeMenuNode, 10000);
 
-    //---------------按钮1：升级功能----------------
-    auto labelUp = Label::createWithSystemFont("Upgrade (Lv+1)", "Arial", 24);
+    // =============================================================
+    // 定义辅助函数：创建漂亮的图标按钮 (Wrapper + Sprite + 点击动画)
+    // 参数: 图片名, 文字(可选), 回调函数
+    // =============================================================
+    auto createIconBtn = [](std::string imgName, std::string text, const ccMenuCallback& callback) -> MenuItem* {
 
-    auto btnUpgrade = MenuItemLabel::create(labelUp, [=](Ref* sender) {
+        // 1. 容器 (点击热区) - 80x80
+        auto wrapper = Node::create();
+        wrapper->setContentSize(Size(80, 80));
+        wrapper->setAnchorPoint(Vec2(0.5, 0.5));
+
+        // 2. 图标 (Sprite)
+        auto sprite = Sprite::create(imgName);
+        if (!sprite) {
+            // 防崩：没图画个红块
+            sprite = Sprite::create();
+            sprite->setTextureRect(Rect(0, 0, 70, 70));
+            sprite->setColor(Color3B::RED);
+        }
+
+        // 缩放：限制在 70x70 以内
+        float s = 70.0f / std::max(sprite->getContentSize().width, sprite->getContentSize().height);
+        sprite->setScale(s);
+        sprite->setPosition(40, 40); // 居中
+        wrapper->addChild(sprite);
+
+        // 3. 文字 (放在图标下方)
+        if (!text.empty()) {
+            auto lbl = Label::createWithSystemFont(text, "Arial", 16);
+            lbl->enableOutline(Color4B::BLACK, 1);
+            lbl->setPosition(40, -15); // 图标下方
+            wrapper->addChild(lbl);
+        }
+
+        // 4. 按钮
+        auto btn = MenuItemSprite::create(wrapper, nullptr, [=](Ref* sender) {
+            // 点击反馈动画
+            sprite->stopAllActions();
+            sprite->runAction(Sequence::create(
+                ScaleTo::create(0.1f, s * 0.9f),
+                ScaleTo::create(0.1f, s),
+                nullptr
+            ));
+
+            // 执行业务逻辑
+            if (callback) callback(sender);
+            });
+
+        return btn;
+        };
+    // =============================================================
+    // 3. 创建各个功能按钮
+    // =============================================================
+
+    // --- 按钮 1: 信息 (Info) ---
+    // 请替换 "btn_info.png" 为你的实际文件名
+    auto btnInfo = createIconBtn("btn_info.png", "Info", [=](Ref* sender) {
+
+        // 1. 先关闭原来的操作菜单
+        this->closeBuildingMenu();
+
+        // 2. 创立一个菜单根节点
+        _activeMenuNode = Node::create();
+        // 设置反向缩放 
+        float mapScaleX = _MainVillageMap->getScaleX();
+        float mapScaleY = _MainVillageMap->getScaleY();
+        _activeMenuNode->setScaleX(1.0f / mapScaleX);
+        _activeMenuNode->setScaleY(1.0f / mapScaleY);
+
+        // 定位到建筑位置
+        _activeMenuNode->setPosition(building->getPosition());
+
+        // 加到地图上，层级极高
+        _MainVillageMap->addChild(_activeMenuNode, 20000);
+
+        // 3. 创建背景板 
+        float bgWidth = 300;
+        float bgHeight = 200;
+
+        // A. 准备图片路径
+        std::string bgImg = "info_panel.png"; 
+
+        // B. 定义九宫格的“可拉伸区域” (CapInsets)
+        // Rect(x, y, w, h) -> 从x=25, y=25的位置开始，取宽50, 高50的中间区域进行拉伸
+        Rect capInsets = Rect(25, 25, 50, 50);
+
+        // C. 创建九宫格精灵
+        auto bg = ui::Scale9Sprite::create(bgImg);
+
+        if (bg) {
+            // 如果图片加载成功，设置拉伸区域
+            bg->setCapInsets(capInsets);
+        }
+        else {
+            // 防崩处理：如果没图，创建一个临时的 Scale9Sprite (使用纯色块)
+            auto sprite = Sprite::create();
+            sprite->setTextureRect(Rect(0, 0, 100, 100));
+            sprite->setColor(Color3B(0, 0, 0));
+            sprite->setOpacity(200);
+            bg = ui::Scale9Sprite::createWithSpriteFrame(sprite->getSpriteFrame());
+        }
+
+        // D. 设置目标大小 (300x200)
+        bg->setContentSize(Size(bgWidth, bgHeight));
+
+        // E. 设置属性 
+        bg->setName("InfoBackground"); // 必须保留，用于鼠标点击检测
+        bg->setAnchorPoint(Vec2(0, 0.5f)); // 左侧垂直居中锚点
+        bg->setPosition(Vec2(60, 0));      // 放在建筑右侧
+
+        _activeMenuNode->addChild(bg);
+        // 4. 显示通用信息 (名字、等级、HP)
+        std::string nameStr = building->name;
+
+        std::string commonText = StringUtils::format(
+            "Name: %s\nLevel: %d\nHP: %d / %d",
+            nameStr.c_str(),
+            building->level,
+            (int)building->currentHP,
+            (int)building->maxHP
+        );
+
+
+        auto labelCommon = Label::createWithSystemFont(commonText, "Kenney Future Narrow", 24);
+        labelCommon->setColor(Color3B::BLACK);
+        labelCommon->setPosition(bgWidth / 2, bgHeight / 2 + 20); // 靠上
+        bg->addChild(labelCommon);
+
+        // 5. 显示特殊信息 (根据类型判断)
+        std::string specialText = "";
+        BuildingStats stats = BaseBuilding::getStatsConfig(building->type, building->level);//获取建筑信息
+        if (building->type == BuildingType::GOLD_MINE || building->type == BuildingType::ELIXIR_PUMP) {
+            specialText = StringUtils::format("Production: %d / hour", stats.productionRate);
+        }
+        else if (building->type == BuildingType::CANNON || building->type == BuildingType::ARCHER_TOWER) {
+            specialText = StringUtils::format("Damage: %.1lf ", stats.damage);
+        }
+        else if (building->type != BuildingType::WALL && building->type != BuildingType::TOWN_HALL) {
+            specialText = StringUtils::format("Capacity: %d", stats.capacity);
+        }
+
+        if (!specialText.empty()) {
+            auto labelSpecial = Label::createWithSystemFont(specialText, "Kenney Future Narrow", 24);
+            labelSpecial->setColor(Color3B::MAGENTA); //以此区分
+            labelSpecial->setPosition(bgWidth / 2, bgHeight / 2 - 40);
+            bg->addChild(labelSpecial);
+        }
+
+        // 6. 添加一个关闭按钮
+        auto closeLabel = Label::createWithSystemFont("[ Close ]", "Kenney Future Narrow", 26);
+        auto closeItem = MenuItemLabel::create(closeLabel, [=](Ref* sender) {
+            this->closeBuildingMenu();
+            });
+        closeItem->setPosition(bgWidth - 60, bgHeight - 20);
+
+        closeLabel->setColor(Color3B(255, 50, 50));
+        closeLabel->enableBold();         // 加粗/描边效果 
+
+        auto menu = Menu::create(closeItem, nullptr);
+        menu->setPosition(Vec2::ZERO);
+        bg->addChild(menu);
+        CCLOG("信息展示：");
+        });
+
+    // --- 按钮 2: 升级 (Upgrade) ---
+    auto btnUpgrade = createIconBtn("btn_upgrade.png", "Upgrade", [=](Ref* sender) {
         CCLOG("点击了升级按钮");
 
         // --- 扣费升级逻辑 ---
@@ -856,13 +1028,13 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
 
         BuildingStats nextStats = BaseBuilding::getStatsConfig(building->type, nextLevel);//获取升级花费
 
-        int upgradeCostGold = nextStats.costGold; 
+        int upgradeCostGold = nextStats.costGold;
         int upgradeCostElixir = nextStats.costElixir;
-        if (PlayerData::getInstance()->consumeGold(upgradeCostGold)&& PlayerData::getInstance()->consumeElixir(upgradeCostElixir)) {
-            // 扣钱成功，执行升级
-            building->upgradeLevel();
+        if (PlayerData::getInstance()->consumeGold(upgradeCostGold) && PlayerData::getInstance()->consumeElixir(upgradeCostElixir)) {
+            // 扣钱成功，开始升级(有时间显示)
+            building->startUpgradeProcess();
             this->updateResourceUI(); // 刷新右上角钱数
-            
+
             //关闭菜单
             this->closeBuildingMenu();
         }
@@ -871,138 +1043,10 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
         }
         });
 
-    //-------------按钮2：删除功能--------------
-    auto labelRem = Label::createWithSystemFont("Remove", "Arial", 24);
-
-    auto btnRemove = MenuItemLabel::create(labelRem, [=](Ref* sender) {
-        CCLOG("点击了拆除按钮");
-
-        // 1. 如果是存储建筑
-        if (building->type == BuildingType::GOLD_STORAGE ||
-            building->type == BuildingType::ELIXIR_STORAGE) {
-
-            auto& list = this->_storageList;
-            auto it = std::find(list.begin(), list.end(), building);
-            if (it != list.end()) {
-                list.erase(it);
-                this->refreshTotalCapacity(); // 刷新上限
-                CCLOG("Storage removed from list.");
-            }
-        }
-
-        // 2. 释放地图占用 
-        Size tileSize = _MainVillageMap->getTileSize();
-        Size mapSize = _MainVillageMap->getMapSize();
-
-        // 获取建筑当前在地图上的坐标
-        Vec2 buildingPos = building->getPosition();
-
-        // 计算网格坐标
-        int tileX = (int)(buildingPos.x / tileSize.width);
-        int tileY = (int)(mapSize.height - (buildingPos.y / tileSize.height));
-
-        std::string key = StringUtils::format("%d_%d", tileX, tileY);
-
-        // 将该位置标记为“未占用”
-        _occupiedTiles[key] = false;
-        CCLOG("Tile (%d, %d) freed.", tileX, tileY);
-
-        // 3. 移除对象
-        building->removeFromParent();
-        // 4. 关闭菜单
-        this->closeBuildingMenu();
-        });
-
-    //----------- 按钮3：显示信息 -------------
-    auto labelInfo = Label::createWithSystemFont("Info", "Arial", 20);
-    auto btnInfo = MenuItemLabel::create(labelInfo, [=](Ref* sender) {
-
-        // 1. 先关闭原来的操作菜单
-        this->closeBuildingMenu();
-
-        // 2. 创立一个菜单根节点
-        _activeMenuNode = Node::create();
-        // 设置反向缩放 
-        float mapScaleX = _MainVillageMap->getScaleX();
-        float mapScaleY = _MainVillageMap->getScaleY();
-        _activeMenuNode->setScaleX(1.0f / mapScaleX);
-        _activeMenuNode->setScaleY(1.0f / mapScaleY);
-
-        // 定位到建筑位置
-        _activeMenuNode->setPosition(building->getPosition());
-
-        // 加到地图上，层级极高
-        _MainVillageMap->addChild(_activeMenuNode, 20000);
-
-        // 3. 创建半透明背景 
-        float bgWidth = 300;
-        float bgHeight = 200;
-        auto bg = LayerColor::create(Color4B(0, 0, 0, 200), bgWidth, bgHeight);
-        bg->setName("InfoBackground");//设置菜单署名
-        bg->ignoreAnchorPointForPosition(false);
-        bg->setAnchorPoint(Vec2(0, 0.5));
-        bg->setPosition(Vec2(60, 0));
-        _activeMenuNode->addChild(bg);//将背景板添加到指针
-
-        // 4. 显示通用信息 (名字、等级、HP)
-        std::string nameStr = building->name;
-
-        std::string commonText = StringUtils::format(
-            "Name: %s\nLevel: %d\nHP: %d / %d",
-            nameStr.c_str(),
-            building->level,
-            (int)building->currentHP,
-            (int)building->maxHP 
-        );
-
-        auto labelCommon = Label::createWithSystemFont(commonText, "Arial", 24);
-        labelCommon->setPosition(bgWidth / 2, bgHeight / 2 + 20); // 靠上
-        bg->addChild(labelCommon);
-
-        // 5. 显示特殊信息 (根据类型判断)
-        std::string specialText = "";
-        BuildingStats stats = BaseBuilding::getStatsConfig(building->type, building->level);//获取建筑信息
-        if (building->type == BuildingType::GOLD_MINE || building->type == BuildingType::ELIXIR_PUMP) {
-            specialText = StringUtils::format("Production: %d / hour", stats.productionRate);
-        }
-        else if (building->type == BuildingType::CANNON || building->type == BuildingType::ARCHER_TOWER) {
-            specialText = StringUtils::format("Damage: %.1lf ", stats.damage);
-        }
-        else if (building->type != BuildingType::WALL && building->type != BuildingType::TOWN_HALL){
-            specialText = StringUtils::format("Capacity: %d", stats.capacity);
-        }
-        
-        if (!specialText.empty()) {
-            auto labelSpecial = Label::createWithSystemFont(specialText, "Arial", 24);
-            labelSpecial->setColor(Color3B::YELLOW); //以此区分
-            labelSpecial->setPosition(bgWidth / 2, bgHeight / 2 -40 );
-            bg->addChild(labelSpecial);
-        }
-
-        // 6. 添加一个关闭按钮
-        auto closeLabel = Label::createWithSystemFont("[ Close ]", "Arial", 26);
-        auto closeItem = MenuItemLabel::create(closeLabel, [=](Ref* sender) {
-            this->closeBuildingMenu();
-            });
-        closeItem->setPosition(bgWidth - 60, bgHeight - 20);
-
-        auto menu = Menu::create(closeItem, nullptr);
-        menu->setPosition(Vec2::ZERO);
-        bg->addChild(menu);
-        CCLOG("信息展示：");
-        });
-
-    // 定义训练按钮指针 (因为不确定是否是军营，使用指针，初始化为空)
-    MenuItemLabel* btnTrain = nullptr;
-
-    // ----------- 按钮4：训练士兵 -------------
+    // --- 按钮 3: 训练 (Train) - 仅兵营 ---
+    MenuItem* btnTrain = nullptr;
     if (building->type == BuildingType::BARRACKS) {
-
-        auto labelTrain = Label::createWithSystemFont("Train Troops", "Arial", 24);
-        labelTrain->setColor(Color3B(0, 255, 0));
-
-        btnTrain = MenuItemLabel::create(labelTrain, [=](Ref* sender) {
-
+        btnTrain = createIconBtn("btn_train.png", "Train", [=](Ref* sender) {
             // 1. 清空当前菜单
             if (_activeMenuNode) {
                 _activeMenuNode->removeAllChildren();
@@ -1132,7 +1176,7 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                             float targetScale = 0.2f; // 你的士兵标准大小
                             if (targetPos.x < doorPos.x) targetScale = -0.2f; // 保持翻转
 
-                            auto scaleAct = ScaleTo::create(duration, fabs(targetScale), fabs(targetScale)); 
+                            auto scaleAct = ScaleTo::create(duration, fabs(targetScale), fabs(targetScale));
 
                             // 组合动作
                             auto spawnSeq = Sequence::create(
@@ -1288,24 +1332,73 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
             CCLOG("打开了兵营训练面板");
             });
     }
+    // --- 按钮 4: 移除 (Remove) ---
+    auto btnRemove = createIconBtn("btn_remove.png", "Remove", [=](Ref* sender) {
+           CCLOG("点击了拆除按钮");
 
-    // ----------- 组装最终的主菜单 (使用 Vector 动态添加) -------------
+            // 1. 如果是存储建筑
+            if (building->type == BuildingType::GOLD_STORAGE ||
+                building->type == BuildingType::ELIXIR_STORAGE) {
+
+                auto& list = this->_storageList;
+                auto it = std::find(list.begin(), list.end(), building);
+                if (it != list.end()) {
+                    list.erase(it);
+                    this->refreshTotalCapacity(); // 刷新上限
+                    CCLOG("Storage removed from list.");
+                }
+            }
+
+            // 2. 释放地图占用 
+            Size tileSize = _MainVillageMap->getTileSize();
+            Size mapSize = _MainVillageMap->getMapSize();
+
+            // 获取建筑当前在地图上的坐标
+            Vec2 buildingPos = building->getPosition();
+
+            // 计算网格坐标
+            int tileX = (int)(buildingPos.x / tileSize.width);
+            int tileY = (int)(mapSize.height - (buildingPos.y / tileSize.height));
+
+            std::string key = StringUtils::format("%d_%d", tileX, tileY);
+
+            // 将该位置标记为“未占用”
+            _occupiedTiles[key] = false;
+            CCLOG("Tile (%d, %d) freed.", tileX, tileY);
+
+            // 3. 移除对象
+            building->removeFromParent();
+            // 4. 关闭菜单
+            this->closeBuildingMenu();
+         });
+
+    // =============================================================
+    // 4. 组装横向菜单
+    // =============================================================
     Vector<MenuItem*> menuItems;
-    menuItems.pushBack(btnUpgrade);
-    menuItems.pushBack(btnRemove);
 
-    // 如果是兵营，就把训练按钮加进去
-    if (btnTrain != nullptr) {
+    // 按习惯顺序排列：信息 - 升级 - (训练) - 拆除
+    menuItems.pushBack(btnInfo);
+    menuItems.pushBack(btnUpgrade);
+
+    if (btnTrain) {
         menuItems.pushBack(btnTrain);
     }
 
-    menuItems.pushBack(btnInfo);
+    menuItems.pushBack(btnRemove);
 
-    auto menu = Menu::createWithArray(menuItems); // 使用数组创建菜单
-    menu->alignItemsVerticallyWithPadding(20);
+    auto menu = Menu::createWithArray(menuItems);
+
+    // 【关键修改】改为水平排列
+    menu->alignItemsHorizontallyWithPadding(10); // 间距 10
+
     menu->setName("BuildingMenu");
     menu->setPosition(Vec2::ZERO);
     _activeMenuNode->addChild(menu);
+
+    // 入场动画：弹出来
+    _activeMenuNode->setScale(0);
+    _activeMenuNode->runAction(EaseBackOut::create(ScaleTo::create(0.2f, 1.0f / mapScaleX, 1.0f / mapScaleY)));
 }
 
 void MainVillage::createBuildUI() {
@@ -1767,7 +1860,7 @@ void MainVillage::updateOccupiedGridVisual() {
 }
 
 void MainVillage::showSettingsLayer() {
-    // 1. 防止重复打开
+    // 防止重复打开
     if (_settingsLayer) return;
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
@@ -1783,19 +1876,35 @@ void MainVillage::showSettingsLayer() {
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _settingsLayer);
     this->addChild(_settingsLayer, 20000); // 最顶层
 
-    // 3. 背景板
-    auto bg = Sprite::create("Settings_BG.png"); // 找个背景图，或者用 Scale9Sprite
-    if (!bg) {
-        bg = Sprite::create();
-        bg->setTextureRect(Rect(0, 0, 400, 300));
-        bg->setColor(Color3B(50, 50, 50));
-    }
-    bg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+    // =============================================================
+       // 3. 背景板 (修改为图片)
+       // =============================================================
+       // 请将 "Settings_Panel.png" 替换为你实际的背景图片文件名
+    std::string bgPath = "setting_panel.png";
 
-    _settingsLayer->addChild(bg); // 注意：加在 layer 上
+    // 使用九宫格 Scale9Sprite，这样可以随意拉伸大小而不变形
+    // 如果没有九宫格需求，直接用 Sprite::create 也可以，但 Scale9Sprite 更适合 UI 面板
+    // Rect(边距) 需要根据你的图片实际边框厚度调整，这里假设是 20px
+    auto bg = ui::Scale9Sprite::create(bgPath);
+
+    if (!bg) {
+        // 防崩处理：没图用色块
+        auto sprite = Sprite::create();
+        sprite->setTextureRect(Rect(0, 0, 100, 100));
+        sprite->setColor(Color3B(50, 50, 50));
+        bg = ui::Scale9Sprite::createWithSpriteFrame(sprite->getSpriteFrame());
+    }
+
+    // 设置面板大小 (宽450, 高350，根据内容调整)
+    bg->setContentSize(Size(450, 350));
+    bg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+    bg->setName("SettingsBackground"); // 用于点击检测
+
+    _settingsLayer->addChild(bg);
 
     // 4. 标题
-    auto lblTitle = Label::createWithSystemFont("SETTINGS", "Arial", 30);
+    auto lblTitle = Label::createWithSystemFont("SETTINGS", "Kenney Future Narrow", 30);
+    lblTitle->enableOutline(Color4B::BLACK, 2); // 加个描边更清晰
     lblTitle->setPosition(bg->getContentSize().width / 2, bg->getContentSize().height - 40);
     bg->addChild(lblTitle);
 
@@ -1808,17 +1917,38 @@ void MainVillage::showSettingsLayer() {
       // 参数3: 获取当前值的函数
       // 参数4: 设置值的回调函数
       // =============================================================
-    auto createVolumeControl = [&](std::string title, float posY, std::function<float()> getVal, std::function<void(float)> setVal) {
+    auto createVolumeControl = [&](std::string title, std::string iconPath, float posY, std::function<float()> getVal, std::function<void(float)> setVal) {
 
+        // 0. 创建小喇叭图标 
+
+        auto icon = Sprite::create(iconPath);
+
+        if (!icon) {
+            // 防崩：没图画个黄圈
+            auto draw = DrawNode::create();
+            draw->drawSolidCircle(Vec2::ZERO, 10, 0, 10, Color4F::YELLOW);
+            icon = Sprite::create();
+            icon->addChild(draw);
+        }
+        else {
+            // 缩放图标到合适大小 (比如 30x30)
+            float targetSize = 30.0f;
+            float maxSide = std::max(icon->getContentSize().width, icon->getContentSize().height);
+            if (maxSide > 0) icon->setScale(targetSize / maxSide);
+        }
+
+        // 位置：放在最左边 (比如 X=30)
+        icon->setPosition(50, posY);
+        bg->addChild(icon);
         // 1. 标题
-        auto lbl = Label::createWithSystemFont(title, "Arial", 24);
+        auto lbl = Label::createWithSystemFont(title, "Kenney Future Narrow", 24);
         lbl->setAnchorPoint(Vec2(0, 0.5));
-        lbl->setPosition(40, posY);
+        lbl->setPosition(80, posY);
         bg->addChild(lbl);
 
         // 2. 格子容器
         auto barNode = Node::create();
-        barNode->setPosition(140, posY);
+        barNode->setPosition(200, posY);
         bg->addChild(barNode);
 
         // 刷新格子的辅助函数
@@ -1840,7 +1970,7 @@ void MainVillage::showSettingsLayer() {
         refreshBar(getVal());
 
         // 3. 减号按钮 [-]
-        auto lblMinus = Label::createWithSystemFont("-", "Arial", 40);
+        auto lblMinus = Label::createWithSystemFont("-", "Kenney Future Narrow", 40);
         lblMinus->enableOutline(Color4B::BLACK, 2);
         auto btnMinus = MenuItemLabel::create(lblMinus, [=](Ref*) {
             float v = getVal();
@@ -1854,10 +1984,10 @@ void MainVillage::showSettingsLayer() {
                 if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
             }
             });
-        btnMinus->setPosition(120, posY);
+        btnMinus->setPosition(170, posY);
 
         // 4. 加号按钮 [+]
-        auto lblPlus = Label::createWithSystemFont("+", "Arial", 40);
+        auto lblPlus = Label::createWithSystemFont("+", "Kenney Future Narrow", 40);
         lblPlus->enableOutline(Color4B::BLACK, 2);
         auto btnPlus = MenuItemLabel::create(lblPlus, [=](Ref*) {
             float v = getVal();
@@ -1869,7 +1999,7 @@ void MainVillage::showSettingsLayer() {
                 if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
             }
             });
-        btnPlus->setPosition(140 + 180 + 20, posY);
+        btnPlus->setPosition(190 + 180 + 20, posY);
 
         // 返回菜单项，以便添加到主菜单
         return Vector<MenuItem*>{btnMinus, btnPlus};
@@ -1879,14 +2009,14 @@ void MainVillage::showSettingsLayer() {
     // 使用上面的通用函数，创建两排控制器
     // =============================================================
 
-    // 1. 音乐控制 (Music) - 放在 Y=220
-    auto musicItems = createVolumeControl("Music", 220,
+    // 1. 音乐控制 (Music) 
+    auto musicItems = createVolumeControl("Music", "icon_music.png", 220,
         []() { return PlayerData::getInstance()->musicVolume; }, // 获取
         [](float v) { PlayerData::getInstance()->setMusicVol(v); } // 设置
     );
 
-    // 2. 音效控制 (Effect) - 放在 Y=160
-    auto effectItems = createVolumeControl("Effect", 160,
+    // 2. 音效控制 (Effect) 
+    auto effectItems = createVolumeControl("Effect", "icon_effect.png", 160,
         []() { return PlayerData::getInstance()->effectVolume; }, // 获取
         [](float v) { PlayerData::getInstance()->setEffectVol(v); } // 设置
     );
@@ -1901,20 +2031,28 @@ void MainVillage::showSettingsLayer() {
     volMenu->setPosition(Vec2::ZERO);
     bg->addChild(volMenu);
 
-    // 5. 继续游戏 (Resume)
-    auto btnResumeLabel = Label::createWithSystemFont("Resume", "Arial", 40);
+    // =============================================================
+     // 5. 继续游戏 (Resume) - 保持文字按钮，调整位置
+     // =============================================================
+    auto btnResumeLabel = Label::createWithSystemFont("Resume", "Kenney Future Narrow", 28);
+    // 加个描边让它好看点
+    btnResumeLabel->enableOutline(Color4B::BLACK, 2);
+
     auto btnResume = MenuItemLabel::create(btnResumeLabel, [=](Ref*) {
-        // 移除并置空
         if (_settingsLayer) {
             _settingsLayer->removeFromParent();
-            _settingsLayer = nullptr; // 置空，防止下次判断出错
+            _settingsLayer = nullptr;
         }
         });
-    btnResume->setPosition(Vec2(bg->getContentSize().width / 2, 100));
+    // 放在底部偏上
+    btnResume->setPosition(Vec2(bg->getContentSize().width / 2, 110));
 
     // 组装菜单
-    auto menu = Menu::create(btnResume, nullptr);
-    menu->setPosition(Vec2::ZERO);
-    bg->addChild(menu);
+    auto bottomMenu = Menu::create(btnResume, nullptr);
+    bottomMenu->setPosition(Vec2::ZERO);
+    bg->addChild(bottomMenu);
 
+    // 入场动画 (Q弹效果)
+    bg->setScale(0);
+    bg->runAction(EaseBackOut::create(ScaleTo::create(0.3f, 1.0f)));
 }

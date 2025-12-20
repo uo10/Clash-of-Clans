@@ -57,6 +57,7 @@ void ArcherTower::updateSpecialProperties()
 
 void ArcherTower::update(float dt)
 {
+    BaseBuilding::update(dt); // 先调用父类刷新时间条
     // 只有在 IDLE 或 ATTACKING 状态才工作
     // 如果正在建造(BUILDING)或被毁(DESTROYED)，不能攻击
     if (this->state != BuildingState::IDLE && this->state != BuildingState::ATTACKING) return;
