@@ -29,9 +29,25 @@ bool Soldier::init()
     return true;
 }
 
+// 开关函数
+void Soldier::setHomeMode(bool isHome) {
+    this->isHomeMode = isHome;
+    if (isHome) {
+        state = State::IDLE;
+        hpBar->setVisible(false);
+        pickNewWanderTarget();
+    }
+}
+
 void Soldier::update(float dt)
 {
     if (state == State::DEAD) return;
+
+    // 如果是大本营模式，游走
+    if (isHomeMode) {
+        updateWander(dt);
+        return;
+    }
 
     // 1. 校验目标是否还存在
     if (target) {
@@ -64,6 +80,94 @@ void Soldier::update(float dt)
         state = State::MOVE;
         moveTowardTarget(dt);
     }
+}
+
+// 实现游走
+void Soldier::updateWander(float dt)
+{
+    // 状态机：要么在走，要么在发呆
+    if (state == State::IDLE) {
+        // 发呆计时
+        wanderTimer += dt;
+        if (wanderTimer >= wanderWaitTime) {
+            // 发呆结束，选个新地方走
+            pickNewWanderTarget();
+            state = State::MOVE;
+            wanderTimer = 0;
+        }
+    }
+    else if (state == State::MOVE) {
+        // 移动向目标点
+        Vec2 currentPos = this->getPosition();
+        float dist = currentPos.distance(wanderTarget);
+
+        // 如果到了 (距离小于 5 像素)
+        if (dist < 5.0f) {
+            state = State::IDLE;
+            // 随机发呆 2 到 5 秒
+            wanderWaitTime = 2.0f + CCRANDOM_0_1() * 3.0f;
+            wanderTimer = 0;
+        }
+        else {
+            // 继续走
+            Vec2 dir = wanderTarget - currentPos;
+            dir.normalize();
+
+            // 移动 (速度稍微慢一点，闲庭信步)
+            float speed = stats.moveSpeed * 0.5f;
+            Vec2 newPos = currentPos + (dir * speed * dt);
+            this->setPosition(newPos);
+
+            // 调整 ZOrder 和朝向
+            this->setLocalZOrder(3000 - (int)newPos.y);
+            if (dir.x > 0) setFlippedX(true);
+            else setFlippedX(false);
+        }
+    }
+}
+
+// 随机选点
+void Soldier::pickNewWanderTarget()
+{
+    Vec2 currentPos = _homePosition;
+
+    // 随机半径
+    float radius = 100.0f * CCRANDOM_0_1();
+
+    // 随机角度
+    float angle = CCRANDOM_0_1() * 2.0f * 3.14159f; // 0 ~ 2PI
+
+    float offsetX = cos(angle) * radius;
+    float offsetY = sin(angle) * radius;
+
+    Vec2 potentialTarget = currentPos + Vec2(offsetX, offsetY);
+
+    auto map = dynamic_cast<TMXTiledMap*>(this->getParent());
+
+    // 边界检查
+    if (map) {
+        Size mapSize = map->getMapSize();
+        Size tileSize = map->getTileSize();
+
+        float minX = 0;
+        float minY = 0;
+        float maxX = mapSize.width * tileSize.width;
+        float maxY = mapSize.height * tileSize.height;
+
+        // 设置一个内缩边距，防止兵贴着边缘走
+        float padding = 50.0f;
+
+        // 限制 X 轴
+        if (potentialTarget.x < minX + padding) potentialTarget.x = minX + padding;
+        if (potentialTarget.x > maxX - padding) potentialTarget.x = maxX - padding;
+
+        // 限制 Y 轴
+        if (potentialTarget.y < minY + padding) potentialTarget.y = minY + padding;
+        if (potentialTarget.y > maxY - padding) potentialTarget.y = maxY - padding;
+    }
+
+    wanderTarget = potentialTarget;
+
 }
 
 bool Soldier::isValidTarget(BaseBuilding* building, BuildingType pref)

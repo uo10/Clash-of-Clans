@@ -77,7 +77,13 @@ void GameUnit::updateUnit(float dt) {
     _attackTimer += dt;
     if (_attackTimer >= 1.0f) { // 1Ãë¹¥»÷Ò»´Î
         _attackTimer = 0;
-        _target->getDamage(_damage);
+        //Õ¨µ¯±øÌØÅÐ£¬¶ÔÎ§Ç½³¬Ç¿ÉËº¦
+        if (_target->getUnitName() == "Fence" && _unitName=="WallBreaker") {
+            _target->getDamage(_damage*40);
+        }
+        else {
+            _target->getDamage(_damage);
+        }
         CCLOG("%s attacked %s", _unitName.c_str(), _target->getUnitName().c_str());
     }
 }

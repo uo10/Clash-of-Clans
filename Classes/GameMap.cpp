@@ -63,24 +63,21 @@ bool GameMap::isTileBlock(Vec2 tileCoord)
     if (!properties.isNull()) {
         ValueMap map = properties.asValueMap();
         if (map.find("Block") != map.end()) {
-            // 如果属性存在，且为 true，则返回 true (表示是障碍物)
-            drawGrid(tileCoord.x, tileCoord.y, Color4F::RED);
+            // 如果属性存在，且为 true，则返回 true (表示是障碍物)           
             return map.at("Block").asBool();
         }
     }
     //前景层
     if (!properties1.isNull()) {
         ValueMap map = properties1.asValueMap();
-        if (map.find("Block") != map.end()) {
-            drawGrid(tileCoord.x, tileCoord.y, Color4F::RED);
+        if (map.find("Block") != map.end()) {           
             return map.at("Block").asBool();
         }
     }
     //建筑层
     if (!properties2.isNull()) {
         ValueMap map = properties2.asValueMap();
-        if (map.find("Block") != map.end()) {
-            drawGrid(tileCoord.x, tileCoord.y, Color4F::RED);
+        if (map.find("Block") != map.end()) {          
             return map.at("Block").asBool();
         }
     }
@@ -297,14 +294,17 @@ bool GameMap::init(const std::string& MapName)
     mouseListener->onMouseDown = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
         //1、判断是否点在菜单上
-        Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());// 获取鼠标点击位置
-        //Vec2 localPos = menu->getParent()->convertToNodeSpace(mousePos);// 转换到菜单节点空间
-        /*if (menu->getBoundingBox().containsPoint(localPos)) {// 判断是否点在菜单区域内
-            _isDragging = false;
-            return; // 点在菜单上了，忽略拖拽
-        }*/
+        Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());// 获取鼠标点击位置        
         // 如果点在右键菜单上，直接结束，_isClickValid = false
         if (isMouseOnMenu(mousePos)) {
+            int count = _battleTroops[_currentSelectedTroop];
+
+            if (count > 0) {
+                // 只有还有兵的时候，才显示放兵区域
+                showForbiddenAreas(true);             
+            }           
+
+            // 无论有没有兵，只要点了菜单，就不进行地图拖拽
             _isDragging = false;
             _isClickValid = false;
             return;
@@ -324,17 +324,12 @@ bool GameMap::init(const std::string& MapName)
         auto map = _Map;
         if (!map) return;
         //1、判断是否点在菜单上
-        Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());
-        //Vec2 localPos = menu->getParent()->convertToNodeSpace(mousePos);
-        /*if (menu->getBoundingBox().containsPoint(localPos)) {
-            return; // 点在菜单上了，忽略拖拽
-        }*/
+        Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());      
         // 2、如果是左键松开
         if (e->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
 
             // 只有当没有发生大幅度拖拽时，才执行放置逻辑
             if (_isClickValid) {
-
                 if (map) {
                     // 1、获取点击在地图内部的坐标
                     Vec2 nodePos = map->convertToNodeSpace(mousePos);
@@ -352,6 +347,11 @@ bool GameMap::init(const std::string& MapName)
                             CCLOG("Blocked! Cannot place item on water or mountain.");
                             return;
                         }
+                        if (!canPlaceSoldierAt(nodePos)) {
+                            _isDragging = false;
+                            CCLOG("Blocked! Cannot place item on Forbidden.");
+                            return;
+                        }
                         // 4、创建精灵                                                
                         float finalX = tileX * tileSize.width + tileSize.width / 2;
                         float finalY = (mapSize.height - 1 - tileY) * tileSize.height + tileSize.height / 2;
@@ -360,14 +360,14 @@ bool GameMap::init(const std::string& MapName)
                             _battleTroops[_currentSelectedTroop] > 0) {
                             // 调整大小，适应屏幕
                             spawnSoldier(_currentSelectedTroop, Vec2(finalX, finalY));
+                            showForbiddenAreas(false);
                             // -1
                             _battleTroops[_currentSelectedTroop]--;
                             // 刷新 UI
                             updateTroopCountUI(_currentSelectedTroop);
                             // 第一次放兵 切换到激昂的战斗音乐
                             if (!_hasBattleStarted) {
-                                _hasBattleStarted = true; // 标记已开战
-
+                                _hasBattleStarted = true; // 标记已开战                            
                                 // 切换到激昂的战斗音乐
                                 PlayerData::getInstance()->playBGM("bgm_battle.mp3");
 
@@ -435,7 +435,6 @@ bool GameMap::init(const std::string& MapName)
     this->addChild(_Map);
     //逐帧更新
     this->scheduleUpdate();
-    debugDrawLogicGrid();
     return true;
 }
 
@@ -469,19 +468,20 @@ void GameMap::getBuildings()
         // 3. 根据名字或类型生成不同的建筑
         //大炮（Cannon）
         if (name == "Cannon") {
-           building = GameUnit::create("map/cannon.png", 400,0,10,200, UnitType::BUILDING_DEFENSE); // 800血
+           building = GameUnit::create("map/cannon.png", 420,0,7.2,100, UnitType::BUILDING_DEFENSE); // 420血
+           building->setAttackTime(0.8f);
            building->setUnitName("Cannon");
            isset = true;
         }
         //大本营（TownHall）
         else if (name == "TownHall") {
-            building = GameUnit::create("map/townhall.png", 1000,0,0,0,UnitType::BUILDING_RESOURCE); // 大本营血厚
+            building = GameUnit::create("map/townhall.png", 1850,0,0,0,UnitType::BUILDING_RESOURCE); // 大本营血厚
             building->setUnitName("TownHall");
             isset = true;
         }
         //小屋（Hut）
         else if (name == "Hut") {
-            building = GameUnit::create("map/Hut.png", 600, 0, 0, 0, UnitType::BUILDING_RESOURCE); // 大本营血厚
+            building = GameUnit::create("map/Hut.png", 250, 0, 0, 0, UnitType::BUILDING_RESOURCE); // 大本营血厚
             building->setUnitName("Hut");
             isset = true;
         }
@@ -490,6 +490,11 @@ void GameMap::getBuildings()
             building = GameUnit::create("map/Fence.png", 300, 0, 0, 0, UnitType::BUILDING_RESOURCE); // 大本营血厚
             isset = true;
             building->setUnitName("Fence");
+        }
+        else if (name == "Trapbomb") {
+            auto trap = GameTrap::createTrap(Vec2(finalX, finalY),tileSize);         
+            _traps.pushBack(trap);
+            _Map->addChild(trap, 5);
         }
         if (isset) {
             Size spriteSize = building->getContentSize();
@@ -510,31 +515,36 @@ void GameMap::getBuildings()
 //放置士兵
 void GameMap::spawnSoldier(std::string troopName, Vec2 pos) {
 
-    /* 根据名字判断创建具体的兵种对象 
-    * 利用士兵类的初始化 这里先统一调用妙蛙种子
+    GameUnit* soldier = nullptr;
+
+    // 创建士兵对象
     if (troopName == "Barbarian") {
-        soldier = Barbarian::create(); 
+        soldier = GameUnit::create("Barbarian.png", 45, 70.0f, 8.0f, 40.0f, UnitType::SOLDIER);
     }
     else if (troopName == "Archer") {
-        soldier = Archer::create();
+        soldier = GameUnit::create("Archer.png", 20, 100.0f, 7.0f, 80.0f, UnitType::SOLDIER);
     }
     else if (troopName == "Giant") {
-        soldier = Giant::create();
+        soldier = GameUnit::create("Giant.png", 300, 50.0f, 11.0f, 40.0f, UnitType::SOLDIER);
     }
     else if (troopName == "WallBreaker") {
-        soldier = WallBreaker::create();
-    }*/
-    // 创建一个士兵(图像、血量、速度、伤害、攻击范围、阵营)
-    auto soldier = GameUnit::create("R-C.jpg", 100, 100.0f, 20.0f, 50.0f, UnitType::SOLDIER);
+        soldier = GameUnit::create("Wall_Breaker.png", 20, 100.0f, 12.0f, 40.0f, UnitType::SOLDIER);
+    }
+
     if (soldier) {
+        // 设置名字
+        soldier->setUnitName(troopName);
+
         soldier->setPosition(pos);
         Size tileSize = _Map->getTileSize();
         Size spriteSize = soldier->getContentSize();
+
         soldier->setScaleX(tileSize.width / spriteSize.width);
         soldier->setScaleY(tileSize.height / spriteSize.height);
-        //调整大小
-        _Map->addChild(soldier, 20); // Z轴比建筑高一点
+
+        _Map->addChild(soldier, 20);
         _soldiers.pushBack(soldier);
+
     }
 }
 
@@ -703,8 +713,12 @@ void GameMap::update(float dt)
             }
         }
     }
+    //检测陷阱激活情况
+    for (auto trap : _traps) {
+        trap->updateTrap(dt, _soldiers);
+    }
     updateTowers(dt);
-    // 清理死亡单位的 GridLookup （可改为智能指针）
+    // 清理死亡单位的 GridLookup
     for (auto it = _unitGridLookup.begin(); it != _unitGridLookup.end(); ) {
         if (!it->second->isAlive()) it = _unitGridLookup.erase(it);
         else ++it;
@@ -848,43 +862,6 @@ GameUnit* GameMap::getUnitAtGrid(int x, int y) {
     std::string key = StringUtils::format("%d_%d", x, y);
     if (_unitGridLookup.count(key)) return _unitGridLookup[key];
     return nullptr;
-}
-
-//对tileblock区域画出区分
-void GameMap::drawGrid(int x, int y, Color4F color) {
-    if (!_debugDrawNode) {
-        _debugDrawNode = DrawNode::create();
-        _Map->addChild(_debugDrawNode, 999);
-    }
-
-    Size tileSize = _Map->getTileSize();
-    Vec2 origin(x * tileSize.width, y * tileSize.height);
-    Vec2 dest(origin.x + tileSize.width, origin.y + tileSize.height);
-
-    _debugDrawNode->drawRect(origin, dest, color);
-}
-
-//对building层画出区分
-void GameMap::debugDrawLogicGrid() {
-    auto drawNode = DrawNode::create();
-    _Map->addChild(drawNode, 9999);
-    Size tileSize = _Map->getTileSize();
-
-    // 遍历查找表，把所有注册了单位的格子画个 绿框
-    for (auto const&pair : _unitGridLookup) {
-        if (!pair.second->isAlive()) continue;
-
-        // 解析 key "x_y"
-        int underscorePos = pair.first.find('_');
-        int gx = std::stoi(pair.first.substr(0, underscorePos));
-        int gy = std::stoi(pair.first.substr(underscorePos + 1));
-
-        Vec2 origin(gx * tileSize.width, gy * tileSize.height);
-        Vec2 dest = origin + Vec2(tileSize.width, tileSize.height);
-
-        // 绿色空心框
-        drawNode->drawRect(origin, dest, Color4F::GREEN);
-    }
 }
 
 // 绘制士兵选择菜单

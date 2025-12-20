@@ -5,6 +5,7 @@
 #include"GameUnit.h"
 #include"FindPath.h"
 #include "MainVillage.h"
+#include "Trap.h"
 #include "ui/CocosGUI.h"
 
 class GameMap : public cocos2d::Scene
@@ -124,9 +125,6 @@ public:
 	* @return 当前网格坐标上的建筑对象，若对象都已不存在，返回空指针
 	*/
 	GameUnit* getUnitAtGrid(int x, int y);
-	//DEBUG使用，画出对象和地图预设的block区
-	void drawGrid(int x, int y, cocos2d::Color4F color);
-	void GameMap::debugDrawLogicGrid();
 
 	/**
     * @brief 初始化士兵选择菜单
@@ -166,6 +164,7 @@ private:
 	cocos2d::TMXTiledMap* _Map;//创建的瓦块地图
 	cocos2d::Vector<GameUnit*>_buildings;//建筑对象数组，储存建筑对象层上的对象
 	cocos2d::Vector<GameUnit*>_soldiers;//士兵数组，储存创建的士兵
+	cocos2d::Vector<GameTrap*> _traps;//陷阱数组，储存陷阱
 	std::map<std::string, GameUnit*> _unitGridLookup; // 哈希表，将网格坐标设置为Key,快速查找网格上的对象
 	std::vector<cocos2d::Rect> _forbiddenAreas;//禁止区对象数组，储存禁止放置层上的对象
 	cocos2d::DrawNode* _debugDrawNode; // 用于显示区域
@@ -179,7 +178,6 @@ private:
 	std::map<std::string, cocos2d::Label*> _troopCountLabels; 	// 记录 UI 上的数字标签，方便投放兵力后实时更新数量
 	cocos2d::Sprite* _selectionHighlight = nullptr;  	// 选中框精灵 (用于显示哪个被选中了)
 	std::map<std::string, int> _battleTroops;  // 战斗临时兵力表 进入战斗时copy PlayerData的数据
-
 	cocos2d::LayerColor* _settingsLayer = nullptr;  // 存储设置覆盖层的指针
 	bool _isGameOver = false; // 判断胜负逻辑
 	bool _isGamePaused = false; // 暂停标志位
