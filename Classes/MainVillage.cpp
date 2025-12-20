@@ -1745,6 +1745,8 @@ void MainVillage::restoreVillageData() {
     Size tileSize = _MainVillageMap->getTileSize();
     Size mapSize = _MainVillageMap->getMapSize();
 
+    BaseBuilding* theBarracks = nullptr;
+
     // 遍历存档数据
     for (const auto& data : dataCenter->_villageLayout) {
 
@@ -1804,26 +1806,65 @@ void MainVillage::restoreVillageData() {
             std::string key = StringUtils::format("%d_%d", data.tileX, data.tileY);
             _occupiedTiles[key] = true;
 
-#if 0       // 还未实现该功能
-            // 7.  如果是兵营，恢复视觉上的小兵 
-            if (data.type == BuildingType::BARRACKS) {
-                // 逻辑：每种兵按数量画出来
-                auto allTroops = PlayerData::getAllTroopConfigs();
-                for (auto info : allTroops) {
-                    int count = PlayerData::getInstance()->getTroopCount(info.name);
-                    for (int k = 0; k < count; ++k) {
-                        newBuilding->addVisualTroop(info.name);
-                    }
-                }
+            if (newBuilding->type == BuildingType::BARRACKS) {
+                theBarracks = newBuilding;
             }
-        }
-    }
-#endif
         }
     }
     // 刷新全局容量上限
     this->refreshTotalCapacity();
     this->updateResourceUI();
+
+    // 如果地图上连一个兵营都没有，那兵也没地方去
+    if (theBarracks == nullptr) return;
+
+    // 定义生成函数 (只针对 theBarracks)
+    auto spawnTroopsAtBarracks = [&](std::string name) {
+        Soldier* s = nullptr;
+        if (name == "Barbarian") s = Barbarian::create();
+        else if (name == "Archer") s = Archer::create();
+        else if (name == "Giant") s = Giant::create();
+        else if (name == "WallBreaker") s = WallBreaker::create();
+
+        if (s) {
+            // 1. 设置模式
+            s->setHomeMode(true);
+            s->setHomePosition(theBarracks->getPosition());
+
+            // 2. 随机位置 (兵营下方扇形)
+            float angle = CC_DEGREES_TO_RADIANS(210 + CCRANDOM_0_1() * 120);
+            float radius = 60.0f + CCRANDOM_0_1() * 60.0f;
+
+            Vec2 offset(cos(angle) * radius, sin(angle) * radius);
+            Vec2 pos = theBarracks->getPosition() + offset;
+
+            s->setPosition(pos);
+
+            //统一缩放逻辑
+            Size ss = s->getContentSize();
+            float scale = 0.2f; 
+
+            s->setScale(scale);
+            if (pos.x < theBarracks->getPositionX()) s->setScaleX(-scale);
+
+            _MainVillageMap->addChild(s, 3000 - (int)pos.y);
+
+            //把恢复出来的兵，重新登记到兵营名册
+            theBarracks->_visualTroops[name].push_back(s);
+        }
+    };
+
+    // 遍历库存，生成所有兵
+    std::vector<std::string> troopTypes = { "Barbarian", "Archer", "Giant", "WallBreaker" };
+    for (const auto& name : troopTypes) {
+        int count = dataCenter->getTroopCount(name);
+        for (int i = 0; i < count; ++i) {
+            spawnTroopsAtBarracks(name);
+        }
+    }
+
+    CCLOG("单兵营模式：士兵视觉已恢复");
+
 }
 
 // 绘制非法放置边框
