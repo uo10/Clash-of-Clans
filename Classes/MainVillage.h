@@ -14,6 +14,8 @@
 #include "Barbarian.h"
 #include "WallBreaker.h"
 #include "Giant.h"
+#include "ui/CocosGUI.h"
+
 //Ö÷´å×¯³¡¾°
 class MainVillage :public cocos2d::Scene
 {

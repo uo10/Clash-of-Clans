@@ -183,6 +183,8 @@ private:
 	bool _isGamePaused = false; // 暂停标志位
 	bool _hasBattleStarted = false; // 标记是否开始战斗
 
+	std::string _currentMapFile;	// 记录当前地图的文件名
+
 };
 
 #endif // __GAMEMAP_H__

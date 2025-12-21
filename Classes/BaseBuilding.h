@@ -86,6 +86,7 @@ protected:
     // true = 正在升级 (结束后 level++)
     // false = 正在建造 (结束后 level 不变，只是进入 IDLE)
     bool _isUpgradingTarget = false;
+    cocos2d::Label* _speedUpCostLabel = nullptr; // 显示加速金币数的文字
 
 
     // --- 时间变量 ---
@@ -129,8 +130,6 @@ public:
     // ------------------------------------------------
     // UI 组件 (需在 updateUI 中刷新)
     // ------------------------------------------------
-    cocos2d::Sprite* hpBar;               // 改用 Sprite，更灵活且不需要 loadingbar 图片
-    cocos2d::Sprite* hpBarBg;
     cocos2d::ui::LoadingBar* buildBar;    // 建造/升级时的黄色进度条
     cocos2d::Label* timeLabel;            // 显示剩余时间的文字 (如 "10s")
     cocos2d::Sprite* mainSprite;          // 建筑的主体图片精灵
@@ -164,14 +163,7 @@ public:
     std::string getTextureName(BuildingType type, int level);
 
     /**
-     * @brief 承受伤害逻辑
-     * @param damage 伤害数值
-     * @return bool 如果建筑因此次伤害被摧毁(HP<=0)返回 true，否则 false
-     */
-    bool takeDamage(float damage);
-
-    /**
-     * @brief 【视图刷新核心】
+     * @brief 
      * 根据当前的 type, level, state 统一刷新外观。
      * 处理：更换图片、显示/隐藏血条和进度条。
      */
@@ -201,31 +193,53 @@ public:
     virtual void updateSpecialProperties() {};
 
     /**
-     * @brief 帧刷新 血条
-     * 通常在 scheduleUpdate 中调用，用于平滑更新血条和进度条的百分比。
-     */
-    void updateHPBar();
-
-    /**
-     * @brief 初始化血条
-     */
-    void initHPBar();
-
-    /**
      * @brief 静态配置读取器
      * 模拟从数据库/配置表中查询指定等级的数值。
      */
     static BuildingStats getStatsConfig(BuildingType type, int level);
 
-    // 【新增】开始建造/升级 (这是 UI 点击后调用的入口)
+    /**
+       * @brief 开始升级过程
+       * 当玩家点击“升级”按钮，并且资源和条件满足时调用。
+       * 1. 检查是否已达最高等级。
+       * 2. 检查是否满足大本营等级要求。
+       * 3. 获取下一级配置（所需时间、资源）。
+       * 4. 扣除资源。
+       * 5. 设置建造时间 (`_buildTotalTime`, `_buildLeftTime`)。
+       * 6. 切换建筑状态到 `BUILDING`。
+       * 7. 显示进度条和倒计时文字。
+       * 8. 触发 UI 刷新（如扣费后更新资源显示）。
+       */
     void startUpgradeProcess();
 
-    // 【重写】每帧更新 (Cocos 自动调用)
+    /**
+     * @brief 游戏帧更新函数 (每帧自动调用)
+     * @param dt 距离上一帧的时间间隔（秒）。
+     *
+     * 核心逻辑：
+     * 1. 只在 `BUILDING` 状态下执行倒计时。
+     * 2. 减少剩余时间 (`_buildLeftTime`)。
+     * 3. 更新进度条 (`_progBar`) 和计时文字 (`_timeLabel`)。
+     * 4. 当时间耗尽 (`_buildLeftTime <= 0`) 时：
+     *    - 如果是升级 (`_isUpgradingTarget == true`)，调用 `upgradeLevel()` 完成升级。
+     *    - 如果是初次建造 (`_isUpgradingTarget == false`)，调用 `constructionFinished()` 完成建造。
+     */
     virtual void update(float dt) override;
 
-    // 开始初次建造 (放置时调用)
+    /**
+     * @brief 开始初次建造过程
+     * 当玩家在地图上放置一个新建筑（非升级）时调用。
+     * 1. 获取当前等级（通常是 Lv.1）的配置。
+     * 2. 设置建造时间 (`_buildTotalTime`, `_buildLeftTime`)。
+     * 3. 标记 `_isUpgradingTarget = false`，表明这是初次建造。
+     * 4. 切换建筑状态到 `BUILDING`。
+     * 5. 显示进度条和锤子图标。
+     */
     void startConstruction();
 
+    void takeDamage(int damage);
+
+    void constructionFinished();
 };
 
 #endif

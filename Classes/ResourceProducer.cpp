@@ -59,12 +59,12 @@ bool ResourceProducer::init(BuildingType type, int level) {
         nullptr
     ));
     bubbleIcon->runAction(moveAction);
-    this->addChild(bubbleIcon,999); // 层级要高
+    this->addChild(bubbleIcon,1000); // 层级在建筑的上面
 
     // 4. 开启 Update
     this->scheduleUpdate();
 
-    // 5. 注册触摸监听器
+    // 5. 触摸监听器 用来收集操作
     auto listener = EventListenerTouchOneByOne::create();
     listener->setSwallowTouches(true);
 
@@ -79,11 +79,9 @@ void ResourceProducer::update(float dt) {
 
     BaseBuilding::update(dt); // 1. 先让父类处理倒计时
 
-    // =========================================================
-    // 【核心修复】 先检查状态，如果不是 IDLE，强制隐藏气泡并停止生产
-    // =========================================================
+    //  先检查状态，如果不是 IDLE，强制隐藏气泡并停止生产
     if (this->state != BuildingState::IDLE) {
-        // 如果当前气泡还亮着，赶紧把它关掉
+        // 如果当前气泡还亮着，将其关掉
         if (isBubbleShowing) {
             bubbleIcon->setVisible(false);
             isBubbleShowing = false;
@@ -92,25 +90,24 @@ void ResourceProducer::update(float dt) {
         return;
     }
 
-    // =========================================================
     // 下面是 IDLE 状态下的正常生产逻辑
-    // =========================================================
 
     // 2. 生产资源
     if (currentRes < maxCapacity) {
         currentRes += (productionRate / 3600.0f) * dt;
-        if (currentRes > maxCapacity) currentRes = maxCapacity;
+        if (currentRes > maxCapacity) currentRes = maxCapacity; //如果暂存量达到最大，不再进行增加
     }
 
-    // 3. 气泡显示逻辑 (只处理显示和因收菜导致的隐藏)
-    bool shouldShow = (currentRes >= 1.0f); // 只要有资源就显示，或者设定阈值
+    // 3. 气泡显示逻辑 
+    bool shouldShow = (currentRes >= 0.01 * maxCapacity);// 设定阈值1%
 
     if (shouldShow && !isBubbleShowing) {
+        // 如果达到显示阈值 进行展示气泡
         bubbleIcon->setVisible(true);
         isBubbleShowing = true;
     }
     else if (!shouldShow && isBubbleShowing) {
-        // 资源被收走了 (currentRes 变少了)，隐藏气泡
+        // 资源被收走了 隐藏气泡
         bubbleIcon->setVisible(false);
         isBubbleShowing = false;
     }
@@ -137,9 +134,6 @@ void ResourceProducer::collectResource() {
     if (actualAdded > 0) {
         CCLOG("收集成功: %d, 剩余未收: %f", actualAdded, currentRes);
         showFloatText(actualAdded);
-
-        // 可以添加音效：
-        // SimpleAudioEngine::getInstance()->playEffect("collect.wav");
     }
     else {
         // 仓库满了，没有收入
@@ -149,23 +143,97 @@ void ResourceProducer::collectResource() {
 }
 
 void ResourceProducer::showFloatText(int amount) {
-    std::string text = (amount > 0) ? "+" + std::to_string(amount) : "Full!";
 
-    // 根据资源类型设置颜色
-    Color3B color = (this->type == BuildingType::GOLD_MINE) ? Color3B::YELLOW : Color3B::MAGENTA;
-    if (amount == 0) color = Color3B::RED;
+    std::string textStr; // 显示的收集的数目
+    std::string iconPath; // 图片的路径
+    Color3B textColor;
 
-    auto label = Label::createWithSystemFont(text, "Arial", 28);
-    label->setColor(color);
-    label->enableOutline(Color4B::BLACK, 2);
+    if (amount > 0) {
+        textStr = "+" + std::to_string(amount);
+        if (this->type == BuildingType::GOLD_MINE) {
+            iconPath = "Gold.png"; 
+            textColor = Color3B(255, 230, 100); // 金黄色
+        }
+        else {
+            iconPath = "Elixir.png";
+            textColor = Color3B(Color3B::MAGENTA); // 紫色
+        }
+    }
+    else {
+        textStr = "Full!";        // 仓库满了的情况
+        textColor = Color3B::RED; // 显示红色的FULL情况
+        iconPath = "";
+    }
 
-    label->setPosition(Vec2(0, 80));
-    this->addChild(label, 200);
+    // 组合图标和文字
+    auto effectNode = Node::create();
+    effectNode->setPosition(Vec2(0.2, 80));    // 放在建筑头顶稍微高一点的位置
+    effectNode->setScale(0.0f);    // 初始缩放为0，为了做弹出的效果
+    this->addChild(effectNode, 2000); // 层级设高，盖过气泡
 
-    auto move = MoveBy::create(0.8f, Vec2(0, 60));
-    auto fade = FadeOut::create(0.8f);
-    auto seq = Sequence::create(Spawn::create(move, fade), RemoveSelf::create(), nullptr);
-    label->runAction(seq);
+    // 创建图标 
+    float totalWidth = 0;
+    Sprite* icon = nullptr;
+    if (!iconPath.empty()) {
+        icon = Sprite::create(iconPath); // 根据路径创建图标
+        if (icon) {
+            // 限制图标大小，高度限制在 30 像素
+            float scale = 30.0f / icon->getContentSize().height;
+            icon->setScale(scale);
+            icon->setAnchorPoint(Vec2(0, 0.5)); // 左中对齐
+            effectNode->addChild(icon);
+
+            // 累加宽度 (图标宽 + 间距)
+            totalWidth += (icon->getContentSize().width * scale) + 5;
+        }
+    }
+
+    // 创建显示的收集文字
+    auto label = Label::createWithSystemFont(textStr, "Arial", 32);
+    label->setColor(textColor);
+    label->enableOutline(Color4B::BLACK, 2); // 黑边增加清晰度
+    label->setAnchorPoint(Vec2(0, 0.5)); // 左中对齐
+    effectNode->addChild(label);
+
+    totalWidth += label->getContentSize().width;
+
+
+    float currentX = -totalWidth / 2.0f;    // 居中排版
+    if (icon) {
+        icon->setPosition(currentX, 0);
+        currentX += (icon->getContentSize().width * icon->getScale()) + 5;
+    }
+    label->setPosition(currentX + 40, 0);
+
+    // 展示漂浮动画 
+    // 阶段A: 弹出 (0.3秒内，从小变大，带弹性)
+    auto appearAction = EaseBackOut::create(ScaleTo::create(0.3f, 1.2f));
+
+    // 阶段B: 飘动并消失 (向上移动并变透明)
+    auto floatAction = Spawn::create(
+        MoveBy::create(0.8f, Vec2(0, 80)), // 向上飘 80 像素
+        FadeOut::create(0.8f),             // 同时变透明
+        nullptr
+    );
+
+    effectNode->setCascadeOpacityEnabled(true);
+
+    auto seq = Sequence::create(
+        appearAction,
+        floatAction,
+        RemoveSelf::create(), // 动画做完自我销毁
+        nullptr
+    );
+
+    effectNode->runAction(seq); // 进行漂浮动画
+
+    // 播放音效
+    if (amount > 0) {
+        // PlayerData::getInstance()->playEffect("collect_resource.mp3");
+    }
+    else {
+        // PlayerData::getInstance()->playEffect("error.mp3");
+    }
 }
 
 void ResourceProducer::updateSpecialProperties() {
@@ -175,7 +243,7 @@ void ResourceProducer::updateSpecialProperties() {
 }
 
 bool ResourceProducer::onTouchBegan(Touch* touch, Event* event) {
-    // 1. 获取点击位置 (转换为节点内的相对坐标)
+    // 1. 获取点击位置 
     Vec2 p = this->convertTouchToNodeSpace(touch);
 
     // 2. 获取主图片的包围盒
@@ -189,7 +257,7 @@ bool ResourceProducer::onTouchBegan(Touch* touch, Event* event) {
         if (this->currentRes >= 1.0f) {
             this->collectResource();
         }
-        // 返回 true 表示吞噬这次点击，不再向下传递
+        // 返回 true  吞噬这次点击，不再向下传递
         return true;
     }
 

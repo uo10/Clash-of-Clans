@@ -30,7 +30,7 @@ bool LoadingScene::init() {
     }
 
     // 2. сно╥ Logo 
-    auto labelLogo = Label::createWithSystemFont("Clash of Clans", "Kenney Future Narrow", 80);
+    auto labelLogo = Label::createWithSystemFont("Clash of Clans", "fonts/GROBOLD.ttf", 80);
     labelLogo->enableOutline(Color4B::BLACK, 3);
     labelLogo->setPosition(center + Vec2(0, 500));
     this->addChild(labelLogo);

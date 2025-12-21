@@ -33,7 +33,7 @@ PlayerData* PlayerData::getInstance() {
     if (!_instance) {
         _instance = new PlayerData();
     }
-    return _instance;
+    return _instance; // 返回现在的数据
 }
 
 int PlayerData::getGold() {
@@ -139,7 +139,7 @@ int PlayerData::getTroopCount(std::string name) {
 }
 
 void PlayerData::setMusicVol(float vol) {
-    this->musicVolume = vol;
+    this->musicVolume = vol; //音量调节为vol
 
     // 如果当前有音乐在放，实时调整它的音量
     if (_currentBgmID != -1) {
@@ -148,7 +148,7 @@ void PlayerData::setMusicVol(float vol) {
 }
 
 void PlayerData::setEffectVol(float vol) {
-    this->effectVolume = vol;
+    this->effectVolume = vol; //音量调节为vol
 }
 
 void PlayerData::playBGM(std::string filename) {
@@ -157,9 +157,8 @@ void PlayerData::playBGM(std::string filename) {
         AudioEngine::stop(_currentBgmID);
     }
 
-    // 2. 播放新的
-    // 参数: 文件名, 是否循环(true), 音量(0.0~1.0)
-    _currentBgmID = AudioEngine::play2d(filename, true, this->musicVolume);
+    // 2. 播放新的 传入的filename的音乐
+    _currentBgmID = AudioEngine::play2d(filename, true, this->musicVolume); 
 
     CCLOG("正在播放 BGM: %s (ID: %d)", filename.c_str(), _currentBgmID);
 }
@@ -167,4 +166,34 @@ void PlayerData::playBGM(std::string filename) {
 void PlayerData::playEffect(std::string filename) {
     // 播放时读取 effectVolume
     AudioEngine::play2d(filename, false, this->effectVolume);
+}
+
+void PlayerData::setLevelStatus(int levelID, bool isWin) {
+    if (isWin) {
+        // 赢了给三星
+        _levelStars[levelID] = 3;
+    }
+    // 如果输了，什么都不做，保留原样
+}
+
+int PlayerData::getLevelStar(int levelID) {
+    // 如果没打过，map默认返回0
+    // 如果打过了，返回3
+    return _levelStars[levelID];
+}
+
+bool PlayerData::isLevelLocked(int levelID) {
+    // 第 1 关永远解锁
+    if (levelID <= 1) return false;
+
+    // 检查上一关 (ID - 1)
+    int prevStars = getLevelStar(levelID - 1);
+
+    // 如果上一关通过了，这关就解锁
+    if (prevStars == 3) {
+        return false; // 解锁
+    }
+    else {
+        return true;  // 锁定
+    }
 }

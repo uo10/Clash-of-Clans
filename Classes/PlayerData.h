@@ -64,6 +64,11 @@ private:
     /** 记录当前正在播放的背景音乐 ID，用于切换歌曲或调整音量 */
     int _currentBgmID = -1;
 
+    // ================= 关卡信息 =================
+    
+    // 关卡是否通关状态
+    std::map<int, int> _levelStars;
+
 public:
     // ================= 公共成员变量 =================
 
@@ -241,6 +246,42 @@ public:
      * @param filename 音效文件路径 (如 "click.mp3")
      */
     void playEffect(std::string filename);
+
+    // ================= 关卡管理操作 ==================
+
+    /**
+     * @brief 设置关卡通过状态 (战斗结算时调用)
+     * 根据战斗结果更新存档中的星星数据。
+     * 逻辑：
+     * - 如果 isWin 为 true：直接将该关卡设为 3 星 (代表通关)。
+     * - 如果 isWin 为 false：不修改现有数据 (保留原成绩)。
+     *
+     * @param levelID 关卡ID (1, 2, 3...)
+     * @param isWin 是否取得胜利
+     */
+    void setLevelStatus(int levelID, bool isWin);
+
+    /**
+     * @brief 获取指定关卡的星星数量
+     * 用于在“选关界面”显示该关卡的完成度。
+     *
+     * @param levelID 关卡ID
+     * @return int 星星数量 (0 = 未打过或未通过, 3 = 已完美通关)
+     */
+    int getLevelStar(int levelID);
+
+    /**
+     * @brief 判断某关卡是否处于锁定状态
+     * 用于决定选关界面中，该关卡显示为“锁”还是“可点击按钮”。
+     *
+     * 解锁规则：
+     * 1. 第 1 关：永远解锁。
+     * 2. 第 N 关：只有当第 N-1 关获得 3 星后，第 N 关才解锁。
+     *
+     * @param levelID 关卡ID
+     * @return true: 锁定 (不可进入); false: 解锁 (可进入)
+     */
+    bool isLevelLocked(int levelID);
 };
 
 #endif // __PLAYER_DATA_H__
