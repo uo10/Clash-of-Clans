@@ -151,6 +151,8 @@ bool GameMap::init(const std::string& MapName)
     // 3. 创建按钮
     auto btnSettings = MenuItemSprite::create(settingWrapper, nullptr, [=](Ref* sender) {
 
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
         // --- 点击反馈动画 ---
         // 让内部的图标缩放一下
         settingSprite->stopAllActions();
@@ -923,6 +925,9 @@ void GameMap::createTroopMenu() {
             // 点击回调
             int currentCount = _battleTroops[info.name];
             if (currentCount > 0) { // 只有有兵才能选中
+
+                PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
                 _currentSelectedTroop = info.name; // 设置鼠标选兵
 
                 // 移动高亮框到当前按钮位置
@@ -937,6 +942,9 @@ void GameMap::createTroopMenu() {
                 CCLOG("选中出战兵种: %s", info.name.c_str());
             }
             else {
+
+                //PlayerData::getInstance()->playEffect("Audio/error.mp3");
+
                 CCLOG("该兵种数量为0，无法出战");
             }
             });
@@ -1203,6 +1211,9 @@ void GameMap::showGameOverLayer(bool isWin) {
     homeWrapper->addChild(lblBtn);
 
     auto btnItem = MenuItemSprite::create(homeWrapper, nullptr, [=](Ref*) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
         auto homeScene = MainVillage::createScene();
         Director::getInstance()->replaceScene(TransitionFade::create(1.0f, homeScene));
         });
@@ -1335,7 +1346,7 @@ void GameMap::showSettingsLayer() {
                 setVal(level / 10.0f); // 调用设置音量函数
                 refreshBar(level / 10.0f); // 刷新音量显示
                 // 如果是调节音效，播放一下声音
-                if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
+                if (title == "Effect") PlayerData::getInstance()->playEffect("Audio/click.mp3");
             }
             });
         btnMinus->setPosition(170, posY);
@@ -1351,7 +1362,7 @@ void GameMap::showSettingsLayer() {
                 setVal(level / 10.0f);// 调用设置音量函数
                 refreshBar(level / 10.0f);// 刷新音量显示
                 // 如果是调节音效，播放一下声音
-                if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
+                if (title == "Effect") PlayerData::getInstance()->playEffect("Audio/click.mp3");
             }
             });
         btnPlus->setPosition(190 + 180 + 20, posY);
@@ -1386,6 +1397,9 @@ void GameMap::showSettingsLayer() {
     btnResumeLabel->enableOutline(Color4B::BLACK, 2);
     // 按钮回调处理
     auto btnResume = MenuItemLabel::create(btnResumeLabel, [=](Ref*) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
         this->_isGamePaused = false; // 取消暂停 回复逻辑
         if (_settingsLayer) {  // 如果打开设置菜单
             _settingsLayer->removeFromParent(); // 关闭设置菜单
@@ -1416,6 +1430,9 @@ void GameMap::showSettingsLayer() {
 
     // --- 按钮 ---
     auto btnQuit = MenuItemSprite::create(quitWrapper, nullptr, [=](Ref*) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
         // 直接回大本营
         auto homeScene = MainVillage::createScene();  // 创建mainvillage的scene
         Director::getInstance()->replaceScene(TransitionFade::create(1.0f, homeScene)); // 切换场景

@@ -98,6 +98,9 @@ bool MainVillage::init()
         "itemBuild.png", 
         "itemBuild.png", 
         [=](Ref* sender) {
+
+            PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
             // 点击逻辑保持不变
             if (_buildMenuNode) {
                 bool isVisible = _buildMenuNode->isVisible();
@@ -146,6 +149,8 @@ bool MainVillage::init()
 
     // 3. 创建按钮
     auto btnSettings = MenuItemSprite::create(settingWrapper, nullptr, [=](Ref* sender) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
 
         // --- 点击反馈动画 ---
         // 让内部的图标缩放一下
@@ -866,6 +871,9 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
 
         // 4. 创立按钮回调操作
         auto btn = MenuItemSprite::create(wrapper, nullptr, [=](Ref* sender) {
+
+            PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
             sprite->stopAllActions(); // 进行一个放缩处理
             sprite->runAction(Sequence::create( 
                 ScaleTo::create(0.1f, s * 0.9f),
@@ -980,6 +988,9 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
         closeLabel->setColor(Color3B(255, 50, 50)); // 红色
         closeLabel->enableOutline(Color4B::BLACK, 1); // 黑边
         auto closeItem = MenuItemLabel::create(closeLabel, [=](Ref* sender) {
+
+            PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
             this->closeBuildingMenu();
             });
         closeItem->setPosition(bgWidth - 60, bgHeight - 20); // 放置在右上角位置
@@ -1092,6 +1103,8 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
                     if (PlayerData::getInstance()->consumeElixir(info.cost) && PlayerData::getInstance()->addPeople(info.weight, info.cost)) {
                         // +1 逻辑
                         PlayerData::getInstance()->addTroop(info.name, 1);
+
+                        PlayerData::getInstance()->playEffect("Audio/plop.mp3");
 
                         // 动画 
                         sprite->stopAllActions();
@@ -1213,6 +1226,9 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
 
                 auto btnMinus = MenuItemSprite::create(minusWrapper, nullptr, [=](Ref*) {
                     // -1 逻辑
+
+                    PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
                     if (PlayerData::getInstance()->consumeTroop(info.name, 1)) {
                         PlayerData::getInstance()->removePeople(info.weight);// 返还人口容量
                         auto countLbl = (Label*)container->getChildByTag(101);
@@ -1319,6 +1335,9 @@ void MainVillage::showBuildingMenu(BaseBuilding* building) {
             auto closeLbl = Label::createWithSystemFont("X", "Arial", 26);
             closeLbl->setColor(Color3B::RED);
             auto closeItem = MenuItemLabel::create(closeLbl, [=](Ref*) {
+
+                PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
                 this->closeBuildingMenu();
                 });
             closeItem->setPosition(panelW - 20, panelH - 20);
@@ -1434,6 +1453,9 @@ void MainVillage::createBuildUI() {
 
     // 2. 设置 [资源] 按钮的回调
     itemRes->setCallback([=](Ref*) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
         // 视觉变化：自己变绿，别人变灰
         itemRes->setColor(Color3B::GREEN);
         itemDef->setColor(Color3B::GRAY);
@@ -1444,6 +1466,9 @@ void MainVillage::createBuildUI() {
 
     // 3. 设置 [防御] 按钮的回调
     itemDef->setCallback([=](Ref*) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
         // 视觉变化：自己变绿，别人变灰
         itemDef->setColor(Color3B::GREEN);
         itemRes->setColor(Color3B::GRAY);
@@ -1501,6 +1526,9 @@ void MainVillage::createCancelUI() {
 
     // 4. 创建按钮逻辑
     auto btnItem = MenuItemSprite::create(container, container, [=](Ref* sender) {
+        
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+        
         CCLOG("UI回调：取消建造");
 
         // 恢复状态
@@ -1611,6 +1639,9 @@ void MainVillage::switchBuildCategory(int category) {
 
         // 点击按钮回调
         return MenuItemSprite::create(nodeNormal, nodeNormal, [=](Ref*) {
+
+            PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
             _selectedBuildingType = type; // 设置建筑对应类型
             this->updateOccupiedGridVisual();
             CCLOG("选中建筑: %s", name.c_str());
@@ -1686,6 +1717,8 @@ void MainVillage::createAttackUI() {
 
     // 3. 创建按钮 (使用 wrapper)
     auto btnAttack = MenuItemSprite::create(wrapper, nullptr, [=](Ref* sender) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
 
         // 点击收缩反馈
         sprite->stopAllActions();
@@ -1818,6 +1851,9 @@ void MainVillage::showLevelSelection() {
 
         // --- E. 创建按钮 ---
         auto btn = MenuItemSprite::create(wrapper, nullptr, [=](Ref* sender) {
+            
+            PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
             // 点击反馈动画
             auto node = dynamic_cast<Node*>(sender);
             node->stopAllActions();
@@ -1887,6 +1923,9 @@ void MainVillage::showLevelSelection() {
     lblClose->enableOutline(Color4B::WHITE, 2);
 
     auto closeBtn = MenuItemLabel::create(lblClose, [=](Ref*) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
         if (_settingsLayer) {
             _settingsLayer->removeFromParent();
             _settingsLayer = nullptr;
@@ -2227,7 +2266,7 @@ void MainVillage::showSettingsLayer() {
                 setVal(level / 10.0f); // 调用设置音量函数
                 refreshBar(level / 10.0f); // 刷新音量显示
                 // 如果是调节音效，播放一下声音
-                if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
+                if (title == "Effect") PlayerData::getInstance()->playEffect("Audio/click.mp3");
             }
             });
         btnMinus->setPosition(170, posY);
@@ -2243,7 +2282,7 @@ void MainVillage::showSettingsLayer() {
                 setVal(level / 10.0f);// 调用设置音量函数
                 refreshBar(level / 10.0f);// 刷新音量显示
                 // 如果是调节音效，播放一下声音
-                if (title == "Effect") PlayerData::getInstance()->playEffect("click.mp3");
+                if (title == "Effect") PlayerData::getInstance()->playEffect("Audio/click.mp3");
             }
             });
         btnPlus->setPosition(190 + 180 + 20, posY);
@@ -2278,6 +2317,9 @@ void MainVillage::showSettingsLayer() {
     btnResumeLabel->enableOutline(Color4B::BLACK, 2);
     // 按钮回调处理 关闭设置菜单
     auto btnResume = MenuItemLabel::create(btnResumeLabel, [=](Ref*) {
+
+        PlayerData::getInstance()->playEffect("Audio/click.mp3");
+
         if (_settingsLayer) {  // 如果打开设置菜单
             _settingsLayer->removeFromParent(); // 关闭设置菜单
             _settingsLayer = nullptr; // 指针置空
