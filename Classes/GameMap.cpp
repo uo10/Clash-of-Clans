@@ -174,7 +174,7 @@ bool GameMap::init(const std::string& MapName)
     this->addChild(settingsMenu, 2000); // UI层级，保证在最上层
 
     // 9、================== 播放音乐 ======================
-        PlayerData::getInstance()->playBGM("bgm_battle_planning.mp3"); // 未放士兵 准备阶段
+        PlayerData::getInstance()->playBGM("bgm_battle_planning.mp3",true); // 未放士兵 准备阶段
 
     // ==================== 鼠标操作  ==================
     auto mouseListener = EventListenerMouse::create();
@@ -369,7 +369,7 @@ bool GameMap::init(const std::string& MapName)
                             if (!_hasBattleStarted) {
                                 _hasBattleStarted = true; // 标记已开战                            
                                 // 切换到激昂的战斗音乐
-                                PlayerData::getInstance()->playBGM("bgm_battle.mp3");
+                                PlayerData::getInstance()->playBGM("bgm_battle.mp3",true);
 
                                 CCLOG("战斗打响！切换 BGM");
                             }
@@ -1082,6 +1082,14 @@ void GameMap::checkGameState() {
 // 游戏结束UI弹窗
 void GameMap::showGameOverLayer(bool isWin) {
     auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // 播放结算bgm
+    if (isWin) {
+        PlayerData::getInstance()->playBGM("Audio/Battle Win.mp3", false);
+    }
+    else {
+        PlayerData::getInstance()->playBGM("Audio/Battle Lost.mp3", false);  // false 不循环
+    }
 
     // ===================== 1. 半透明遮罩 ================== 
     auto layer = LayerColor::create(Color4B(0, 0, 0, 0), visibleSize.width, visibleSize.height);

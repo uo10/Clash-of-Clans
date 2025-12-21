@@ -565,7 +565,8 @@ bool MainVillage::init()
                             // 2. 尝试扣费
                             if (PlayerData::getInstance()->consumeGold(costGold)&& PlayerData::getInstance()->consumeElixir(costElixir) ){
                                 // === 扣费成功，执行建造逻辑 ===
-
+								// 播放建造音效
+                                PlayerData::getInstance()->playEffect("Audio/plop.mp3");
                                 // 刷新 UI 显示扣钱后的结果
                                 this->updateResourceUI();
                                 // 适应瓦片大小
@@ -713,7 +714,7 @@ bool MainVillage::init()
     createResourceUI();
 
     // 播放音乐
-    PlayerData::getInstance()->playBGM("bgm_village.mp3");
+    PlayerData::getInstance()->playBGM("bgm_village.mp3",true);
     return true;
 }
 void MainVillage::menuCloseCallback(Ref* pSender)

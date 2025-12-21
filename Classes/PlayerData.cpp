@@ -151,14 +151,14 @@ void PlayerData::setEffectVol(float vol) {
     this->effectVolume = vol; //音量调节为vol
 }
 
-void PlayerData::playBGM(std::string filename) {
+void PlayerData::playBGM(std::string filename,bool opt) {
     // 1. 如果当前有音乐在放，先停掉旧的
     if (_currentBgmID != -1) {
         AudioEngine::stop(_currentBgmID);
     }
 
     // 2. 播放新的 传入的filename的音乐
-    _currentBgmID = AudioEngine::play2d(filename, true, this->musicVolume); 
+    _currentBgmID = AudioEngine::play2d(filename, opt, this->musicVolume); 
 
     CCLOG("正在播放 BGM: %s (ID: %d)", filename.c_str(), _currentBgmID);
 }

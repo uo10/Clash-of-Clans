@@ -229,10 +229,15 @@ void ResourceProducer::showFloatText(int amount) {
 
     // ²¥·ÅÒôÐ§
     if (amount > 0) {
-        // PlayerData::getInstance()->playEffect("collect_resource.mp3");
+        if (this->type == BuildingType::GOLD_MINE) {
+            PlayerData::getInstance()->playEffect("Audio/coins.mp3");
+        }
+        else {
+            PlayerData::getInstance()->playEffect("Audio/water.mp3");
+        }
     }
     else {
-        // PlayerData::getInstance()->playEffect("error.mp3");
+         PlayerData::getInstance()->playEffect("Audio/error.mp3");
     }
 }
 

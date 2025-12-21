@@ -239,7 +239,7 @@ public:
      * 会自动停止当前正在播放的 BGM (如果有)。
      * @param filename 音乐文件路径 (如 "bgm_village.mp3")
      */
-    void playBGM(std::string filename);
+    void playBGM(std::string filename,bool opt);
 
     /**
      * @brief 播放一次性音效 (SFX)

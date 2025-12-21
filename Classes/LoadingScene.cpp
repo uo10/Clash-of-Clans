@@ -64,6 +64,7 @@ bool LoadingScene::init() {
     this->addChild(_percentLabel);
 
     // 6. 开启 Update
+    PlayerData::getInstance()->playEffect("Audio/Intro.mp3");
     this->scheduleUpdate();
 
     return true;
@@ -72,7 +73,7 @@ bool LoadingScene::init() {
 void LoadingScene::update(float dt) {
 
     // 模拟加载速度：每秒增加 20% (即5秒加载完)
-    _currentPercent += dt * 100.0f;
+    _currentPercent += dt * 20.0f;
 
     if (_currentPercent > 100.0f) {
         _currentPercent = 100.0f;

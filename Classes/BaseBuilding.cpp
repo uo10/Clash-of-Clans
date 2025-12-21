@@ -354,6 +354,8 @@ void BaseBuilding::upgradeLevel() {
     );
     mainSprite->runAction(action);
 
+    PlayerData::getInstance()->playEffect("Audio/plop.mp3");
+
     // 刷新升级后的画面
     this->updateView();
 
@@ -649,7 +651,7 @@ void BaseBuilding::constructionFinished() {
     // 如果是初次建造，直接完工 (level 不变)
              // 状态变为正常
     this->changeState(BuildingState::IDLE);
-
+    PlayerData::getInstance()->playEffect("Audio/plop.mp3");
     // 隐藏剩余时间进度条
     if (_progressNode) {
         _progressNode->setVisible(false);
