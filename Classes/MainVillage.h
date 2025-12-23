@@ -147,7 +147,7 @@ private:
 
     cocos2d::DrawNode* _gridDrawNode = nullptr;    // 用于绘制占用格子的画笔节点
 
-    cocos2d::LayerColor* _settingsLayer = nullptr;  // 设置覆盖层的指针
+    cocos2d::LayerColor* settings_layer_ = nullptr;  // 设置覆盖层的指针
 
 
     // 取消建造按钮

@@ -4,7 +4,7 @@
 #include "Archer.h"
 #include "Giant.h"
 #include "WallBreaker.h" 
-#include "GameMap.h"
+#include "game_map.h"
 
 
 USING_NS_CC;
@@ -365,7 +365,7 @@ bool MainVillage::init()
             }
         }
         // --- 情况E：有遮护罩(如选择关卡和设置) ---
-        if (_settingsLayer) {
+        if (settings_layer_) {
             _isDragging = false;
             _isClickValid = false;
             return true; 
@@ -1752,21 +1752,21 @@ void MainVillage::createAttackUI() {
 // 选择关卡弹窗
 void MainVillage::showLevelSelection() {
     // 0. 防止重复打开
-    if (_settingsLayer) return;
+    if (settings_layer_) return;
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
     // ==================== 1. 创建全屏遮罩 =====================
-    _settingsLayer = LayerColor::create(Color4B(0, 0, 0, 200), visibleSize.width, visibleSize.height);
-    _settingsLayer->setName("LevelSelectionLayer");
+    settings_layer_ = LayerColor::create(Color4B(0, 0, 0, 200), visibleSize.width, visibleSize.height);
+    settings_layer_->setName("LevelSelectionLayer");
 
     // 拦截点击
     auto listener = EventListenerTouchOneByOne::create();
     listener->setSwallowTouches(true);
     listener->onTouchBegan = [](Touch*, Event*) { return true; };
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _settingsLayer);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, settings_layer_);
 
-    this->addChild(_settingsLayer, 20000);
+    this->addChild(settings_layer_, 20000);
 
     // ===================== 2. 创建弹窗背景 ====================
     auto bg = ui::Scale9Sprite::create("Level_Panel.png");
@@ -1778,7 +1778,7 @@ void MainVillage::showLevelSelection() {
     }
     bg->setContentSize(Size(500, 550));
     bg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-    _settingsLayer->addChild(bg);
+    settings_layer_->addChild(bg);
 
     // 标题
     auto title = Label::createWithTTF("SELECT BATTLE", "fonts/GROBOLD.ttf", 36);
@@ -1902,7 +1902,7 @@ void MainVillage::showLevelSelection() {
             else {
                 CCLOG("进入关卡 %d...", levelID);
 
-                auto scene = GameMap::create(levels[i].mapFile); // 创建对应地图 
+                auto scene = GameMap::Create(levels[i].mapFile); // 创建对应地图 
                 Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene)); // 切换场景
             }
             });
@@ -1926,9 +1926,9 @@ void MainVillage::showLevelSelection() {
 
         PlayerData::getInstance()->playEffect("Audio/click.mp3");
 
-        if (_settingsLayer) {
-            _settingsLayer->removeFromParent();
-            _settingsLayer = nullptr;
+        if (settings_layer_) {
+            settings_layer_->removeFromParent();
+            settings_layer_ = nullptr;
         }
         });
 
@@ -2165,19 +2165,19 @@ void MainVillage::updateOccupiedGridVisual() {
 }
 
 void MainVillage::showSettingsLayer() {
-    if (_settingsLayer) return;    // 防止重复打开
+    if (settings_layer_) return;    // 防止重复打开
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
     // 1. 创建遮罩层 
-    _settingsLayer = LayerColor::create(Color4B(0, 0, 0, 180), visibleSize.width, visibleSize.height);
-    _settingsLayer->setName("SettingsLayer"); // Tag命名 用于点击检测
+    settings_layer_ = LayerColor::create(Color4B(0, 0, 0, 180), visibleSize.width, visibleSize.height);
+    settings_layer_->setName("SettingsLayer"); // Tag命名 用于点击检测
 
     // 触摸拦截
     auto listener = EventListenerTouchOneByOne::create();
     listener->setSwallowTouches(true);
     listener->onTouchBegan = [](Touch*, Event*) { return true; };
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _settingsLayer);
-    this->addChild(_settingsLayer, 20000); // 最顶层
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, settings_layer_);
+    this->addChild(settings_layer_, 20000); // 最顶层
 
     // 2. 设置背景板
     std::string bgPath = "setting_panel.png";
@@ -2188,7 +2188,7 @@ void MainVillage::showSettingsLayer() {
     bg->setPosition(visibleSize.width / 2, visibleSize.height / 2); // 位于中心位置
     bg->setName("SettingsBackground"); // 用于点击检测
 
-    _settingsLayer->addChild(bg);
+    settings_layer_->addChild(bg);
 
     // 3. 标题
     auto lblTitle = Label::createWithTTF("SETTINGS", "fonts/GROBOLD.ttf", 36);
@@ -2320,9 +2320,9 @@ void MainVillage::showSettingsLayer() {
 
         PlayerData::getInstance()->playEffect("Audio/click.mp3");
 
-        if (_settingsLayer) {  // 如果打开设置菜单
-            _settingsLayer->removeFromParent(); // 关闭设置菜单
-            _settingsLayer = nullptr; // 指针置空
+        if (settings_layer_) {  // 如果打开设置菜单
+            settings_layer_->removeFromParent(); // 关闭设置菜单
+            settings_layer_ = nullptr; // 指针置空
         }
         });
 

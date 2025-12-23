@@ -25,7 +25,7 @@
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
 #include "MainVillage.h"
-#include "GameMap.h"
+#include "game_map.h"
 #include "LoadingScene.h"
 
 // #define USE_AUDIO_ENGINE 1
