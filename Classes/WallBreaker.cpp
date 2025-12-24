@@ -17,14 +17,14 @@ std::string WallBreaker::getIconName() {
 
 BuildingType WallBreaker::getPreferredTargetType() {
     // 优先找墙
-    return BuildingType::WALL;
+    return BuildingType::kWall;
 }
 
 void WallBreaker::attackTarget(float dt) {
     // 只有当目标存在时才自爆
     if (target) {
         // 1. 造成伤害
-        target->takeDamage(stats.damage);
+        target->TakeDamage(stats.damage);
 
         CCLOG("WallBreaker BOOM!");
 
@@ -56,11 +56,11 @@ void WallBreaker::findTarget()
             auto b = dynamic_cast<BaseBuilding*>(child);
 
             // 1. 必须是活着的建筑
-            if (b && b->state != BuildingState::DESTROYED) {
+            if (b && b->state_ != BuildingState::kDestroyed) {
 
                 // 2. 只允许 WALL 类型通过
                 // 如果不是墙，直接跳过 (continue)
-                if (b->type != BuildingType::WALL) {
+                if (b->type_ != BuildingType::kWall) {
                     continue;
                 }
 

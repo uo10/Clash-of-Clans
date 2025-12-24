@@ -1,7 +1,7 @@
     #ifndef __CANNON_H__
     #define __CANNON_H__
 
-    #include "BaseBuilding.h"
+    #include "base_building.h"
     // 前向声明 Soldier，因为我们需要攻击它
     class Soldier;
 
@@ -18,7 +18,7 @@
         virtual void update(float dt) override;
 
         // 更新特有属性 (升级时伤害增加)
-        virtual void updateSpecialProperties() override;
+        virtual void UpdateSpecialProperties() override;
 
     private:
         float _attackRange;    // 攻击范围

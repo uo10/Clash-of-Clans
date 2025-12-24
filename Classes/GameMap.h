@@ -12,7 +12,7 @@ class GameMap : public cocos2d::Scene
 {
 public:
 	//构造函数
-	GameMap(std::string str) :_MapName(str), _isDragging(false), _isClickValid(false), _debugDrawNode(nullptr) {}
+	GameMap(std::string str) :_MapName(str), is_dragging_(false), is_click_valid_(false), _debugDrawNode(nullptr) {}
 	// a selector callback
 	void menuCloseCallback(cocos2d::Ref* pSender);
 	/**
@@ -129,27 +129,27 @@ public:
 	/**
     * @brief 初始化士兵选择菜单
     */
-	void createTroopMenu();
+	void CreateTroopMenu();
 
 	/**
     * @brief 更新士兵数量label（调用士兵之后）
 	* @param name 更改label的士兵的名字
     */
-	void updateTroopCountUI(std::string name);
+	void UpdateTroopCountUi(std::string name);
 
 	/**
 	* @brief 判断游戏结束函数
 	* 胜利：所有建筑HP为0
 	* 失败：士兵容器为空 创建的士兵HP均为0
 	*/
-	void checkGameState();
+	void CheckGameState();
 
 	/**
 	* @brief 游戏结束画面处理
 	* @param isWin 是否胜利
 	* true 为胜利 false 为失败
 	*/
-	void showGameOverLayer(bool isWin);
+	void ShowGameOverLayer(bool isWin);
 
 	/**
 	* @brief 显示设置菜单
@@ -157,7 +157,7 @@ public:
 	* 包括：BGM和音效音量 结束战斗 返回按钮
 	* 同时包括暂停战斗
 	*/
-	void showSettingsLayer();
+	void ShowSettingsLayer();
 
 private:
 	std::string _MapName;//所要创建的地图名（tmx文件名）
@@ -168,22 +168,22 @@ private:
 	std::map<std::string, GameUnit*> _unitGridLookup; // 哈希表，将网格坐标设置为Key,快速查找网格上的对象
 	std::vector<cocos2d::Rect> _forbiddenAreas;//禁止区对象数组，储存禁止放置层上的对象
 	cocos2d::DrawNode* _debugDrawNode; // 用于显示区域
-	bool _isDragging;       // 是否正在按住鼠标
-	bool _isClickValid;     // 标记这次点击是否有效（用于生成精灵）
-	cocos2d::Vec2 _lastMousePos; // 上一帧鼠标位置（用于移动地图）
-	cocos2d::Vec2 _startClickPos;// 按下鼠标时的初始位置（用于判断距离）
+	bool is_dragging_;       // 是否正在按住鼠标
+	bool is_click_valid_;     // 标记这次点击是否有效（用于生成精灵）
+	cocos2d::Vec2 last_mouse_pos_; // 上一帧鼠标位置（用于移动地图）
+	cocos2d::Vec2 start_click_pos_;// 按下鼠标时的初始位置（用于判断距离）
 
-	cocos2d::Node* _troopMenuNode = nullptr;    // 士兵选择菜单容器
-	std::string _currentSelectedTroop = "";    	// 当前选中的兵种名字 (例如 "Barbarian")，为空代表没选
-	std::map<std::string, cocos2d::Label*> _troopCountLabels; 	// 记录 UI 上的数字标签，方便投放兵力后实时更新数量
-	cocos2d::Sprite* _selectionHighlight = nullptr;  	// 选中框精灵 (用于显示哪个被选中了)
-	std::map<std::string, int> _battleTroops;  // 战斗临时兵力表 进入战斗时copy PlayerData的数据
-	cocos2d::LayerColor* _settingsLayer = nullptr;  // 存储设置覆盖层的指针
-	bool _isGameOver = false; // 判断胜负逻辑
-	bool _isGamePaused = false; // 暂停标志位
-	bool _hasBattleStarted = false; // 标记是否开始战斗
+	cocos2d::Node* troop_menu_node_ = nullptr;    // 士兵选择菜单容器
+	std::string current_selected_troop_ = "";    	// 当前选中的兵种名字 (例如 "Barbarian")，为空代表没选
+	std::map<std::string, cocos2d::Label*> troop_count_labels_; 	// 记录 UI 上的数字标签，方便投放兵力后实时更新数量
+	cocos2d::Sprite* selection_highlight_ = nullptr;  	// 选中框精灵 (用于显示哪个被选中了)
+	std::map<std::string, int> battle_troops_;  // 战斗临时兵力表 进入战斗时copy PlayerData的数据
+	cocos2d::LayerColor* settings_layer_ = nullptr;  // 存储设置覆盖层的指针
+	bool is_game_over_ = false; // 判断胜负逻辑
+	bool is_game_paused_ = false; // 暂停标志位
+	bool has_battle_started_ = false; // 标记是否开始战斗
 
-	std::string _currentMapFile;	// 记录当前地图的文件名
+	std::string current_map_file_name_;	// 记录当前地图的文件名
 
 };
 

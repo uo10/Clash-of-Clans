@@ -1,7 +1,7 @@
 #ifndef __TOWNHALL_H__
 #define __TOWNHALL_H__
 
-#include "BaseBuilding.h"
+#include "base_building.h"
 
 class TownHall : public BaseBuilding
 {

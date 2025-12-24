@@ -47,20 +47,20 @@ private:
      * @brief 进度条控件
      * 使用 cocos2d::ui::LoadingBar，可以通过 setPercent() 控制显示长度。
      */
-    cocos2d::ui::LoadingBar* _loadingBar;
+    cocos2d::ui::LoadingBar* loading_bar_;
 
     /**
      * @brief 百分比文本标签
      * 用于实时显示 "0%" 到 "100%" 的数字。
      */
-    cocos2d::Label* _percentLabel;
+    cocos2d::Label* percent_label_;
 
     /**
      * @brief 当前加载进度
      * 范围 0.0f - 100.0f。
      * 在 update 函数中随时间增加。
      */
-    float _currentPercent = 0.0f;
+    float current_percent_ = 0.0f;
 };
 
 #endif // __LOADING_SCENE_H__

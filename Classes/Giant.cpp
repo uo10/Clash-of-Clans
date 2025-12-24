@@ -17,5 +17,5 @@ std::string Giant::getIconName() {
 
 BuildingType Giant::getPreferredTargetType() {
     // 返回 CANNON，在 Soldier::findTarget 中，我们约定这代表“所有防御建筑”
-    return BuildingType::CANNON;
+    return BuildingType::kCannon;
 }

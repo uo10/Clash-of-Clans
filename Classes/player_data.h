@@ -2,7 +2,7 @@
 #define __PLAYER_DATA_H__
 
 #include "cocos2d.h"
-#include "BaseBuilding.h"
+#include "base_building.h"
 #include "AudioEngine.h" // 引入音频引擎，用于控制声音播放
 
 USING_NS_CC;
@@ -15,8 +15,8 @@ USING_NS_CC;
 struct BuildingData {
     BuildingType type; // 建筑类型 (枚举)
     int level;         // 建筑等级
-    int tileX;         // 在瓦片地图上的 X 网格坐标
-    int tileY;         // 在瓦片地图上的 Y 网格坐标
+    int tile_x;         // 在瓦片地图上的 X 网格坐标
+    int tile_y;         // 在瓦片地图上的 Y 网格坐标
 };
 
 /**
@@ -37,17 +37,17 @@ private:
     PlayerData();
 
     /** 静态单例指针，全局唯一 */
-    static PlayerData* _instance;
+    static PlayerData* instance_;
 
     // ================= 资源核心数据 =================
 
-    int _totalGold;   // 当前持有的金币数量 (资源)
-    int _totalElixir; // 当前持有的圣水数量 (资源)
-    int _totalPeople; // 当前已占用的人口数量 (兵力占用)
+    int total_gold_;   // 当前持有的金币数量 (资源)
+    int total_elixir_; // 当前持有的圣水数量 (资源)
+    int total_people_; // 当前已占用的人口数量 (兵力占用)
 
-    int _maxGold;     // 金币存储上限 (由所有金库等级累加决定)
-    int _maxElixir;   // 圣水存储上限 (由所有圣水瓶等级累加决定)
-    int _maxPeople;   // 人口总上限 (由所有兵营等级累加决定) 
+    int max_gold_;     // 金币存储上限 (由所有金库等级累加决定)
+    int max_elixir_;   // 圣水存储上限 (由所有圣水瓶等级累加决定)
+    int max_people_;   // 人口总上限 (由所有兵营等级累加决定) 
 
     // ================= 兵力核心数据 =================
 
@@ -57,17 +57,17 @@ private:
      * Value: 数量
      * 数据持久化存储在这里，不会因为场景切换而丢失。
      */
-    std::map<std::string, int> _ownedTroops;
+    std::map<std::string, int> owned_troops_;
 
     // ================= 音频核心数据 =================
 
     /** 记录当前正在播放的背景音乐 ID，用于切换歌曲或调整音量 */
-    int _currentBgmID = -1;
+    int current_bgm_id_ = -1;
 
     // ================= 关卡信息 =================
     
     // 关卡是否通关状态
-    std::map<int, int> _levelStars;
+    std::map<int, int> level_stars_;
 
 public:
     // ================= 公共成员变量 =================
@@ -77,28 +77,28 @@ public:
      * 当玩家离开大本营进入战斗时，将所有建筑信息保存至此。
      * 当玩家回到大本营时，读取此列表重建地图。
      */
-    std::vector<BuildingData> _villageLayout;
+    std::vector<BuildingData> village_layout_;
 
-    float musicVolume = 1.0f;  // 全局背景音乐音量 (0.0 - 1.0)
-    float effectVolume = 1.0f; // 全局音效音量 (0.0 - 1.0)
+    float music_volume_ = 1.0f;  // 全局背景音乐音量 (0.0 - 1.0)
+    float effect_volume_ = 1.0f; // 全局音效音量 (0.0 - 1.0)
 
 public:
     /**
      * @brief 获取单例实例 (工厂方法)
      * @return PlayerData* 全局唯一的指针。若未创建则自动创建。
      */
-    static PlayerData* getInstance();
+    static PlayerData* GetInstance();
 
     /**
      * @brief 更新资源存储上限
      * 通常在以下情况调用：
      * 1. 读档恢复建筑后 (refreshTotalCapacity)。
      * 2. 存储类建筑建造/升级完成时。
-     * @param maxGold 新的金币总容量
-     * @param maxElixir 新的圣水总容量
-     * @param maxPeople 新的人口总容量
+     * @param max_gold 新的金币总容量
+     * @param max_elixir 新的圣水总容量
+     * @param max_people 新的人口总容量
      */
-    void updateMaxLimits(int maxGold, int maxElixir, int maxPeople);
+    void UpdateMaxLimits(int max_gold, int max_elixir, int max_people);
 
     // ================== 资源辅助查询 ==================
 
@@ -106,18 +106,18 @@ public:
      * @brief 获取金币剩余存储空间
      * @return (最大容量 - 当前持有量)
      */
-    int getGoldSpace() { return _maxGold - _totalGold; }
+    int GetGoldSpace() { return max_gold_ - total_gold_; }
 
     /**
      * @brief 获取圣水剩余存储空间
      * @return (最大容量 - 当前持有量)
      */
-    int getElixirSpace() { return _maxElixir - _totalElixir; }
+    int GetElixirSpace() { return max_elixir_ - total_elixir_; }
 
     // ================== 金币操作 ==================
 
     /** @return 当前拥有的金币数 */
-    int getGold();
+    int GetGold();
 
     /**
      * @brief 增加金币
@@ -125,7 +125,7 @@ public:
      * @param amount 尝试增加的数量
      * @return 实际增加的数量 (受上限限制)
      */
-    int addGold(int amount);
+    int AddGold(int amount);
 
     /**
      * @brief 消耗金币
@@ -133,12 +133,12 @@ public:
      * @param amount 需要消耗的数量
      * @return true: 余额充足，扣除成功; false: 余额不足，扣除失败。
      */
-    bool consumeGold(int amount);
+    bool ConsumeGold(int amount);
 
     // ================== 圣水操作 ==================
 
     /** @return 当前拥有的圣水数 */
-    int getElixir();
+    int GetElixir();
 
     /**
      * @brief 增加圣水
@@ -146,7 +146,7 @@ public:
      * @param amount 尝试增加的数量
      * @return 实际增加的数量
      */
-    int addElixir(int amount);
+    int AddElixir(int amount);
 
     /**
      * @brief 消耗圣水
@@ -154,12 +154,12 @@ public:
      * @param amount 需要消耗的数量
      * @return true: 余额充足，扣除成功; false: 余额不足。
      */
-    bool consumeElixir(int amount);
+    bool ConsumeElixir(int amount);
 
     // ================== 人口操作 ==================
 
     /** @return 当前已占用的人口数量 */
-    int getPeople();
+    int GetPeople();
 
     /**
      * @brief 尝试占用人口并扣除造兵资源
@@ -173,14 +173,14 @@ public:
      * @param cost 该士兵消耗的圣水数
      * @return true: 资源和人口都充足，操作成功; false: 任一条件不满足。
      */
-    bool addPeople(int amount, int cost);
+    bool AddPeople(int amount, int cost);
 
     /**
      * @brief 释放人口
      * 用于取消训练或士兵死亡时，归还占用的人口空间。
      * @param amount 释放的数量
      */
-    void removePeople(int amount);
+    void RemovePeople(int amount);
 
     // ================= 士兵管理操作 ==================
 
@@ -190,7 +190,7 @@ public:
      * @param name 士兵名称
      * @param count 增加数量
      */
-    void addTroop(std::string name, int count);
+    void AddTroop(std::string name, int count);
 
     /**
      * @brief 消耗士兵库存
@@ -199,14 +199,14 @@ public:
      * @param count 消耗数量
      * @return true: 库存充足，扣除成功; false: 库存不足。
      */
-    bool consumeTroop(std::string name, int count);
+    bool ConsumeTroop(std::string name, int count);
 
     /**
      * @brief 查询士兵库存
      * @param name 士兵名称
      * @return 当前拥有的数量
      */
-    int getTroopCount(std::string name);
+    int GetTroopCount(std::string name);
 
     /**
      * @brief 获取士兵数据的副本
@@ -214,8 +214,8 @@ public:
      * 这样在战斗中消耗兵力不会直接影响全局数据 (除非战斗结算时确认消耗)。
      * @return 全局兵力 Map 的拷贝
      */
-    std::map<std::string, int> getTroopsCopy() {
-        return _ownedTroops;
+    std::map<std::string, int> GetTroopsCopy() {
+        return owned_troops_;
     }
 
     // ================= 音频管理操作 ==================
@@ -225,27 +225,27 @@ public:
      * 同时更新变量并实时调整正在播放的 BGM 音量。
      * @param vol 音量值 (0.0 ~ 1.0)
      */
-    void setMusicVol(float vol);
+    void SetMusicVol(float vol);
 
     /**
      * @brief 设置音效音量
      * 仅更新变量，下次播放音效时生效。
      * @param vol 音量值 (0.0 ~ 1.0)
      */
-    void setEffectVol(float vol);
+    void SetEffectVol(float vol);
 
     /**
      * @brief 播放背景音乐 (BGM)
      * 会自动停止当前正在播放的 BGM (如果有)。
-     * @param filename 音乐文件路径 (如 "bgm_village.mp3")
+     * @param file_name 音乐文件路径 (如 "bgm_village.mp3")
      */
-    void playBGM(std::string filename,bool opt);
+    void PlayBgm(std::string file_name,bool opt);
 
     /**
      * @brief 播放一次性音效 (SFX)
-     * @param filename 音效文件路径 (如 "click.mp3")
+     * @param file_name 音效文件路径 (如 "click.mp3")
      */
-    void playEffect(std::string filename);
+    void PlayEffect(std::string file_name);
 
     // ================= 关卡管理操作 ==================
 
@@ -253,22 +253,22 @@ public:
      * @brief 设置关卡通过状态 (战斗结算时调用)
      * 根据战斗结果更新存档中的星星数据。
      * 逻辑：
-     * - 如果 isWin 为 true：直接将该关卡设为 3 星 (代表通关)。
-     * - 如果 isWin 为 false：不修改现有数据 (保留原成绩)。
+     * - 如果 is_win 为 true：直接将该关卡设为 3 星 (代表通关)。
+     * - 如果 is_win 为 false：不修改现有数据 (保留原成绩)。
      *
-     * @param levelID 关卡ID (1, 2, 3...)
-     * @param isWin 是否取得胜利
+     * @param level_id 关卡ID (1, 2, 3...)
+     * @param is_win 是否取得胜利
      */
-    void setLevelStatus(int levelID, bool isWin);
+    void SetLevelStatus(int level_id, bool is_win);
 
     /**
      * @brief 获取指定关卡的星星数量
      * 用于在“选关界面”显示该关卡的完成度。
      *
-     * @param levelID 关卡ID
+     * @param level_id 关卡ID
      * @return int 星星数量 (0 = 未打过或未通过, 3 = 已完美通关)
      */
-    int getLevelStar(int levelID);
+    int GetLevelStar(int level_id);
 
     /**
      * @brief 判断某关卡是否处于锁定状态
@@ -278,10 +278,10 @@ public:
      * 1. 第 1 关：永远解锁。
      * 2. 第 N 关：只有当第 N-1 关获得 3 星后，第 N 关才解锁。
      *
-     * @param levelID 关卡ID
+     * @param level_id 关卡ID
      * @return true: 锁定 (不可进入); false: 解锁 (可进入)
      */
-    bool isLevelLocked(int levelID);
+    bool IsLevelLocked(int level_id);
 };
 
 #endif // __PLAYER_DATA_H__

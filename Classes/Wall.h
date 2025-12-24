@@ -1,7 +1,7 @@
 #ifndef __WALL_H__
 #define __WALL_H__
 
-#include "BaseBuilding.h"
+#include "base_building.h"
 
 class Wall : public BaseBuilding
 {

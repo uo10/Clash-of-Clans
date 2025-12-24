@@ -2,7 +2,7 @@
 #define __SOLDIER_H__
 
 #include "cocos2d.h"
-#include "BaseBuilding.h"
+#include "base_building.h"
 
 class Soldier : public cocos2d::Sprite
 {
@@ -36,7 +36,7 @@ public:
     virtual std::string getIconName() = 0;
 
     // 3. 获取优先攻击目标类型 (默认返回 NONE，表示攻击最近的一切)
-    virtual BuildingType getPreferredTargetType() { return BuildingType::NONE; }
+    virtual BuildingType getPreferredTargetType() { return BuildingType::kNone; }
 
     //设置是否为家乡模式（只游走不攻击）
     void setHomeMode(bool isHome);

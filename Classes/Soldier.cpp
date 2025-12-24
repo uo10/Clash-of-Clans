@@ -51,7 +51,7 @@ void Soldier::update(float dt)
 
     // 1. 校验目标是否还存在
     if (target) {
-        if (!target->getParent() || target->state == BuildingState::DESTROYED) {
+        if (!target->getParent() || target->state_ == BuildingState::kDestroyed) {
             target = nullptr; // 目标没了
             state = State::IDLE;
         }
@@ -173,24 +173,24 @@ void Soldier::pickNewWanderTarget()
 bool Soldier::isValidTarget(BaseBuilding* building, BuildingType pref)
 {
     // 1. 基础检查：建筑必须存在且活着
-    if (!building || building->state == BuildingState::DESTROYED) return false;
+    if (!building || building->state_ == BuildingState::kDestroyed) return false;
 
     // 2. 如果偏好是 NONE，说明什么都吃，只排除障碍物或特殊物体
-    if (pref == BuildingType::NONE) return true;
+    if (pref == BuildingType::kNone) return true;
 
     // 3. === 巨人逻辑 (CANNON 代表防御类) ===
-    if (pref == BuildingType::CANNON) {
+    if (pref == BuildingType::kCannon) {
         // 只要是防御塔都算
-        if (building->type == BuildingType::CANNON ||
-            building->type == BuildingType::ARCHER_TOWER) {
+        if (building->type_ == BuildingType::kCannon ||
+            building->type_ == BuildingType::kArcherTower) {
             return true;
         }
         return false;
     }
 
     // 4. === 炸弹人逻辑 ===
-    if (pref == BuildingType::WALL) {
-        return (building->type == BuildingType::WALL);
+    if (pref == BuildingType::kWall) {
+        return (building->type_ == BuildingType::kWall);
     }
 
     // 默认不匹配
@@ -211,7 +211,7 @@ void Soldier::findTarget()
     BuildingType pref = getPreferredTargetType();
 
     // 2. 第一轮扫描：只找偏好的目标
-    if (pref != BuildingType::NONE) {
+    if (pref != BuildingType::kNone) {
         for (auto child : map->getChildren()) {
             if (child->getTag() == 999) {
                 auto b = dynamic_cast<BaseBuilding*>(child);
@@ -235,7 +235,7 @@ void Soldier::findTarget()
             if (child->getTag() == 999) {
                 auto b = dynamic_cast<BaseBuilding*>(child);
                 // 这里 pref 传 NONE，表示任意活着的建筑都行
-                if (isValidTarget(b, BuildingType::NONE)) {
+                if (isValidTarget(b, BuildingType::kNone)) {
                     float d = myPos.distance(b->getPosition());
                     if (d < minDst) {
                         minDst = d;
@@ -274,7 +274,7 @@ void Soldier::attackTarget(float dt)
         attackTimer = 0;
 
         if (target) {
-            target->takeDamage(stats.damage);
+            target->TakeDamage(stats.damage);
 
             auto scaleUp = ScaleBy::create(0.1f, 1.2f);
             auto scaleDown = scaleUp->reverse(); // 自动计算反向动作 (除以 1.2)

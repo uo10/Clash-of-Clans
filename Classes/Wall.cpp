@@ -17,6 +17,6 @@ Wall* Wall::create(int level)
 
 bool Wall::init(int level)
 {
-    if (!BaseBuilding::init(BuildingType::WALL, level)) return false;
+    if (!BaseBuilding::Init(BuildingType::kWall, level)) return false;
     return true;
 }

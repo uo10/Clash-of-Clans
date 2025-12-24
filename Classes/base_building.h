@@ -13,16 +13,16 @@
  * 用于区分不同的建筑逻辑（如：只有 GOLD_MINE 会产金币，只有 BARRACKS 能造兵）
  */
 enum class BuildingType {
-    GOLD_MINE = 1,      // 金矿 (生产金币)
-    ELIXIR_PUMP,    // 圣水收集器 (生产圣水)
-    GOLD_STORAGE,   // 金库 (存储金币)
-    ELIXIR_STORAGE, // 圣水瓶 (存储圣水)
-    BARRACKS,        // 兵营 (训练士兵)
-    CANNON,         // 加农炮
-    ARCHER_TOWER,   // 箭塔
-    WALL,            // 围墙
-	TOWN_HALL,     // 大本营
-    NONE = 0 // empty states
+    kGoldMine = 1,      // 金矿 (生产金币)
+    kElixirPump,    // 圣水收集器 (生产圣水)
+    kGoldStorage,   // 金库 (存储金币)
+    kElixirStorage, // 圣水瓶 (存储圣水)
+    kBarracks,        // 兵营 (训练士兵)
+    kCannon,         // 加农炮
+    kArcherTower,   // 箭塔
+    kWall,            // 围墙
+	kTownHall,     // 大本营
+    kNone = 0 // empty states
 };
 
 /**
@@ -30,11 +30,11 @@ enum class BuildingType {
  * 这是一个简易的状态机定义，决定了建筑当前的表现和行为。
  */
 enum class BuildingState {
-    PREVIEW,    // 预览状态：跟随鼠标移动，半透明，绿色/红色指示能否建造
-    BUILDING,   // 建造/升级中：显示倒计时和进度条，功能暂停
-    IDLE,       // 正常待机：正在工作 (生产/存储/防御)
-    ATTACKING,  // 攻击状态：防御塔发现敌人并开火
-    DESTROYED   // 摧毁状态：HP归零，显示废墟图，功能失效
+    kPreview,    // 预览状态：跟随鼠标移动，半透明，绿色/红色指示能否建造
+    kBuilding,   // 建造/升级中：显示倒计时和进度条，功能暂停
+    kIdle,       // 正常待机：正在工作 (生产/存储/防御)
+    kAttacking,  // 攻击状态：防御塔发现敌人并开火
+    kDestroyed   // 摧毁状态：HP归零，显示废墟图，功能失效
 };
 
 // ==========================================
@@ -49,13 +49,13 @@ enum class BuildingState {
 struct BuildingStats {
     std::string name;   // 显示名称
     int hp;             // 血量上限
-    int costGold;       // 建造/升级所需金币
-    int costElixir;     // 建造/升级所需圣水
-    int buildTime;      // 建造/升级所需时间(秒)
+    int cost_gold;       // 建造/升级所需金币
+    int cost_elixir;     // 建造/升级所需圣水
+    int build_time;      // 建造/升级所需时间(秒)
 
     // --- 资源类特有属性 ---
     int capacity;       // 资源存储容量
-    int productionRate; // 资源生产效率 (每小时产量)
+    int production_rate; // 资源生产效率 (每小时产量)
 
     // --- 防御类特有属性 ---
     double damage;       // 单次伤害
@@ -75,26 +75,25 @@ struct BuildingStats {
 class BaseBuilding : public cocos2d::Node {
 protected:
     // 保存当前等级的配置数据，供子类逻辑使用
-    BuildingStats _stats;
+    BuildingStats stats_;
 
     // --- 倒计时 UI 组件 ---
-    cocos2d::Node* _progressNode;       // 进度条的父节点(容器)
-    cocos2d::Sprite* _progBar;          // 进度条
-    cocos2d::Label* _timeLabel;         // "10s" 文字
-    cocos2d::Sprite* _hammerIcon = nullptr; // 锤子图标
+    cocos2d::Node* progress_node_;       // 进度条的父节点(容器)
+    cocos2d::Sprite* prog_bar_;          // 进度条
+    cocos2d::Sprite* hammer_icon_ = nullptr; // 锤子图标
     // 标记当前倒计时是为了升级还是为了建造
     // true = 正在升级 (结束后 level++)
     // false = 正在建造 (结束后 level 不变，只是进入 IDLE)
-    bool _isUpgradingTarget = false;
-    cocos2d::Label* _speedUpCostLabel = nullptr; // 显示加速金币数的文字
+    bool is_upgrading_target_ = false;
+    cocos2d::Label* speed_up_cost_label_ = nullptr; // 显示加速金币数的文字
 
 
     // --- 时间变量 ---
-    float _buildTotalTime = 0.0f;       // 总时间
-    float _buildLeftTime = 0.0f;        // 剩余时间
+    float build_total_time_ = 0.0f;       // 总时间
+    float build_left_time_ = 0.0f;        // 剩余时间
 
     // 初始化进度条 UI 的辅助函数
-    void initBuildUI();
+    void InitBuildUI();
 
 
 public:
@@ -102,40 +101,40 @@ public:
     // ------------------------------------------------
     // 基础属性 (从配置中读取)
     // ------------------------------------------------
-    int buildCostGold;   // 升级下一级所需的金币
-    int buildCostElixir; // 升级下一级所需的圣水
-    int buildTimeSeconds;// 建造/升级所需总时间
+    int build_cost_gold_;   // 升级下一级所需的金币
+    int build_cost_elixir_; // 升级下一级所需的圣水
+    int build_time_seconds_;// 建造/升级所需总时间
 
     // ------------------------------------------------
     // 身份标识
     // ------------------------------------------------
-    BuildingType type;    // 建筑类型
-    int level;            // 当前等级
-    int instanceID;       // 实例ID (存档用，区分地图上多个同类建筑)
-    std::string name;     // 建筑名称
+    BuildingType type_;    // 建筑类型
+    int level_;            // 当前等级
+    int instance_id_;       // 实例ID (存档用，区分地图上多个同类建筑)
+    std::string name_;     // 建筑名称
 
     // ------------------------------------------------
     // 战斗属性
     // ------------------------------------------------
-    float maxHP;          // 血量上限
-    float currentHP;      // 当前血量
+    float max_hp_;          // 血量上限
+    float current_hp_;      // 当前血量
 
     // ------------------------------------------------
     // 状态管理
     // ------------------------------------------------
-    BuildingState state;          // 当前状态机状态
-    float buildTimeTotal;         // 建造总时长 (用于计算进度百分比)
-    float buildTimeRemaining;     // 剩余建造时间 (倒计时用)
+    BuildingState state_;          // 当前状态机状态
+    float build_time_total_;         // 建造总时长 (用于计算进度百分比)
+    float build_time_remaining_;     // 剩余建造时间 (倒计时用)
 
     // ------------------------------------------------
     // UI 组件 (需在 updateUI 中刷新)
     // ------------------------------------------------
-    cocos2d::ui::LoadingBar* buildBar;    // 建造/升级时的黄色进度条
-    cocos2d::Label* timeLabel;            // 显示剩余时间的文字 (如 "10s")
-    cocos2d::Sprite* mainSprite;          // 建筑的主体图片精灵
+    cocos2d::ui::LoadingBar* build_bar_;    // 建造/升级时的黄色进度条
+    cocos2d::Label* time_label_;            // 显示剩余时间的文字 (如 "10s")
+    cocos2d::Sprite* main_sprite_;          // 建筑的主体图片精灵
 
     // Key: 兵种名字 (如 "Barbarian"), Value: 士兵节点列表
-    std::map<std::string, std::vector<cocos2d::Node*>> _visualTroops; //用来存储可视化军营士兵容器
+    std::map<std::string, std::vector<cocos2d::Node*>> visual_troops_; //用来存储可视化军营士兵容器
     // 同时存在BaseBuilding里，和MainVillage里面的list区分开
 
     // ------------------------------------------------
@@ -148,33 +147,33 @@ public:
      * @param level 初始等级
      * @return 创建成功的建筑指针，失败返回 nullptr
      */
-    static BaseBuilding* create(BuildingType type, int level);
+    static BaseBuilding* Create(BuildingType type, int level);
 
     /**
      * @brief 初始化函数
      * 设置默认属性，加载配置，但不创建具体图片(由 updateView 处理)
      */
-    virtual bool init(BuildingType type, int level);
+    virtual bool Init(BuildingType type, int level);
 
     /**
      * @brief 获取图片路径辅助函数
      * 根据类型和等级拼接文件名，例如: GOLD_MINE, 1 -> "gold_mine_1.png"
      */
-    std::string getTextureName(BuildingType type, int level);
+    std::string GetTextureName(BuildingType type, int level);
 
     /**
      * @brief 
      * 根据当前的 type, level, state 统一刷新外观。
      * 处理：更换图片、显示/隐藏血条和进度条。
      */
-    void updateView();
+    void UpdateView();
 
     /**
      * @brief 切换状态
      * 修改 state 变量，并自动调用 updateView() 刷新外观。
      * @param newState 目标状态
      */
-    void changeState(BuildingState newState);
+    void ChangeState(BuildingState new_state);
 
     /**
      * @brief 升级逻辑
@@ -183,20 +182,20 @@ public:
      * 3. 刷新属性(MaxHP, 产量等)
      * 4. 调用 updateView() 换新图
      */
-    void upgradeLevel();
+    void UpgradeLevel();
 
     /**
      * @brief 虚函数：通知子类更新特有属性
      * 当 BaseBuilding 完成通用属性升级后调用。
      * 子类(如 ResourceProducer)需重写此函数来更新 productionRate 等。
      */
-    virtual void updateSpecialProperties() {};
+    virtual void UpdateSpecialProperties() {};
 
     /**
      * @brief 静态配置读取器
      * 模拟从数据库/配置表中查询指定等级的数值。
      */
-    static BuildingStats getStatsConfig(BuildingType type, int level);
+    static BuildingStats GetStatsConfig(BuildingType type, int level);
 
     /**
        * @brief 开始升级过程
@@ -210,7 +209,7 @@ public:
        * 7. 显示进度条和倒计时文字。
        * 8. 触发 UI 刷新（如扣费后更新资源显示）。
        */
-    void startUpgradeProcess();
+    void StartUpgradeProcess();
 
     /**
      * @brief 游戏帧更新函数 (每帧自动调用)
@@ -235,11 +234,15 @@ public:
      * 4. 切换建筑状态到 `BUILDING`。
      * 5. 显示进度条和锤子图标。
      */
-    void startConstruction();
+    void StartConstruction();
 
-    void takeDamage(int damage);
+    void TakeDamage(int damage);
 
-    void constructionFinished();
+    /**
+    * @brief 开始初次建造结束
+    * 当一个建筑非升级初次建造完成后调用
+    */
+    void ConstructionFinished();
 };
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef __RESOURCE_STORAGE_H__
 #define __RESOURCE_STORAGE_H__
 
-#include "BaseBuilding.h"
+#include "base_building.h"
 
 /**
  * @brief 资源存储类建筑 (ResourceStorage)
@@ -22,7 +22,7 @@ public:
      * 此数值来源于 _stats.capacity。
      * 游戏全局总容量 = 所有 ResourceStorage 的 maxLimit 之和 + 大本营容量(设定的初始容量)。
      */
-    int maxLimit;
+    int max_limit_;
 
     // ------------------------------------------------
     // 核心函数
@@ -32,7 +32,7 @@ public:
      * @brief 静态创建函数
      * 工厂方法，创建一个新的仓库实例。
      */
-    static ResourceStorage* create(BuildingType type, int level);
+    static ResourceStorage* Create(BuildingType type, int level);
 
     /**
      * @brief 初始化函数
@@ -40,7 +40,7 @@ public:
      * 2. 从配置中读取 capacity 赋值给 this->maxLimit。
      * 3. 初始化完成后，通常需要通知游戏场景刷新一次全局资源上限。
      */
-    virtual bool init(BuildingType type, int level) override;
+    virtual bool Init(BuildingType type, int level) override;
 
     /**
      * @brief 更新特有属性 (重写父类虚函数)
@@ -49,7 +49,7 @@ public:
      * 1. 从新的 _stats 中获取更大的 capacity 赋值给 maxLimit。
      * 2. 触发全局事件 (如 "REFRESH_MAX_CAPACITY")，让 UI 上的资源上限数字(如 1000/5000)及时更新。
      */
-    virtual void updateSpecialProperties() override;
+    virtual void UpdateSpecialProperties() override;
 };
 
 #endif

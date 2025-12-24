@@ -1,7 +1,7 @@
 #ifndef __RESOURCE_PRODUCER_H__
 #define __RESOURCE_PRODUCER_H__
 
-#include "BaseBuilding.h"
+#include "base_building.h"
 
 /**
  * @brief 资源生产类建筑 (ResourceProducer)
@@ -20,20 +20,20 @@ public:
      * 单位通常为：资源/秒。
      * 计算公式为：配置每小时产量 / 3600。
      */
-    float productionRate;
+    float production_rate_;
 
     /**
      * @brief 内部暂存容量上限
      * @return 矿机内部能存放的最大资源量。达到此值后停止生产，直到玩家收集。
      * 注意：区别于仓库(capacity)的容量。
      */
-    float maxCapacity;
+    float max_capacity_;
 
     /**
      * @brief 当前暂存资源量
      * @return 还没被玩家收集走的资源
      */
-    float currentRes;
+    float current_res_;
 
     // ------------------------------------------------
     // UI 组件
@@ -44,15 +44,15 @@ public:
      * 当暂存资源达到一定比例（如20%）时，在建筑头顶显示的图标（金币/圣水滴）。
      * 提示玩家可以收集了。
      */
-    cocos2d::Sprite* bubbleIcon;
+    cocos2d::Sprite* bubble_icon_;
 
-    bool isBubbleShowing; // 标记气泡当前是否可见，避免重复设置显隐
+    bool is_bubble_showing_; // 标记气泡当前是否可见，避免重复设置显隐
 
     // ------------------------------------------------
     // 核心函数
     // ------------------------------------------------
 
-    static ResourceProducer* create(BuildingType type, int level);
+    static ResourceProducer* Create(BuildingType type, int level);
 
     /**
      * @brief 初始化函数
@@ -62,7 +62,7 @@ public:
      * 4. 开启 scheduleUpdate。
      * 5. 创建触摸监听器。
      */
-    virtual bool init(BuildingType type, int level) override;
+    virtual bool Init(BuildingType type, int level) override;
 
     /**
      * @brief 帧循环更新 (核心生产逻辑)
@@ -80,7 +80,7 @@ public:
      * 如果点击了且有资源可收 -> 调用 collectResource()。
      * 如果点击了但没资源 -> 仅选中建筑（显示菜单）。
      */
-    bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
+    bool OnTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
 
     /**
      * @brief 执行收集动作
@@ -90,13 +90,13 @@ public:
      * 4. 隐藏气泡。
      * 5. 播放 "+100" 飘字动画。
      */
-    void collectResource();
+    void CollectResource();
 
     /**
      * @brief 显示飘字特效
      * @param amount 收集到的数量
      */
-    void showFloatText(int amount);
+    void ShowFloatText(int amount);
 
     /**
      * @brief 更新特有属性 (重写父类虚函数)
@@ -104,6 +104,6 @@ public:
      * 这里的任务是：从新的 _stats 配置中读取 productionRate 和 capacity，
      * 并应用到当前的逻辑变量中，让升级立即生效。
      */
-    virtual void updateSpecialProperties() override;
+    virtual void UpdateSpecialProperties() override;
 };
 #endif
