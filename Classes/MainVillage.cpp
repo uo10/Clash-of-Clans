@@ -4,7 +4,7 @@
 #include "Archer.h"
 #include "Giant.h"
 #include "WallBreaker.h" 
-#include "GameMap.h"
+#include "game_map.h"
 
 
 USING_NS_CC;
@@ -1888,7 +1888,7 @@ void MainVillage::ShowLevelSelection() {
             else {
                 CCLOG("进入关卡 %d...", level_id);
 
-                auto scene = GameMap::create(levels[i].map_file); // 创建对应地图 
+                auto scene = GameMap::Create(levels[i].map_file); // 创建对应地图 
                 Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene)); // 切换场景
             }
             });

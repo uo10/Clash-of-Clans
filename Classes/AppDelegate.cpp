@@ -27,6 +27,8 @@
 #include "MainVillage.h"
 #include "GameMap.h"
 #include "splash_scene.h"
+#include "game_map.h"
+#include "loading_scene.h"
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
