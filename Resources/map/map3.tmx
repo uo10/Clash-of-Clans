@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="30">
+ <tileset firstgid="1" source="newpac.tsx"/>
+ <tileset firstgid="65" source="LayerRes.tsx"/>
+ <tileset firstgid="81" source="Building.tsx"/>
+ <layer id="1" name="BackGround" width="16" height="16">
+  <data encoding="base64" compression="zlib">
+   eJwTYGBgEBjFo3gUj0gMACXgEAE=
+  </data>
+ </layer>
+ <layer id="2" name="ForeGround" width="16" height="16">
+  <data encoding="base64" compression="zlib">
+   eJxzYmBgcKIQYwMeaHxfLGqQ9QdAMSkAl/0eWOxHd5cvHv24ALqZMP247CIEcNlPbDhg0+9BpH4PBszwp4b9hPQjhxU1/U9t96PHKbY4RtcPU4PNfuR4geUFbPaTkg8ozbcgDABvPBi4
+  </data>
+ </layer>
+ <layer id="5" name="BuildingGround" width="16" height="16">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgcIABKhyFhUkEgHgwCITj0wewLQbMfSbwBn34YwCVPqv5ATHGS9KOrG2j9YTjEaaUfVxogpD8MjcYlT4x+XHiwAQCmYBeB
+  </data>
+ </layer>
+ <objectgroup id="3" name="PlaceGround">
+  <object id="1" name="TownHall" x="239.5" y="239">
+   <point/>
+  </object>
+  <object id="2" name="Hut" x="176" y="402">
+   <point/>
+  </object>
+  <object id="3" name="Hut" x="80" y="371.5">
+   <point/>
+  </object>
+  <object id="4" name="Cannon" x="140" y="402.5">
+   <point/>
+  </object>
+  <object id="5" name="Cannon" x="303" y="81">
+   <point/>
+  </object>
+  <object id="6" name="Cannon" x="395.5" y="113.5">
+   <point/>
+  </object>
+  <object id="10" name="Trapbomb" x="144" y="367">
+   <point/>
+  </object>
+  <object id="11" name="Trapbomb" x="143" y="330.5">
+   <point/>
+  </object>
+  <object id="12" name="Trapbomb" x="142" y="298">
+   <point/>
+  </object>
+  <object id="13" name="Trapbomb" x="142" y="272.5">
+   <point/>
+  </object>
+  <object id="14" name="Trapbomb" x="144.5" y="236.5">
+   <point/>
+  </object>
+  <object id="15" name="Trapbomb" x="142" y="204.5">
+   <point/>
+  </object>
+  <object id="16" name="Trapbomb" x="141.5" y="176">
+   <point/>
+  </object>
+  <object id="17" name="Trapbomb" x="336.5" y="112">
+   <point/>
+  </object>
+  <object id="18" name="Trapbomb" x="334.5" y="145.5">
+   <point/>
+  </object>
+  <object id="19" name="Trapbomb" x="334.5" y="176">
+   <point/>
+  </object>
+  <object id="20" name="Trapbomb" x="334.5" y="207.5">
+   <point/>
+  </object>
+  <object id="21" name="Trapbomb" x="334" y="241">
+   <point/>
+  </object>
+  <object id="22" name="Trapbomb" x="331" y="269.5">
+   <point/>
+  </object>
+  <object id="23" name="Trapbomb" x="333" y="300.5">
+   <point/>
+  </object>
+  <object id="24" name="Trapbomb" x="336" y="337">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="6" name="ForbiddenGround">
+  <object id="26" name="Noplace" x="95.5" y="97.5" width="282.5" height="285"/>
+  <object id="27" name="Noplace" x="92" y="378.5" width="85.5" height="53.5"/>
+  <object id="28" name="Noplace" x="294.5" y="65" width="94.5" height="52.5"/>
+ </objectgroup>
+</map>
