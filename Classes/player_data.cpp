@@ -164,7 +164,7 @@ void PlayerData::PlayBgm(std::string filename,bool opt) {
 }
 
 void PlayerData::PlayEffect(std::string filen_ame) {
-    // 播放时读取 effectVolume
+    // 播放时读取 effectVolume // 
     AudioEngine::play2d(filen_ame, false, this->effect_volume_);
 }
 
