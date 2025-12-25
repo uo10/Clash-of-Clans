@@ -1,4 +1,4 @@
-#include "FindPath.h"
+#include "find_path.h"
 #include <algorithm>
 
 USING_NS_CC;

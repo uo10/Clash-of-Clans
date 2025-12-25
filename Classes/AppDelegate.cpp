@@ -24,8 +24,7 @@
 
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
-#include "MainVillage.h"
-#include "GameMap.h"
+#include "main_village.h"
 #include "splash_scene.h"
 #include "game_map.h"
 #include "loading_scene.h"

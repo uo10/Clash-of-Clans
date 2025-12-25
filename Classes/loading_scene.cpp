@@ -1,5 +1,5 @@
 #include "loading_scene.h"
-#include "MainVillage.h" 
+#include "main_village.h" 
 
 USING_NS_CC;
 using namespace cocos2d::ui;

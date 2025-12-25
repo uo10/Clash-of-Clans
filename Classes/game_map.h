@@ -3,8 +3,8 @@
 
 #include "cocos2d.h"
 #include"game_unit.h"
-#include"FindPath.h"
-#include "MainVillage.h"
+#include"find_path.h"
+#include "main_village.h"
 #include "trap.h"
 #include "ui/CocosGUI.h"
 

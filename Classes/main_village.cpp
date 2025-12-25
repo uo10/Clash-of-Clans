@@ -1,9 +1,10 @@
-﻿#include "MainVillage.h"
+﻿#include "main_village.h"
 #include "SimpleAudioEngine.h"
 #include "Barbarian.h"   
 #include "Archer.h"
 #include "Giant.h"
 #include "WallBreaker.h" 
+#include "Dragon.h"
 #include "game_map.h"
 
 
@@ -74,7 +75,7 @@ bool MainVillage::init()
     Director::getInstance()->getTextureCache()->removeAllTextures();
 
 	// 1、加载TMX地图
-     main_village_map_ = TMXTiledMap::create("MainVillage1.tmx");
+     main_village_map_ = TMXTiledMap::create("mainvillage/MainVillage1.tmx");
 
     Size map_size = main_village_map_->getMapSize(); // 图块数量
     Size tile_size = main_village_map_->getTileSize(); // 单个图块像素 
@@ -573,9 +574,12 @@ bool MainVillage::init()
                         }
                         if (selected_building_type_ != BuildingType::kWall) { // 除了围墙
                             // 清空非法区域
+                            if (current_preview_building_) {
+                                current_preview_building_->removeFromParent(); // 从屏幕上移除
+                                current_preview_building_ = nullptr;           // 取消预览
+                            }
                             selected_building_type_ = BuildingType::kNone;
                             UpdateOccupiedGridVisual();
-                            current_preview_building_ = nullptr; // 取消预览
                         }
                     }
                 }
@@ -1102,7 +1106,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
             }
 
             // 2. 创建训练面板背景
-            float panel_w = 400;
+            float panel_w = 500;
             float panel_h = 140;
             std::string bg_path = "TrainingBg.png";   // 准备图片路径 
             Rect cap_insets = Rect(20, 20, 60, 60); // 创建九宫格背景
@@ -2057,6 +2061,7 @@ void MainVillage::RestoreVillageData() {
         else if (name == "Archer") s = Archer::create();
         else if (name == "Giant") s = Giant::create();
         else if (name == "WallBreaker") s = WallBreaker::create();
+        else if (name == "Dragon") s = Dragon::create();
 
         if (s) {
             // 1. 设置模式
@@ -2087,7 +2092,7 @@ void MainVillage::RestoreVillageData() {
     };
 
     // c. 遍历库存，生成所有兵
-    std::vector<std::string> troop_types = { "Barbarian", "Archer", "Giant", "WallBreaker" };
+    std::vector<std::string> troop_types = { "Barbarian", "Archer", "Giant", "WallBreaker" ,"Dragon" };
     for (const auto& name : troop_types) {
         int count = data_center->GetTroopCount(name);
         for (int i = 0; i < count; ++i) {

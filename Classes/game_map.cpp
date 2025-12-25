@@ -877,7 +877,7 @@ void GameMap::CalculatePath(GameUnit* soldier) {
         };
 
     //´´½¨Â·¾¶
-    std::vector<Vec2> path = ComputePath::ComputePath(start, end, map_size, tile_size, is_walkable);
+    std::vector<Vec2> path = FindPath::ComputePath(start, end, map_size, tile_size, is_walkable);
     soldier->SetPath(path);
 }
 
