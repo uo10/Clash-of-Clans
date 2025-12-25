@@ -1,6 +1,6 @@
 #include "splash_scene.h"
 #include "loading_scene.h" 
-#include "MainVillage.h" 
+#include "main_village.h" 
 
 USING_NS_CC;
 
@@ -60,7 +60,7 @@ bool SplashScene::init() {
 }
 
 void SplashScene::GoToLoadingScene(float dt) {
-    auto scene = LoadingScene::createScene();
+    auto scene = LoadingScene::CreateScene();
 
     // TransitionFade负责“淡出”当前场景，进入 Loading
     Director::getInstance()->replaceScene(TransitionFade::create(0.8f, scene, Color3B::BLACK));

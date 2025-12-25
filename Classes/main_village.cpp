@@ -1,4 +1,4 @@
-﻿#include "MainVillage.h"
+﻿#include "main_village.h"
 #include "SimpleAudioEngine.h"
 #include "Barbarian.h"   
 #include "Archer.h"
@@ -8,11 +8,11 @@
 
 
 USING_NS_CC;
-Scene* MainVillage::createScene()
+Scene* MainVillage::CreateScene()
 {
 	return MainVillage::create();
 }
-bool MainVillage::isTileBlock(Vec2 tileCoord)
+bool MainVillage::IsTileBlock(Vec2 tileCoord)
 {
     // 1、获取地图图层 
 	//检查背景层
@@ -448,7 +448,7 @@ bool MainVillage::init()
                             return;
                         }
 						// 检查该瓦片是否为障碍物
-                        if (isTileBlock(targetCoord)) {
+                        if (IsTileBlock(targetCoord)) {
                             is_dragging_ = false;
                             CCLOG("Blocked! Cannot place item on water or mountain.");                        
                             return;
@@ -743,7 +743,7 @@ bool MainVillage::init()
                 can_build = false;
             }
             // c. 障碍物检查
-            if (isTileBlock(Vec2(tile_x, tile_y))) {
+            if (IsTileBlock(Vec2(tile_x, tile_y))) {
                 can_build = false;
             }
 
@@ -763,7 +763,7 @@ bool MainVillage::init()
 	this->addChild(main_village_map_, 0);
     return true;
 }
-void MainVillage::menuCloseCallback(Ref* pSender)
+void MainVillage::MenuCloseCallback(Ref* pSender)
 {
     Director::getInstance()->end();
 }

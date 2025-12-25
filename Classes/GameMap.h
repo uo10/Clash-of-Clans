@@ -14,7 +14,7 @@ public:
 	//构造函数
 	GameMap(std::string str) :_MapName(str), is_dragging_(false), is_click_valid_(false), _debugDrawNode(nullptr) {}
 	// a selector callback
-	void menuCloseCallback(cocos2d::Ref* pSender);
+	void MenuCloseCallback(cocos2d::Ref* pSender);
 	/**
 	* 创建一个GameMap对象
 	* 
@@ -26,7 +26,7 @@ public:
 	* 
 	* @param mapName 传入的地图名字
 	*/
-	static cocos2d::Scene* createScene(const std::string& mapName);
+	static cocos2d::Scene* CreateScene(const std::string& mapName);
 	/**
 	* 初始化GameMap对象，调整地图大小，添加对象
 	* 
@@ -73,7 +73,7 @@ public:
 	 * 
 	 * @return 如果是障碍物，返回true，否则返回false
 	 */
-	bool isTileBlock(cocos2d::Vec2 tileCoord);
+	bool IsTileBlock(cocos2d::Vec2 tileCoord);
 	/**
 	* 检查指定瓦片坐标是否有添加的存活状态的对象
 	* 

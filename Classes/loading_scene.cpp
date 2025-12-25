@@ -1,10 +1,10 @@
 #include "loading_scene.h"
-#include "MainVillage.h" 
+#include "main_village.h" 
 
 USING_NS_CC;
 using namespace cocos2d::ui;
 
-Scene* LoadingScene::createScene() {
+Scene* LoadingScene::CreateScene() {
     return LoadingScene::create();
 }
 
@@ -119,7 +119,7 @@ void LoadingScene::update(float dt) {
         this->unscheduleUpdate(); // 停止更新
 
         // 切换到 MainVillage
-        auto scene = MainVillage::createScene();
+        auto scene = MainVillage::CreateScene();
         // 淡入淡出效果
         Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene));
     }

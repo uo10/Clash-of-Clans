@@ -1232,7 +1232,7 @@ void GameMap::ShowGameOverLayer(bool is_win) {
 
         PlayerData::GetInstance()->PlayEffect("Audio/click.mp3");
 
-        auto home_scene = MainVillage::createScene();
+        auto home_scene = MainVillage::CreateScene();
         Director::getInstance()->replaceScene(TransitionFade::create(1.0f, home_scene));
         });
 
@@ -1452,7 +1452,7 @@ void GameMap::ShowSettingsLayer() {
         PlayerData::GetInstance()->PlayEffect("Audio/click.mp3");
 
         // 直接回大本营
-        auto home_scene = MainVillage::createScene();  // 创建mainvillage的scene
+        auto home_scene = MainVillage::CreateScene();  // 创建mainvillage的scene
         Director::getInstance()->replaceScene(TransitionFade::create(1.0f, home_scene)); // 切换场景
         });
 

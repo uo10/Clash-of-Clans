@@ -19,7 +19,7 @@ public:
      * @brief 创建场景的静态方法
      * 标准 Cocos2d-x 写法，用于创建并返回一个由 autorelease 管理的 Scene 对象。
      */
-    static cocos2d::Scene* createScene();
+    static cocos2d::Scene* CreateScene();
 
     /**
      * @brief 初始化函数

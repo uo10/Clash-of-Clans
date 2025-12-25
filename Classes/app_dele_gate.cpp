@@ -24,8 +24,7 @@
 
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
-#include "MainVillage.h"
-#include "GameMap.h"
+#include "main_village.h"
 #include "splash_scene.h"
 #include "game_map.h"
 #include "loading_scene.h"
@@ -124,7 +123,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    // auto scene = HelloWorld::createScene();
+    // auto scene = HelloWorld::CreateScene();
 
     auto loadingscene = SplashScene::CreateScene();
     // 开始界面 

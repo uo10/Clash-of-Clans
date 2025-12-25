@@ -20,19 +20,19 @@
 class MainVillage :public cocos2d::Scene
 {
 public:
-    static cocos2d::Scene* createScene();
+    static cocos2d::Scene* CreateScene();
 
     virtual bool init();
 
     // a selector callback
-    void menuCloseCallback(cocos2d::Ref* pSender);
+    void MenuCloseCallback(cocos2d::Ref* p_sender);
     /**
 	 * 检查指定瓦片坐标是否为障碍物
      * 
-	 * @param tileCoord 瓦片坐标
+	 * @param tile_Coord 瓦片坐标
 	 * @return 如果是障碍物，返回true，否则返回false
 	 */
-    bool isTileBlock(cocos2d::Vec2 tileCoord);
+    bool IsTileBlock(cocos2d::Vec2 tile_Coord);
     // implement the "static create()" method manually
     CREATE_FUNC(MainVillage);
 
