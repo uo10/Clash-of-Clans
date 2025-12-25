@@ -20,7 +20,7 @@
 class MainVillage :public cocos2d::Scene
 {
 public:
-    static cocos2d::Scene* CreateScene();
+    static cocos2d::Scene* createScene();
 
     virtual bool init();
 
@@ -29,10 +29,10 @@ public:
     /**
 	 * 检查指定瓦片坐标是否为障碍物
      * 
-	 * @param tile_Coord 瓦片坐标
+	 * @param tile_coord 瓦片坐标
 	 * @return 如果是障碍物，返回true，否则返回false
 	 */
-    bool IsTileBlock(cocos2d::Vec2 tile_Coord);
+    bool IsTileBlock(cocos2d::Vec2 tile_coord);
     // implement the "static create()" method manually
     CREATE_FUNC(MainVillage);
 

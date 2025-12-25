@@ -6,10 +6,9 @@
 class Barbarian : public Soldier
 {
 public:
-    CREATE_FUNC(Barbarian);
 
-    // 重写基类纯虚函数
-    virtual SoldierStats getStats() override;
+    static Barbarian* create();
+
     virtual std::string getIconName() override;
 };
 

@@ -37,7 +37,7 @@ bool GameUnit::InitUnit(const std::string& filename, float maxHp, float speed, f
     bar_bg->setScaleY(sprite_size.width / bar_bg_size.width);
     bar_bg->setPosition(Vec2(this->getContentSize().width / 2, this->getContentSize().height + 10));//适应尺寸
     this->addChild(bar_bg);
-
+    hp_bg_ = bar_bg;
     //设置前景
     hp_bar_ = cocos2d::ui::LoadingBar::create("map/bar_red.png");//便于做百分比血量
 	hp_bar_->setDirection(cocos2d::ui::LoadingBar::Direction::LEFT);//血条从左向右减少
@@ -47,6 +47,8 @@ bool GameUnit::InitUnit(const std::string& filename, float maxHp, float speed, f
     hp_bar_->setScaleY(sprite_size.width / bar_size.width);
     hp_bar_->setPosition(bar_bg->getPosition());
     this->addChild(hp_bar_);
+
+    this->scheduleUpdate();
 
     return true;
 }

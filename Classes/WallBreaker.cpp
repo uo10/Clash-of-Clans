@@ -2,13 +2,19 @@
 
 USING_NS_CC;
 
-Soldier::SoldierStats WallBreaker::getStats() {
-    // 血量: 40 (极脆，还没跑到可能就被塔打死了)
-    // 伤害: 400 (非常高，用于秒杀墙)
-    // 移速: 120 (非常快)
-    // 射程: 30 (贴脸爆炸)
-    // 攻速: 1.0秒/次 (其实只攻击一次)
-    return { 40, 400, 120.0f, 30.0f, 1.0f };
+WallBreaker* WallBreaker::create() {
+    WallBreaker* pRet = new(std::nothrow) WallBreaker();
+
+    // 调用 GameUnit 的初始化函数
+    // 填入数值: 图片, HP, 速度, 伤害, 射程, 类型
+    if (pRet && pRet->InitUnit("Soldier/Wall_Breaker.png", 20, 100.0f, 7.0f, 80.0f, UnitType::kSoldier)) {
+
+        pRet->SetUnitName("WallBreaker"); // 设置名字
+        pRet->autorelease();
+        return pRet;
+    }
+    delete pRet;
+    return nullptr;
 }
 
 std::string WallBreaker::getIconName() {
@@ -20,7 +26,7 @@ BuildingType WallBreaker::getPreferredTargetType() {
     return BuildingType::kWall;
 }
 
-void WallBreaker::attackTarget(float dt) {
+/*void WallBreaker::attackTarget(float dt) {
     // 只有当目标存在时才自爆
     if (target) {
         // 1. 造成伤害
@@ -76,4 +82,4 @@ void WallBreaker::findTarget()
 
     // 更新目标 (如果没有墙，bestTarget 就是 nullptr，炸弹人就会待机)
     target = bestTarget;
-}
+}*/

@@ -2,13 +2,19 @@
 
 USING_NS_CC;
 
-Soldier::SoldierStats Barbarian::getStats() {
-    // 血量: 150 (中等)
-    // 伤害: 20
-    // 移速: 80
-    // 射程: 2 (近战，大概是一个格子的距离)
-    // 攻速: 1.0秒/次
-    return { 150, 20, 80.0f, 2.0f, 1.0f };
+Barbarian* Barbarian::create() {
+    Barbarian* pRet = new(std::nothrow) Barbarian();
+
+    // 调用 GameUnit 的初始化函数
+    // 填入数值: 图片, HP, 速度, 伤害, 射程, 类型
+    if (pRet && pRet->InitUnit("Soldier/Barbarian.png", 45, 70.0f, 8.0f, 40.0f, UnitType::kSoldier)) {
+
+        pRet->SetUnitName("Barbarian"); // 设置名字
+        pRet->autorelease();
+        return pRet;
+    }
+    delete pRet;
+    return nullptr;
 }
 
 std::string Barbarian::getIconName() {

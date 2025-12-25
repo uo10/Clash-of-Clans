@@ -4,35 +4,37 @@
 #include "Archer.h"
 #include "Giant.h"
 #include "WallBreaker.h" 
+#include "Dragon.h"
 #include "game_map.h"
 
 
 USING_NS_CC;
 Scene* MainVillage::CreateScene()
+Scene* MainVillage::createScene()
 {
 	return MainVillage::create();
 }
-bool MainVillage::IsTileBlock(Vec2 tileCoord)
+bool MainVillage::IsTileBlock(Vec2 tile_coord)
 {
     // 1、获取地图图层 
 	//检查背景层
     auto layer = main_village_map_->getLayer("MainBackGround"); 
     if (!layer) return false;
 	// 检查前景层
-    auto layer1 = main_village_map_->getLayer("MainForeGround");
-    if (!layer1) return false;
+    auto layer_1 = main_village_map_->getLayer("MainForeGround");
+    if (!layer_1) return false;
 
     // 2、获取该网格坐标下的 GID (全局图块ID)
-    int gid = layer->getTileGIDAt(tileCoord);
+    int gid = layer->getTileGIDAt(tile_coord);
 	//前景层
-    int gid1 = layer1->getTileGIDAt(tileCoord);
+    int gid_1 = layer_1->getTileGIDAt(tile_coord);
     // 如果 GID 为 0，说明这地方是空的（没有图块），可通行
-    if (gid == 0 && gid1 == 0) return false;
+    if (gid == 0 && gid_1 == 0) return false;
 
     // 3、查询该 GID 的属性
     Value properties = main_village_map_->getPropertiesForGID(gid);
     //前景层
-    Value properties1 = main_village_map_->getPropertiesForGID(gid1);
+    Value properties_1 = main_village_map_->getPropertiesForGID(gid_1);
 
     // 4、检查Block属性
     if (!properties.isNull()) {
@@ -43,8 +45,8 @@ bool MainVillage::IsTileBlock(Vec2 tileCoord)
         }
     }
 	//前景层
-    if (!properties1.isNull()) {
-        ValueMap map = properties1.asValueMap();
+    if (!properties_1.isNull()) {
+        ValueMap map = properties_1.asValueMap();
         if (map.find("Block") != map.end()) {
             return map.at("Block").asBool();
         }
@@ -68,28 +70,28 @@ bool MainVillage::init()
 	// ================  设置初始化地图  ======================
     // 
 	//获取屏幕可见大小和原点位置
-    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto visible_size = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
     
     Director::getInstance()->getTextureCache()->removeAllTextures();
 
-	// 1、加载 TMX 地图
-     main_village_map_ = TMXTiledMap::create("MainVillage1.tmx");
+	// 1、加载TMX地图
+     main_village_map_ = TMXTiledMap::create("mainvillage/MainVillage1.tmx");
 
-    Size mapSize = main_village_map_->getMapSize(); // 图块数量
-    Size tileSize = main_village_map_->getTileSize(); // 单个图块像素 
+    Size map_size = main_village_map_->getMapSize(); // 图块数量
+    Size tile_size = main_village_map_->getTileSize(); // 单个图块像素 
 
     // 2、计算地图实际像素宽度和高度
-    float mapPixelWidth = mapSize.width * tileSize.width;
-    float mapPixelHeight = mapSize.height * tileSize.height;
+    float map_pixel_width = map_size.width * tile_size.width;
+    float map_pixel_height = map_size.height * tile_size.height;
 
     // 3、计算缩放因子
-    float scaleX = visibleSize.width / mapPixelWidth;
-    float scaleY = visibleSize.height / mapPixelHeight;
+    float scale_x = visible_size.width / map_pixel_width;
+    float scale_y = visible_size.height / map_pixel_height;
 
     // 4、设置缩放
-    main_village_map_->setScaleX(scaleX);
-    main_village_map_->setScaleY(scaleY);
+    main_village_map_->setScaleX(scale_x);
+    main_village_map_->setScaleY(scale_y);
 
     // ==================== UI音乐初始化 =========================
     // 创立Icon右上角 UI
@@ -100,7 +102,7 @@ bool MainVillage::init()
     PlayerData::GetInstance()->PlayBgm("Audio/bgm_village.mp3", true);
 
     // ====================最左上角建筑主按钮========================
-    auto itemBuild = MenuItemImage::create(
+    auto item_build = MenuItemImage::create(
         "Icon/itemBuild.png", 
         "Icon/itemBuild.png", 
         [=](Ref* sender) {
@@ -109,8 +111,8 @@ bool MainVillage::init()
 
             // 点击逻辑保持不变
             if (build_menu_node_) {
-                bool isVisible = build_menu_node_->isVisible();
-                build_menu_node_->setVisible(!isVisible);
+                bool is_visible = build_menu_node_->isVisible();
+                build_menu_node_->setVisible(!is_visible);
 
                 if (!build_menu_node_->isVisible()) {
                     this->CloseBuildingMenu();
@@ -118,52 +120,52 @@ bool MainVillage::init()
             }
         }
     );
-    itemBuild->setScale(0.12f);
-    auto mainMenu = Menu::create(itemBuild, nullptr);
-    mainMenu->setPosition(Vec2(75, visibleSize.height - 70)); // 左上角
-    this->addChild(mainMenu, 1000); // 加到 this，层级高
+    item_build->setScale(0.12f);
+    auto main_menu = Menu::create(item_build, nullptr);
+    main_menu->setPosition(Vec2(75, visible_size.height - 70)); // 左上角
+    this->addChild(main_menu, 1000); // 加到地图中
 
     // ====================最左下角战斗主按钮========================
     this->CreateAttackUi();
 
     // ===================== 右下角设置按钮 ========================
 
-  // 1. 创建容器 (Wrapper)
-    auto settingWrapper = Node::create();
-    settingWrapper->setContentSize(Size(100, 100));
-    settingWrapper->setAnchorPoint(Vec2(0.5, 0.5));
+  // 1. 创建容器 (Wrapper),用于包裹图标，方便定位和缩放
+    auto setting_wrapper = Node::create();
+    setting_wrapper->setContentSize(Size(100, 100));
+    setting_wrapper->setAnchorPoint(Vec2(0.5, 0.5));
 
     // 2. 创建图标
-    auto settingSprite = Sprite::create("Icon/Settings_Icon.png");
+    auto setting_sprite = Sprite::create("Icon/Settings_Icon.png");
 
-    // --- 自动缩放逻辑 ---
-    float targetSetSize = 100.0f;
-    float setContentMax = std::max(settingSprite->getContentSize().width, settingSprite->getContentSize().height);
+    // 自动缩放
+    float target_set_size = 100.0f;
+    float set_content_max = std::max(setting_sprite->getContentSize().width, setting_sprite->getContentSize().height);
 
     // 防止除以0
-    if (setContentMax <= 0) setContentMax = 80.0f;
+    if (set_content_max <= 0) set_content_max = 80.0f;
 
-    float setScale = targetSetSize / setContentMax;
-    settingSprite->setScale(setScale);
+    float set_scale = target_set_size / set_content_max;
+    setting_sprite->setScale(set_scale);
 
     // --- 定位 ---
     // 放在容器正中心
-    settingSprite->setPosition(settingWrapper->getContentSize().width / 2, settingWrapper->getContentSize().height / 2);
-    settingWrapper->addChild(settingSprite);
+    setting_sprite->setPosition(setting_wrapper->getContentSize().width / 2, setting_wrapper->getContentSize().height / 2);
+    setting_wrapper->addChild(setting_sprite);
 
     // 3. 创建按钮
-    auto btnSettings = MenuItemSprite::create(settingWrapper, nullptr, [=](Ref* sender) {
+    auto btn_settings = MenuItemSprite::create(setting_wrapper, nullptr, [=](Ref* sender) {
 
         PlayerData::GetInstance()->PlayEffect("Audio/click.mp3");
 
         // --- 点击反馈动画 ---
         // 让内部的图标缩放一下
-        settingSprite->stopAllActions();
-        settingSprite->runAction(Sequence::create(
-            ScaleTo::create(0.1f, setScale * 1.2f), // 变大一点
-            ScaleTo::create(0.1f, setScale),        // 恢复
+        setting_sprite->stopAllActions();
+        setting_sprite->runAction(Sequence::create(
+            ScaleTo::create(0.1f, set_scale * 1.2f), // 变大一点
+            ScaleTo::create(0.1f, set_scale),        // 恢复
             nullptr
-        ));
+        ));     
 
         // --- 打开设置弹窗 ---
         CCLOG("Clicked Settings");
@@ -171,175 +173,175 @@ bool MainVillage::init()
         });
 
     // 4. 设置位置 (右上角)
-    btnSettings->setPosition(Vec2(visibleSize.width - 50, 50));
+    btn_settings->setPosition(Vec2(visible_size.width - 50, 50));
 
     // 5. 添加到菜单
-    auto settingsMenu = Menu::create(btnSettings, nullptr);
-    settingsMenu->setPosition(Vec2::ZERO);
-    this->addChild(settingsMenu, 2000); // UI层级，保证在最上层
+    auto settings_menu = Menu::create(btn_settings, nullptr);
+    settings_menu->setPosition(Vec2::ZERO);
+    this->addChild(settings_menu, 2000); // 保证在最上层
     // ==================== 恢复之前的存档 ========================
     this->RestoreVillageData();
 
 	//=============================================================
-    auto mouseListener = EventListenerMouse::create();
+    auto mouse_listener = EventListenerMouse::create();
 
     // 监听器用来监听刷新最大资源量信号
-    auto refreshListener = EventListenerCustom::create("REFRESH_MAX_CAPACITY", [=](EventCustom* event) {
+    auto refresh_listener = EventListenerCustom::create("REFRESH_MAX_CAPACITY", [=](EventCustom* event) {
         CCLOG("收到刷新指令，开始统计全局容量...");
         this->RefreshTotalCapacity();
         });
 
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(refreshListener, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(refresh_listener, this);
 
 	// ==================== 鼠标操作  ==================
    
     // =================  一、滚轮缩放  ==================
-    mouseListener->onMouseScroll = [=](Event* event) {
+    mouse_listener->onMouseScroll = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
         auto map = main_village_map_;
         if (!map) return;//没有成功创建地图就返回
 
-        Size mapContentSize = map->getContentSize(); // 获取地图原始大小
+        Size map_content_size = map->getContentSize(); // 获取地图原始大小
 
-		float scrollY = e->getScrollY();// 获取滚轮滚动值
-		float currentScaleX = map->getScaleX();// 获取当前X缩放值
-		float currentScaleY = map->getScaleY();//   获取当前Y缩放值
+		float scroll_y = e->getScrollY();// 获取滚轮滚动值
+		float current_scale_x = map->getScaleX();// 获取当前X缩放值
+		float current_scale_y = map->getScaleY();//   获取当前Y缩放值
         //获取缩放前鼠标坐标
-        Vec2 mouseLocation = Vec2(e->getCursorX(), e->getCursorY());
-        Vec2 nodePosBeforeScale = map->convertToNodeSpace(mouseLocation);
+        Vec2 mouse_location = Vec2(e->getCursorX(), e->getCursorY());
+        Vec2 node_pos_before_scale = map->convertToNodeSpace(mouse_location);
         // 1、计算新的缩放值
-        float factor = (scrollY > 0) ? 1.1f : 0.9f;
-        float newScaleX = currentScaleX * factor;
-        float newScaleY = currentScaleY * factor;
+        float factor = (scroll_y > 0) ? 1.1f : 0.9f;
+        float new_scale_x = current_scale_x * factor;
+        float new_scale_y = current_scale_y * factor;
 
         // ---------------------------------------------------------
         //限制最小缩放值 (防止地图缩得比屏幕还小,导致出现黑边)
         // ---------------------------------------------------------
         // 最小缩放比例 = 屏幕尺寸 / 地图原始尺寸
-        float minScaleX = visibleSize.width / mapContentSize.width;
-        float minScaleY = visibleSize.height / mapContentSize.height;
+        float min_scale_x = visible_size.width / map_content_size.width;
+        float min_scale_y = visible_size.height / map_content_size.height;
 
         // 保证不能小于最小缩放值
-        if (newScaleX < minScaleX) newScaleX = minScaleX;
-        if (newScaleY < minScaleY) newScaleY = minScaleY;
+        if (new_scale_x < min_scale_x) new_scale_x = min_scale_x;
+        if (new_scale_y < min_scale_y) new_scale_y = min_scale_y;
 
         // 限制最大缩放值
-        if (newScaleX > 5.0f) newScaleX = 5.0f;
-        if (newScaleY > 5.0f) newScaleY = 5.0f;
+        if (new_scale_x > 5.0f) new_scale_x = 5.0f;
+        if (new_scale_y > 5.0f) new_scale_y = 5.0f;
 
         // 应用缩放
-        map->setScaleX(newScaleX);
-        map->setScaleY(newScaleY);
+        map->setScaleX(new_scale_x);
+        map->setScaleY(new_scale_y);
 
 		//调整地图位置，使鼠标位置不变
-        Vec2 nodePosAfterScale = map->convertToNodeSpace(mouseLocation);
-        Vec2 diff = nodePosAfterScale - nodePosBeforeScale;
-        Vec2 currentPos = map->getPosition();
-        map->setPosition(currentPos + Vec2(diff.x * newScaleX, diff.y * newScaleY));
+        Vec2 node_pos_after_scale = map->convertToNodeSpace(mouse_location);
+        Vec2 diff = node_pos_after_scale - node_pos_before_scale;
+        Vec2 current_pos = map->getPosition();
+        map->setPosition(current_pos + Vec2(diff.x * new_scale_x, diff.y * new_scale_y));
 
         // ---------------------------------------------------------
         // 位置修正 (防止缩放后边缘露出黑底)
         // ---------------------------------------------------------
 
         // 计算当前地图缩放后的实际宽高
-        float currentMapWidth = mapContentSize.width * newScaleX;
-        float currentMapHeight = mapContentSize.height * newScaleY;
+        float current_map_width = map_content_size.width * new_scale_x;
+        float current_map_height = map_content_size.height * new_scale_y;
 
         // --- X轴修正 ---
         // 1、地图左边界不能往右跑 (x不能大于 0，否则左边出现黑边)
-        if (currentPos.x > 0) {
-            currentPos.x = 0;
+        if (current_pos.x > 0) {
+            current_pos.x = 0;
         }
         // 2、地图右边界不能往左跑 (x不能小于屏幕宽 - 地图宽，否则右边出现黑边)
-        float minX = visibleSize.width - currentMapWidth;
-        if (currentPos.x < minX) {
-            currentPos.x = minX;
+        float minX = visible_size.width - current_map_width;
+        if (current_pos.x < minX) {
+            current_pos.x = minX;
         }
 
         // --- Y轴修正 ---
         // 1、地图下边界不能往上跑 (y不能大于0，否则下边出现黑边)
-        if (currentPos.y > 0) {
-            currentPos.y = 0;
+        if (current_pos.y > 0) {
+            current_pos.y = 0;
         }
         // 2、地图上边界不能往下跑 (y不能小于屏幕高-地图高，否则上边出现黑边)
-        float minY = visibleSize.height - currentMapHeight;
-        if (currentPos.y < minY) {
-            currentPos.y = minY;
+        float minY = visible_size.height - current_map_height;
+        if (current_pos.y < minY) {
+            current_pos.y = minY;
         }
-        map->setPosition(currentPos);
+        map->setPosition(current_pos);
 
         };
-    // ------ 判断鼠标是否点到了右键菜单 ------
-    auto isMouseOnMenu = [=](Vec2 mousePos) -> bool {
+    // ------ 判断鼠标是否点到了菜单 ------
+    auto is_mouse_on_menu = [=](Vec2 mouse_pos) -> bool {
         if (active_menu_node_ ) {
-            // --- 情况 A: 建筑操作菜单 ---
-            auto activemenu = active_menu_node_->getChildByName("BuildingMenu");
-            if (activemenu) {
-                bool isHitAnyButton = false; // 标记：是否点到了任意一个按钮
+            // A: 建筑操作菜单
+            auto active_menu = active_menu_node_->getChildByName("BuildingMenu");
+            if (active_menu) {
+                bool is_hit_any_button = false; // 是否点到了任意一个按钮
 
-                for (const auto& child : activemenu->getChildren()) {
-                    Vec2 localPos = activemenu->convertToNodeSpace(mousePos);
+                for (const auto& child : active_menu->getChildren()) {
+                    Vec2 local_pos = active_menu->convertToNodeSpace(mouse_pos);
 
                     // 只要点中了其中一个
-                    if (child->getBoundingBox().containsPoint(localPos)) {
-                        isHitAnyButton = true;
+                    if (child->getBoundingBox().containsPoint(local_pos)) {
+                        is_hit_any_button = true;
                         break; // 找到，停止
                     }
                 }
-                if (isHitAnyButton) {
-                    // 点在按钮上了 -> 拦截事件，但不关闭菜单
+                if (is_hit_any_button) {
+                    // 点在按钮上了拦截事件，但不关闭菜单
                     is_dragging_ = false;
                     is_click_valid_ = false;
                     return true;
                 }
                 else {
-                    // 循环结束了，说明所有按钮都没点中 -> 关闭菜单，并拦截事件
+                    // 说明所有按钮都没点中,关闭菜单,并拦截事件
                     this->CloseBuildingMenu();
                     is_dragging_ = false;
                     is_click_valid_ = false;
                     return true;
                 }
             }
-            // --- 情况 B: 建筑信息弹窗 ---
-            auto infoBg = active_menu_node_->getChildByName("InfoBackground");
-            if (infoBg) {
-                Vec2 localPos = infoBg->convertToNodeSpace(mousePos);
+            //B: 建筑信息弹窗 
+            auto info_bg = active_menu_node_->getChildByName("InfoBackground");
+            if (info_bg) {
+                Vec2 local_pos = info_bg->convertToNodeSpace(mouse_pos);
 
-                Size s = infoBg->getContentSize();
-                Rect bgRect = Rect(0, 0, s.width, s.height);
+                Size s = info_bg->getContentSize();
+                Rect bg_rect = Rect(0, 0, s.width, s.height);
 
                 // 判断鼠标是否在背景板范围内
-                if (bgRect.containsPoint(localPos)) {
-                    // 点在面板上 -> 拦截
+                if (bg_rect.containsPoint(local_pos)) {
+                    // 点在面板上,拦截
                     is_dragging_ = false;
                     is_click_valid_ = false;
                     return true;
                 }
                 else {
-                    // 点在面板外面 -> 关闭面板，并拦截这次点击
+                    // 点在面板外面,关闭面板，并拦截这次点击
                     this->CloseBuildingMenu();
                     is_dragging_ = false;
                     is_click_valid_ = false;
                     return true;
                 }
             }
-            // --- 情况 C: 兵营士兵窗口 ---
+            // C: 兵营士兵窗口
             auto info = active_menu_node_->getChildByName("TrainPanel");
             if (info) {
-                Vec2 localPos = info->convertToNodeSpace(mousePos);
+                Vec2 local_pos = info->convertToNodeSpace(mouse_pos);
 
                 Size s = info->getContentSize();
-                Rect bgRect = Rect(0, 0, s.width, s.height);
+                Rect bg_rect = Rect(0, 0, s.width, s.height);
 
                 // 判断鼠标是否在背景板范围内
-                if (bgRect.containsPoint(localPos)) {
-                    // 点在面板上 -> 拦截
+                if (bg_rect.containsPoint(local_pos)) {
+                    // 点在面板上,拦截
                     is_dragging_ = false;
                     is_click_valid_ = false;
                     return true;
                 }
                 else {
-                    // 点在面板外面 -> 关闭面板，并拦截这次点击
+                    // 点在面板外面,关闭面板，并拦截这次点击
                     this->CloseBuildingMenu();
                     is_dragging_ = false;
                     is_click_valid_ = false;
@@ -347,20 +349,20 @@ bool MainVillage::init()
                 }
             }
         }
-        // --- 情况D：建筑选择菜单 ---
+        // D：建筑选择菜单
         if (build_menu_node_ && build_menu_node_->isVisible()) {
             auto bg = build_menu_node_->getChildByName("BuildPanelBG");
             if (bg) {
-                Vec2 localPos = bg->convertToNodeSpace(mousePos);
+                Vec2 local_pos = bg->convertToNodeSpace(mouse_pos);
                 // 判断鼠标是否在背景板范围内
-                if (bg->getBoundingBox().containsPoint(localPos)) {
-                    // 点在面板上 -> 拦截
+                if (bg->getBoundingBox().containsPoint(local_pos)) {
+                    // 点在面板上,拦截
                     is_dragging_ = false;
                     is_click_valid_ = false;
                     return true;
                 }
                 else {
-                    // 点在面板外面 -> 关闭面板，并拦截这次点击
+                    // 点在面板外面,关闭面板，并拦截这次点击
                     build_menu_node_->setVisible(false);
                     is_dragging_ = false;
                     is_click_valid_ = false;
@@ -368,7 +370,7 @@ bool MainVillage::init()
                 }
             }
         }
-        // --- 情况E：有遮护罩(如选择关卡和设置) ---
+        // E：有遮护罩(如选择关卡和设置)
         if (settings_layer_) {
             is_dragging_ = false;
             is_click_valid_ = false;
@@ -379,17 +381,17 @@ bool MainVillage::init()
     };
 
     // ==================  二、鼠标按下  ==================
-    mouseListener->onMouseDown = [=](Event* event) {
+    mouse_listener->onMouseDown = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
 		//1、判断是否点在菜单上
-		Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());// 获取鼠标点击位置
-		Vec2 localPos = mainMenu->getParent()->convertToNodeSpace(mousePos);// 转换到菜单节点空间
-		if (mainMenu->getBoundingBox().containsPoint(localPos)) {// 判断是否点在菜单区域内
+		Vec2 mouse_pos = Vec2(e->getCursorX(), e->getCursorY());// 获取鼠标点击位置
+		Vec2 local_pos = main_menu->getParent()->convertToNodeSpace(mouse_pos);// 转换到菜单节点空间
+		if (main_menu->getBoundingBox().containsPoint(local_pos)) {// 判断是否点在菜单区域内
             is_dragging_ = false;
             return; // 点在菜单上了，忽略拖拽
         }
         // 如果点在右键菜单上，直接结束，_isClickValid = false
-        if (isMouseOnMenu(mousePos)) {
+        if (is_mouse_on_menu(mouse_pos)) {
             is_dragging_ = false;
             is_click_valid_ = false; 
             return;
@@ -398,21 +400,21 @@ bool MainVillage::init()
         if (e->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
             is_dragging_ = true; // 只有没点在菜单上，才允许拖拽
             is_click_valid_ = true;
-            last_mouse_pos_ = mousePos;
-            start_click_pos_ = mousePos;
+            last_mouse_pos_ = mouse_pos;
+            start_click_pos_ = mouse_pos;
         }
         };
 
     // ==================  三、鼠标松开  ==================
 
-    mouseListener->onMouseUp = [=](Event* event) {
+    mouse_listener->onMouseUp = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
         auto map = main_village_map_;
 		if (!map) return;
 		//1、判断是否点在菜单上
-        Vec2 mousePos = Vec2(e->getCursorX(), e->getCursorY());
-        Vec2 localPos = mainMenu->getParent()->convertToNodeSpace(mousePos);
-        if (mainMenu->getBoundingBox().containsPoint(localPos)) {
+        Vec2 mouse_pos = Vec2(e->getCursorX(), e->getCursorY());
+        Vec2 local_pos = main_menu->getParent()->convertToNodeSpace(mouse_pos);
+        if (main_menu->getBoundingBox().containsPoint(local_pos)) {
             return; // 点在菜单上了，忽略拖拽
         }
 
@@ -424,11 +426,11 @@ bool MainVillage::init()
                 
                 if (map) {                   
 					// 1、获取点击在地图内部的坐标
-                    Vec2 nodePos = map->convertToNodeSpace(mousePos);
+                    Vec2 node_pos = map->convertToNodeSpace(mouse_pos);
 
 					// 2、计算对应的瓦片坐标                
-                    int tileX = static_cast<int>(nodePos.x / tileSize.width);
-                    int tileY = static_cast<int>(mapSize.height - (nodePos.y / tileSize.height));
+                    int tile_x = static_cast<int>(node_pos.x / tile_size.width);
+                    int tile_y = static_cast<int>(map_size.height - (node_pos.y / tile_size.height));
 
                     // 如果当前没有选中要建造的类型，直接返回，不执行建造逻辑
                     if (selected_building_type_ == BuildingType::kNone) {
@@ -437,137 +439,137 @@ bool MainVillage::init()
                     }
 
                     // 3、边界检查
-                    if (tileX >= 0 && tileX < mapSize.width && tileY >= 0 && tileY < mapSize.height) {
-						Vec2 targetCoord = Vec2(tileX, tileY);// 目标瓦片坐标
+                    if (tile_x >= 0 && tile_x < map_size.width && tile_y >= 0 && tile_y < map_size.height) {
+						Vec2 target_coord = Vec2(tile_x, tile_y);// 目标瓦片坐标
 						// 检查该瓦片是否已被占用
-                        std::string key = StringUtils::format("%d_%d", tileX, tileY);
+                        std::string key = StringUtils::format("%d_%d", tile_x, tile_y);
                         if (occupied_tiles_.find(key) != occupied_tiles_.end() && occupied_tiles_[key] == true) {
-                            CCLOG("Tile is already occupied by another sprite!");
+                            CCLOG("瓦块已被占用");
                             is_dragging_ = false;
                             // 直接返回，不执行后面的放置代码
                             return;
                         }
 						// 检查该瓦片是否为障碍物
-                        if (IsTileBlock(targetCoord)) {
+                        if (IsTileBlock(target_coord)) {
                             is_dragging_ = false;
-                            CCLOG("Blocked! Cannot place item on water or mountain.");                        
+                            CCLOG("不能在地图装饰图块上放置");                        
                             return;
                         }
                         // 4、创建精灵
-                        BaseBuilding* newBuilding = nullptr; 
+                        BaseBuilding* new_building = nullptr; 
 
                         // 判断建筑类型，如果是矿或采集器，创建 ResourceProducer
                         if (selected_building_type_ == BuildingType::kGoldMine ||
                             selected_building_type_ == BuildingType::kElixirPump) {
-                            newBuilding = ResourceProducer::Create(selected_building_type_, 1);
+                            new_building = ResourceProducer::Create(selected_building_type_, 1);
                         }
                         //如果是存储类
                         else if (selected_building_type_ == BuildingType::kGoldStorage ||
                             selected_building_type_ == BuildingType::kElixirStorage ||
                             selected_building_type_ == BuildingType::kBarracks) {
                             // 创建新的存储类指针
-                            ResourceStorage* storageBuilding = ResourceStorage::Create(selected_building_type_, 1);
+                            ResourceStorage* storage_building = ResourceStorage::Create(selected_building_type_, 1);
                             // 加入到存储类建筑列表
-                            storage_list_.push_back(storageBuilding);
+                            storage_list_.push_back(storage_building);
                             // 转化为父类
-                            newBuilding = storageBuilding;
+                            new_building = storage_building;
                             // 刷新上限
                             this->RefreshTotalCapacity();
                         }
                         //其他建筑类型
                         else {
                                 if (selected_building_type_ == BuildingType::kWall) {
-                                    newBuilding = Wall::create(1);
+                                    new_building = Wall::create(1);
                                 }
                                 if (selected_building_type_ == BuildingType::kCannon) {
-                                    newBuilding = Cannon::create(1);
+                                    new_building = Cannon::create(1);
                                 }
                                 if (selected_building_type_ == BuildingType::kArcherTower) {
-                                    newBuilding = ArcherTower::create(1);
+                                    new_building = ArcherTower::create(1);
                                 }
                                 if (selected_building_type_ == BuildingType::kTownHall) {
-                                    newBuilding = TownHall::create(1); 
+                                    new_building = TownHall::create(1); 
                                 }
                         }
-                        if (newBuilding) {
+                        if (new_building) {
                             // ================= 一、根据大本营判断是否可以建造 ==============
                             // --- a. 获取当前大本营等级 ---
-                            int currentTHLevel = 0;
+                            int current_th_Level = 0;
                             for (auto child : map->getChildren()) {
-                                // 因为所有建筑 Tag 都是 999，我们要区分出谁是 TownHall
+                                //区分出谁是TownHall
                                 if (child->getTag() == 999) {
-                                    // 使用 dynamic_cast 尝试转换
+                                    // 使用dynamic_cast转换
                                     TownHall* th = dynamic_cast<TownHall*>(child);
                                     if (th) {
-                                        currentTHLevel = th->level_;
+                                        current_th_Level = th->level_;
                                         break; // 找到了，退出循环
                                     }
                                 }
                             }
                             // 获取该大本营的最大建筑容量
-                            int maxLimit = TownHall::getMaxBuildingCount(selected_building_type_, currentTHLevel);
+                            int max_limit = TownHall::getMaxBuildingCount(selected_building_type_, current_th_Level);
 
                             // --- b. 统计当前地图上该类建筑的数量 ---
-                            int currentCount = 0;
+                            int current_count = 0;
                             for (auto child : map->getChildren()) {
                                 if (child->getTag() == 999) {
                                     BaseBuilding* b = dynamic_cast<BaseBuilding*>(child);
                                     // 统计同类型且未被摧毁的建筑
                                     if (b && b->type_ == selected_building_type_ && b->state_ != BuildingState::kDestroyed) {
-                                        currentCount++;
+                                        current_count++;
                                     }
                                 }
                             }
 
                             // --- c. 判断是否超限 ---
-                            if (currentCount >= maxLimit) {
-                                CCLOG("建造失败：数量已达上限！当前: %d / %d (大本营 Lv.%d)", currentCount, maxLimit, currentTHLevel);
+                            if (current_count >= max_limit) {
+                                CCLOG("建造失败：数量已达上限！当前: %d / %d (大本营 Lv.%d)", current_count, max_limit, current_th_Level);
                                 is_dragging_ = false;
                                 return; // 拦截，不准建造
                             }
 
                             // =============== 二、根据造价判断是否可建造 并且执行建造逻辑 ==============
                             // a. 获取该建筑的造价
-                            int costGold = newBuilding->build_cost_gold_;
-                            int costElixir = newBuilding->build_cost_elixir_;
+                            int cost_gold = new_building->build_cost_gold_;
+                            int cost_elixir = new_building->build_cost_elixir_;
 
                             // b. 尝试扣费
-                            if (PlayerData::GetInstance()->ConsumeGold(costGold)&& PlayerData::GetInstance()->ConsumeElixir(costElixir) ){
-                                // === 扣费成功，执行建造逻辑 ===
+                            if (PlayerData::GetInstance()->ConsumeGold(cost_gold)&& PlayerData::GetInstance()->ConsumeElixir(cost_elixir) ){
+                                //扣费成功，执行建造逻辑
 								// 播放建造音效
                                 PlayerData::GetInstance()->PlayEffect("Audio/plop.mp3");
                                 // 刷新 UI 显示扣钱后的结果
                                 this->UpdateResourceUi();
                                 // 适应瓦片大小
-                                Size spriteSize = newBuilding->getContentSize();
-                                newBuilding->setScaleX(tileSize.width / spriteSize.width);
-                                newBuilding->setScaleY(tileSize.height / spriteSize.height);
+                                Size sprite_size = new_building->getContentSize();
+                                new_building->setScaleX(tile_size.width / sprite_size.width);
+                                new_building->setScaleY(tile_size.height / sprite_size.height);
 
                                 // 居中位置
-                                float finalX = tileX * tileSize.width + tileSize.width / 2;
-                                float finalY = (mapSize.height - 1 - tileY) * tileSize.height + tileSize.height / 2;
-                                newBuilding->setPosition(Vec2(finalX, finalY));
-                                newBuilding->setTag(999);// 设置Tag以便后续识别
-                                map->addChild(newBuilding, 10);
+                                float finalX = tile_x * tile_size.width + tile_size.width / 2;
+                                float finalY = (map_size.height - 1 - tile_y) * tile_size.height + tile_size.height / 2;
+                                new_building->setPosition(Vec2(finalX, finalY));
+                                new_building->setTag(999);// 设置Tag以便后续识别
+                                map->addChild(new_building, 10);
                                 // 标记该瓦片为已占用
-                                std::string key = StringUtils::format("%d_%d", tileX, tileY);
+                                std::string key = StringUtils::format("%d_%d", tile_x, tile_y);
                                 occupied_tiles_[key] = true;
 
                                 // 开始建造流程 (显示进度条，进入 BUILDING 状态)
-                                newBuilding->StartConstruction();
-                                CCLOG("Sprite placed at tile (%d, %d)", tileX, tileY);
+                                new_building->StartConstruction();
+                                CCLOG("Sprite placed at tile (%d, %d)", tile_x, tile_y);
                             }
                             else {
                                 // === 钱不够，取消建造 ===
 
                                 CCLOG("资源不足！需要: 金币%d, 圣水%d，但你只有: 金币%d, 圣水%d",
-                                    costGold, costElixir,
+                                    cost_gold, cost_elixir,
                                     PlayerData::GetInstance()->GetGold(),
                                     PlayerData::GetInstance()->GetElixir());
                                 // 如果刚才 push_back 进了 _storageList，现在要把它弹出来
                                 if (selected_building_type_ == BuildingType::kGoldStorage ||
                                     selected_building_type_ == BuildingType::kElixirStorage) {
-                                    if (!storage_list_.empty() && storage_list_.back() == newBuilding) {
+                                    if (!storage_list_.empty() && storage_list_.back() == new_building) {
                                         storage_list_.pop_back(); // 还没建成就不算进容量
                                         this->RefreshTotalCapacity(); // 刷新回滚容量
                                     }
@@ -576,6 +578,10 @@ bool MainVillage::init()
                         }
                         if (selected_building_type_ != BuildingType::kWall) { // 除了围墙
                             // 清空非法区域
+                            if (current_preview_building_) {
+                                current_preview_building_->removeFromParent(); // 从屏幕上移除
+                                current_preview_building_ = nullptr;           // 取消预览
+                            }
                             selected_building_type_ = BuildingType::kNone;
                             UpdateOccupiedGridVisual();
                             current_preview_building_ = nullptr; // 取消预览
@@ -607,7 +613,7 @@ bool MainVillage::init()
 
             // B. 如果没有预览建筑      
             // 1. 获取点击坐标
-            Vec2 nodePos = map->convertToNodeSpace(mousePos);
+            Vec2 node_pos = map->convertToNodeSpace(mouse_pos);
 
             // 2. 遍历查找点中了谁
             auto& children = map->getChildren();
@@ -619,9 +625,9 @@ bool MainVillage::init()
                 if (child->getTag() == 999) {
 
                     // 4. 碰撞检测
-                    if (child->getBoundingBox().containsPoint(nodePos)) {
+                    if (child->getBoundingBox().containsPoint(node_pos)) {
 
-                        // 如果是Building类型的话 尝试转为 BaseBuilding
+                        // 如果是Building类型的话 尝试转为BaseBuilding
                         BaseBuilding* building = dynamic_cast<BaseBuilding*>(child);
 
                         if (building) {
@@ -645,7 +651,7 @@ bool MainVillage::init()
         };
 
     // ==================  四、鼠标移动  ==================
-    mouseListener->onMouseMove = [=](Event* event) {
+    mouse_listener->onMouseMove = [=](Event* event) {
         EventMouse* e = (EventMouse*)event;
         auto map = main_village_map_;
         // 获取当前鼠标位置
@@ -657,37 +663,37 @@ bool MainVillage::init()
             if (!map) return;
 
             // 1、获取当前鼠标位置
-            Vec2 currentMousePos = Vec2(e->getCursorX(), e->getCursorY());
+            Vec2 current_mouse_pos = Vec2(e->getCursorX(), e->getCursorY());
 
             // 2、计算移动距离 (Delta)
-            Vec2 delta = currentMousePos - last_mouse_pos_;
+            Vec2 delta = current_mouse_pos - last_mouse_pos_;
 
             // 3、计算新位置
-            Vec2 newPos = map->getPosition() + delta;
+            Vec2 new_pos = map->getPosition() + delta;
 
 			// 限制边界，防止出现黑边
-            Size mapContentSize = map->getContentSize();
-            float currentMapWidth = mapContentSize.width * map->getScaleX();
-            float currentMapHeight = mapContentSize.height * map->getScaleY();
+            Size map_content_size = map->getContentSize();
+            float current_map_width = map_content_size.width * map->getScaleX();
+            float current_map_height = map_content_size.height * map->getScaleY();
 
             // X 轴限制
-            float minX = visibleSize.width - currentMapWidth;
-            float maxX = 0;
-            if (newPos.x < minX) newPos.x = minX; // 右边黑边限制
-            if (newPos.x > maxX) newPos.x = maxX; // 左边黑边限制
+            float min_x = visible_size.width - current_map_width;
+            float max_x = 0;
+            if (new_pos.x < min_x) new_pos.x = min_x; // 右边黑边限制
+            if (new_pos.x > max_x) new_pos.x = max_x; // 左边黑边限制
 
             // Y 轴限制
-            float minY = visibleSize.height - currentMapHeight;
-            float maxY = 0;
-            if (newPos.y < minY) newPos.y = minY; // 上边黑边限制
-            if (newPos.y > maxY) newPos.y = maxY; // 下边黑边限制
+            float min_y = visible_size.height - current_map_height;
+            float max_y = 0;
+            if (new_pos.y < min_y) new_pos.y = min_y; // 上边黑边限制
+            if (new_pos.y > max_y) new_pos.y = max_y; // 下边黑边限制
 
-            map->setPosition(newPos);
-            last_mouse_pos_ = currentMousePos;
+            map->setPosition(new_pos);
+            last_mouse_pos_ = current_mouse_pos;
 			// 如果鼠标移动距离超过阈值，取消点击有效性
-            if (is_click_valid_ && currentMousePos.distance(start_click_pos_) > 10.0f) {
+            if (is_click_valid_ && current_mouse_pos.distance(start_click_pos_) > 10.0f) {
                 is_click_valid_ = false;
-                CCLOG("Mode switched to Dragging. Click invalidated.");
+                CCLOG("转换至拖拽模式");
             }
         }
        // B: --- 建筑预览跟随 --- 
@@ -758,7 +764,7 @@ bool MainVillage::init()
 
         };
     // ================== 五、添加监听器捕获鼠标操作 ==================
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(mouse_listener, this);
 
 	this->addChild(main_village_map_, 0);
     return true;
@@ -769,41 +775,41 @@ void MainVillage::MenuCloseCallback(Ref* pSender)
 }
 
 void MainVillage::CreateResourceUi() {
-    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto visible_size = Director::getInstance()->getVisibleSize();
 
     // 1. 金币 UI (右上角)
-    auto goldIcon = Sprite::create("Icon/Gold.png"); 
-    goldIcon->setPosition(visibleSize.width - 200, visibleSize.height - 40);
-    this->addChild(goldIcon, 9999);
+    auto gold_icon = Sprite::create("Icon/Gold.png"); 
+    gold_icon->setPosition(visible_size.width - 200, visible_size.height - 40);
+    this->addChild(gold_icon, 9999);
 
     gold_label_ = Label::createWithTTF("0", "fonts/GROBOLD.ttf", 24);
     gold_label_->setColor(Color3B(255, 215, 0)); //金色
     gold_label_->enableOutline(Color4B::BLACK, 2); 
     gold_label_->setAnchorPoint(Vec2(0, 0.5));
-    gold_label_->setPosition(visibleSize.width - 170, visibleSize.height - 40);
+    gold_label_->setPosition(visible_size.width - 170, visible_size.height - 40);
     this->addChild(gold_label_, 9999);
 
     // 2. 圣水 UI (金币下方)
-    auto elixirIcon = Sprite::create("Icon/Elixir.png"); 
-    elixirIcon->setPosition(visibleSize.width - 200, visibleSize.height - 80);
-    this->addChild(elixirIcon, 9999);
+    auto elixir_icon = Sprite::create("Icon/Elixir.png"); 
+    elixir_icon->setPosition(visible_size.width - 200, visible_size.height - 80);
+    this->addChild(elixir_icon, 9999);
 
     elixir_label_ = Label::createWithTTF("0", "fonts/GROBOLD.ttf", 24);
     elixir_label_->setColor(Color3B(255, 80, 255)); // 紫色
     elixir_label_->enableOutline(Color4B::BLACK, 2);
     elixir_label_->setAnchorPoint(Vec2(0, 0.5));
-    elixir_label_->setPosition(visibleSize.width - 170, visibleSize.height - 80);
+    elixir_label_->setPosition(visible_size.width - 170, visible_size.height - 80);
     this->addChild(elixir_label_, 9999);
 
     // 3. 人口 UI (圣水下方)
-    auto peopleIcon = Sprite::create("Icon/People.png");
-    peopleIcon->setPosition(visibleSize.width - 200, visibleSize.height - 120);
-    this->addChild(peopleIcon, 9999);
+    auto people_icon = Sprite::create("Icon/People.png");
+    people_icon->setPosition(visible_size.width - 200, visible_size.height - 120);
+    this->addChild(people_icon, 9999);
 
     people_label_ = Label::createWithTTF("0", "fonts/GROBOLD.ttf", 24);
     people_label_->enableOutline(Color4B::BLACK, 2);
     people_label_->setAnchorPoint(Vec2(0, 0.5));
-    people_label_->setPosition(visibleSize.width - 170, visibleSize.height - 120);
+    people_label_->setPosition(visible_size.width - 170, visible_size.height - 120);
     this->addChild(people_label_, 9999);
 
     // 3. 初始刷新一次
@@ -831,9 +837,9 @@ void MainVillage::UpdateResourceUi() {
 void MainVillage::RefreshTotalCapacity()
 {
     // 设定初始资源值
-    long long totalGoldCapacity = 20000000;
-    long long totalElixirCapacity = 20000000;
-    long long totalPeopleCapacity = 0;
+    long long total_gold_capacity = 20000000;
+    long long total_elixir_capacity = 20000000;
+    long long total_people_capacity = 0;
 
     // 1. 遍历容器中的每一个建筑
     for (auto building : storage_list_) {
@@ -841,22 +847,22 @@ void MainVillage::RefreshTotalCapacity()
         if (building) {
             // 根据类型累加对应的种类资源
             if (building->type_ == BuildingType::kGoldStorage) {
-                totalGoldCapacity += building->max_limit_;
+                total_gold_capacity += building->max_limit_;
             }
             else if (building->type_ == BuildingType::kElixirStorage) {
-                totalElixirCapacity += building->max_limit_;
+                total_elixir_capacity += building->max_limit_;
             }
             else if (building->type_ == BuildingType::kBarracks) {
-                totalPeopleCapacity += building->max_limit_;
+                total_people_capacity += building->max_limit_;
             }
         }
     }
     // 2. 更新资源总数
-    PlayerData::GetInstance()->UpdateMaxLimits(totalGoldCapacity, totalElixirCapacity, totalPeopleCapacity);
+    PlayerData::GetInstance()->UpdateMaxLimits(total_gold_capacity, total_elixir_capacity, total_people_capacity);
     CCLOG("=== 刷新完成 ===");
-    CCLOG("当前金币总上限: %lld", totalGoldCapacity);
-    CCLOG("当前圣水总上限: %lld", totalElixirCapacity);
-    CCLOG("当前人口总上限: %lld", totalPeopleCapacity);
+    CCLOG("当前金币总上限: %lld", total_gold_capacity);
+    CCLOG("当前圣水总上限: %lld", total_elixir_capacity);
+    CCLOG("当前人口总上限: %lld", total_people_capacity);
 }
 
 void MainVillage::CloseBuildingMenu() {
@@ -887,7 +893,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
     main_village_map_->addChild(active_menu_node_, 10000); // 保证最高层
 
     // 2. 定义函数：创建图标按钮 
-    auto createIconBtn = [](std::string img_name, std::string text, const ccMenuCallback& callback) -> MenuItem* {
+    auto create_icon_btn = [](std::string img_name, std::string text, const ccMenuCallback& callback) -> MenuItem* {
 
         // 1. 创建按钮容器  点击区 - 80x80
         auto wrapper = Node::create();
@@ -932,8 +938,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
     //======================== 3. 创建各个功能按钮 =======================
 
     // --- 按钮 1: 信息 (Info) ---
-    // 请替换 "btn_info.png" 为你的实际文件名
-    auto btnInfo = createIconBtn("Icon/btn_info.png", "Info", [=](Ref* sender) {
+    auto btn_info = create_icon_btn("Icon/btn_info.png", "Info", [=](Ref* sender) {
 
         // 1. 先关闭原来的操作菜单
         this->CloseBuildingMenu();
@@ -941,10 +946,10 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
         // 2. 创立一个菜单根节点
         active_menu_node_ = Node::create();
         // 设置反向缩放 
-        float mapScaleX = main_village_map_->getScaleX();
-        float mapScaleY = main_village_map_->getScaleY();
-        active_menu_node_->setScaleX(1.0f / mapScaleX);
-        active_menu_node_->setScaleY(1.0f / mapScaleY);
+        float map_scale_x = main_village_map_->getScaleX();
+        float map_scale_y = main_village_map_->getScaleY();
+        active_menu_node_->setScaleX(1.0f / map_scale_x);
+        active_menu_node_->setScaleY(1.0f / map_scale_y);
 
         // 定位到建筑位置
         active_menu_node_->setPosition(building->getPosition());
@@ -953,21 +958,21 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
         main_village_map_->addChild(active_menu_node_, 20000);
 
         // 3. 创建背景板 
-        float bgWidth = 300;
-        float bgHeight = 200;
+        float bg_width = 300;
+        float bg_height = 200;
 
         // A. 准备图片路径
-        std::string bgImg = "Icon/info_panel.png"; 
+        std::string bg_img = "Icon/info_panel.png"; 
 
         // B. 定义九宫格坐标
-        Rect capInsets = Rect(25, 25, 50, 50);
+        Rect cap_in_sets = Rect(25, 25, 50, 50);
 
         // C. 创建九宫格精灵
-        auto bg = ui::Scale9Sprite::create(bgImg);
+        auto bg = ui::Scale9Sprite::create(bg_img);
 
         if (bg) {
             // 如果图片加载成功，设置拉伸区域
-            bg->setCapInsets(capInsets);
+            bg->setCapInsets(cap_in_sets);
         }
         else {
            // 未找到照片，防止崩溃
@@ -979,7 +984,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
         }
 
         // D. 设置信息背景板大小 
-        bg->setContentSize(Size(bgWidth, bgHeight)); // (300x200)
+        bg->setContentSize(Size(bg_width, bg_height)); // (300x200)
 
         // E. 设置属性 
         bg->setName("InfoBackground");     // 用于鼠标点击检测
@@ -990,7 +995,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
         // 4. 显示通用信息 (名字、等级、HP)
         std::string nameStr = building->name_;
 
-        std::string commonText = StringUtils::format(
+        std::string common_text = StringUtils::format(
             "Name: %s\nLevel: %d\nHP: %d / %d",
             nameStr.c_str(),
             building->level_,
@@ -999,46 +1004,46 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
         );
 
         // 设置通用信息label
-        auto labelCommon = Label::createWithTTF(commonText, "fonts/GROBOLD.ttf", 20); 
-        labelCommon->setColor(Color3B(65, 105, 225)); // 蓝色
-        labelCommon->setPosition(bgWidth / 2, bgHeight / 2 + 20);
-        bg->addChild(labelCommon);
+        auto label_common = Label::createWithTTF(common_text, "fonts/GROBOLD.ttf", 20); 
+        label_common->setColor(Color3B(65, 105, 225)); // 蓝色
+        label_common->setPosition(bg_width / 2, bg_height / 2 + 20);
+        bg->addChild(label_common);
 
         // 5. 显示特殊信息 (根据类型判断)
-        std::string specialText = "";
+        std::string special_text = "";
         BuildingStats stats = BaseBuilding::GetStatsConfig(building->type_, building->level_);//获取建筑信息
         if (building->type_ == BuildingType::kGoldMine || building->type_ == BuildingType::kElixirPump) {
-            specialText = StringUtils::format("Production: %d / hour", stats.production_rate);
+            special_text = StringUtils::format("Production: %d / hour", stats.production_rate);
         }
         else if (building->type_ == BuildingType::kCannon || building->type_ == BuildingType::kArcherTower) {
-            specialText = StringUtils::format("Damage: %.1lf ", stats.damage);
+            special_text = StringUtils::format("Damage: %.1lf ", stats.damage);
         }
         else if (building->type_ != BuildingType::kWall && building->type_ != BuildingType::kTownHall) {
-            specialText = StringUtils::format("Capacity: %d", stats.capacity);
+            special_text = StringUtils::format("Capacity: %d", stats.capacity);
         }
 
-        if (!specialText.empty()) { // 如果不为空即存在特殊属性
+        if (!special_text.empty()) { // 如果不为空即存在特殊属性
             // 设置特殊属性label
-            auto labelSpecial = Label::createWithTTF(specialText, "fonts/GROBOLD.ttf", 20);
-            labelSpecial->setColor(Color3B::MAGENTA); // 特殊属性用洋红色
-            labelSpecial->setPosition(bgWidth / 2, bgHeight / 2 - 40);
-            bg->addChild(labelSpecial);
+            auto label_special = Label::createWithTTF(special_text, "fonts/GROBOLD.ttf", 20);
+            label_special->setColor(Color3B::MAGENTA); // 特殊属性用洋红色
+            label_special->setPosition(bg_width / 2, bg_height / 2 - 40);
+            bg->addChild(label_special);
         }
 
         // 6. 添加关闭按钮
-        auto closeLabel = Label::createWithTTF("[ Close ]", "fonts/GROBOLD.ttf", 24);
-        closeLabel->setColor(Color3B(255, 50, 50)); // 红色
-        closeLabel->enableOutline(Color4B::BLACK, 1); // 黑边
-        auto closeItem = MenuItemLabel::create(closeLabel, [=](Ref* sender) {
+        auto close_label = Label::createWithTTF("[ Close ]", "fonts/GROBOLD.ttf", 24);
+        close_label->setColor(Color3B(255, 50, 50)); // 红色
+        close_label->enableOutline(Color4B::BLACK, 1); // 黑边
+        auto closeItem = MenuItemLabel::create(close_label, [=](Ref* sender) {
 
             PlayerData::GetInstance()->PlayEffect("Audio/click.mp3");
 
             this->CloseBuildingMenu();
             });
-        closeItem->setPosition(bgWidth - 60, bgHeight - 20); // 放置在右上角位置
+        closeItem->setPosition(bg_width - 60, bg_height - 20); // 放置在右上角位置
 
-        closeLabel->setColor(Color3B(255, 50, 50));
-        closeLabel->enableBold();         // 描边 
+        close_label->setColor(Color3B(255, 50, 50));
+        close_label->enableBold();         // 描边 
 
         auto menu = Menu::create(closeItem, nullptr); // 组装进菜单
         menu->setPosition(Vec2::ZERO);
@@ -1052,7 +1057,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
         });
 
     // --- 按钮 2: 升级 (Upgrade) ---
-    auto btnUpgrade = createIconBtn("Icon/btn_upgrade.png", "Upgrade", [=](Ref* sender) {
+    auto btn_up_grade = create_icon_btn("Icon/btn_upgrade.png", "Upgrade", [=](Ref* sender) {
         CCLOG("点击了升级按钮");
 
         // --- 扣费升级逻辑 ---
@@ -1060,20 +1065,20 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
 
         // 大本营等级限制
         // 1. 寻找当前地图上的大本营等级
-        int currentTHLevel = 1;
+        int current_th_level = 1;
         for (auto child : main_village_map_->getChildren()) {
             if (child->getTag() == 999) {
                 auto th = dynamic_cast<TownHall*>(child);
                 if (th) {
-                    currentTHLevel = th->level_;
+                    current_th_level = th->level_;
                     break;
                 }
             }
         }
 
         // 2. 检查是否允许升级
-        if (!TownHall::isUpgradeAllowed(building->type_, next_level, currentTHLevel)) {
-            CCLOG("升级失败：需要大本营 Lv.%d 才能升级到 Lv.%d", currentTHLevel + 1, next_level); // 如果满足限制规定
+        if (!TownHall::isUpgradeAllowed(building->type_, next_level, current_th_level)) {
+            CCLOG("升级失败：需要大本营 Lv.%d 才能升级到 Lv.%d", current_th_level + 1, next_level); // 如果满足限制规定
             return; // 直接拦截，不扣钱
         }
 
@@ -1096,7 +1101,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
     // --- 按钮 3: 训练 (Train) - 仅兵营 ---
     MenuItem* btn_train = nullptr; // 因为不确定是否有兵营 初始设为空
     if (building->type_ == BuildingType::kBarracks) { // 如果是兵营
-        btn_train = createIconBtn("Icon/btn_train.png", "Train", [=](Ref* sender) {
+        btn_train = create_icon_btn("Icon/btn_train.png", "Train", [=](Ref* sender) {
             // 1. 清空当前菜单
             if (active_menu_node_) {
                 active_menu_node_->removeAllChildren();
@@ -1106,7 +1111,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
             }
 
             // 2. 创建训练面板背景
-            float panel_w = 400;
+            float panel_w = 500;
             float panel_h = 140;
             std::string bg_path = "TrainingBg.png";   // 准备图片路径 
             Rect cap_insets = Rect(20, 20, 60, 60); // 创建九宫格背景
@@ -1179,7 +1184,9 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
                         else if (info.name == "WallBreaker") { 
                             new_soldier = WallBreaker::create();
                         }
-
+                        else if (info.name == "Dragon") {
+                            new_soldier = Dragon::create();
+                        }
                         if (new_soldier) {
 
                             new_soldier->setHomeMode(true); // // 开启游走
@@ -1216,6 +1223,9 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
                                 // 如果目标在左边，需要翻转 
                                new_soldier->setScaleX(-0.01f); // 用负 Scale 实现翻转
                             }
+
+                            new_soldier->setHomePosition(building->getPosition());
+                            new_soldier->setHomeMode(true); // // 开启游走
 
                             // 4. 添加到地图层 
                             main_village_map_->addChild(new_soldier, 3000 - static_cast<int>(door_pos.y));
@@ -1390,7 +1400,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
             });
     }
     // --- 按钮 4: 移除 (Remove) ---
-    auto btn_remove = createIconBtn("Icon/btn_remove.png", "Remove", [=](Ref* sender) {
+    auto btn_remove = create_icon_btn("Icon/btn_remove.png", "Remove", [=](Ref* sender) {
            CCLOG("点击了拆除按钮");
 
             // 1. 如果是存储建筑 总资源容量会发生改变
@@ -1434,8 +1444,8 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
     Vector<MenuItem*> menu_items;
 
     // 信息 - 升级 - (训练) - 拆除
-    menu_items.pushBack(btnInfo);
-    menu_items.pushBack(btnUpgrade);
+    menu_items.pushBack(btn_info);
+    menu_items.pushBack(btn_up_grade);
     // 如果有兵营 push进入兵营
     if (btn_train) {
         menu_items.pushBack(btn_train);
@@ -1675,7 +1685,8 @@ std::vector<MainVillage::TroopInfo> MainVillage::troops_ = {
        {"Barbarian",   "Troops/Barbarian_head.png",    1,    25},
        {"Archer",      "Troops/Archer_head.png",       1,    30},
        {"Giant",       "Troops/Giant_head.png",        5,   250},
-       {"WallBreaker", "Troops/Wall_Breaker_head.png", 2,   100}
+       {"WallBreaker", "Troops/Wall_Breaker_head.png", 2,   100},
+       {"Dragon",      "Troops/Dragon_head.png",       20, 1000}
 };
 
 // 左下角Attack按钮
@@ -2058,11 +2069,13 @@ void MainVillage::RestoreVillageData() {
         else if (name == "Archer") s = Archer::create();
         else if (name == "Giant") s = Giant::create();
         else if (name == "WallBreaker") s = WallBreaker::create();
+        else if (name == "Dragon") s = Dragon::create();
 
         if (s) {
             // 1. 设置模式
             s->setHomeMode(true);
             s->setHomePosition(the_barracks->getPosition());
+            s->setHomeMode(true);
 
             // 2. 随机位置 (兵营下方扇形)
             float angle = CC_DEGREES_TO_RADIANS(210 + CCRANDOM_0_1() * 120);
@@ -2088,8 +2101,8 @@ void MainVillage::RestoreVillageData() {
     };
 
     // c. 遍历库存，生成所有兵
-    std::vector<std::string> troopTypes = { "Barbarian", "Archer", "Giant", "WallBreaker" };
-    for (const auto& name : troopTypes) {
+    std::vector<std::string> troop_types = { "Barbarian", "Archer", "Giant", "WallBreaker" ,"Dragon" };
+    for (const auto& name : troop_types) {
         int count = data_center->GetTroopCount(name);
         for (int i = 0; i < count; ++i) {
             spawn_troops_at_barracks(name);
@@ -2191,7 +2204,7 @@ void MainVillage::ShowSettingsLayer() {
      * @param setVal   设置音量的回调 (传入 0.0 ~ 1.0)
      * @return Vector<MenuItem*> 返回生成的加减按钮，以便添加到 Menu 中
      */
-    auto createVolumeControl = [&](std::string title, std::string icon_path, float posY, std::function<float()> get_val, std::function<void(float)> setVal) {
+    auto create_volume_control = [&](std::string title, std::string icon_path, float posY, std::function<float()> get_val, std::function<void(float)> setVal) {
         // a. 根据iconPath来创建小喇叭图标 
         auto icon = Sprite::create(icon_path);
 
@@ -2279,13 +2292,13 @@ void MainVillage::ShowSettingsLayer() {
 
     // f. 使用上面的通用函数，创建两排控制器
     // (1). 音乐控制 (Music) - 放在 Y=220
-    auto music_items = createVolumeControl("Music", "Icon/icon_music.png", 220,
+    auto music_items = create_volume_control("Music", "Icon/icon_music.png", 220,
         []() { return PlayerData::GetInstance()->music_volume_; }, // 获取
         [](float v) { PlayerData::GetInstance()->SetMusicVol(v); } // 设置
     );
 
     // (2). 音效控制 (Effect) - 放在 Y=160
-    auto effect_items = createVolumeControl("Effect", "Icon/icon_effect.png", 160,
+    auto effect_items = create_volume_control("Effect", "Icon/icon_effect.png", 160,
         []() { return PlayerData::GetInstance()->effect_volume_; }, // 获取
         [](float v) { PlayerData::GetInstance()->SetEffectVol(v); } // 设置
     );

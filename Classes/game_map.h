@@ -3,9 +3,14 @@
 
 #include "cocos2d.h"
 #include"game_unit.h"
-#include"FindPath.h"
+#include"find_path.h"
 #include "main_village.h"
 #include "trap.h"
+#include "Barbarian.h"   
+#include "Archer.h"
+#include "Giant.h"
+#include "WallBreaker.h" 
+#include "Dragon.h"
 #include "ui/CocosGUI.h"
 
 class GameMap : public cocos2d::Scene
