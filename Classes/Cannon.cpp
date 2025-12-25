@@ -66,7 +66,7 @@ void Cannon::update(float dt)
     if (_targetSoldier) {
         // 1. 检查士兵状态是否为 DEAD
         // 只要士兵宣判死亡，塔就应该立刻停手，哪怕士兵尸体还在播动画
-        if (_targetSoldier->getState() == Soldier::State::DEAD) {
+        if (!_targetSoldier->IsAlive()) {
             _targetSoldier = nullptr;
             this->state_ = BuildingState::kIdle;
         }
@@ -111,7 +111,7 @@ void Cannon::findEnemy()
 
         if (s) {
 
-            if (s->getState() == Soldier::State::DEAD) {
+            if (!s->IsAlive()) {
                 continue; // 跳过这个死人
             }
 
@@ -143,7 +143,7 @@ void Cannon::fireAtEnemy()
     // 2. 发射炮弹动画 (简易版：直接扣血)
 
     // 这里直接造成伤害
-    _targetSoldier->takeDamage(this->_damage); // 假设伤害变量叫 _damage 或 damage
+    _targetSoldier->GetDamage(this->_damage); // 假设伤害变量叫 _damage 或 damage
 
 
     // 模拟一下：

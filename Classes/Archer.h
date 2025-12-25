@@ -6,9 +6,9 @@
 class Archer : public Soldier
 {
 public:
-    CREATE_FUNC(Archer);
 
-    virtual SoldierStats getStats() override;
+    static Archer* create();
+
     virtual std::string getIconName() override;
 };
 

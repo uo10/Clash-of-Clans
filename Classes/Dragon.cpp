@@ -2,9 +2,24 @@
 
 USING_NS_CC;
 
-bool Dragon::init()
+Dragon* Dragon::create() {
+    Dragon* pRet = new(std::nothrow) Dragon();
+
+    // 调用 GameUnit 的初始化函数
+    // 填入数值: 图片, HP, 速度, 伤害, 射程, 类型
+    if (pRet && pRet->InitUnit("Soldier/Dragon.png", 500, 120.0f, 15.0f, 60.0f, UnitType::kSoldier)) {
+
+        pRet->SetUnitName("Dragon"); // 设置名字
+        pRet->autorelease();
+        return pRet;
+    }
+    delete pRet;
+    return nullptr;
+}
+
+bool Dragon::InitUnit(const std::string& filename, float maxHp, float speed, float damage, float range, UnitType type)
 {
-    if (!Soldier::init()) return false;
+    if (!GameUnit::InitUnit(filename, maxHp, speed, damage, range, type)) return false;
 
     // 制作影子
     shadow_sprite = Sprite::create(getIconName());
@@ -54,14 +69,6 @@ void Dragon::update(float dt)
     }
 }
 
-Soldier::SoldierStats Dragon::getStats() {
-    // 血量: 80 (脆皮)
-    // 伤害: 8
-    // 移速: 90 (稍快)
-    // 射程: 200 (远程，可以隔着墙打建筑)
-    // 攻速: 1.0秒/次
-    return { 80, 8, 90.0f, 200.0f, 1.0f };
-}
 
 std::string Dragon::getIconName() {
     return "Dragon.png";

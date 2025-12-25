@@ -2,13 +2,19 @@
 
 USING_NS_CC;
 
-Soldier::SoldierStats Giant::getStats() {
-    // 血量: 600 (非常厚)
-    // 伤害: 25
-    // 移速: 40 (很慢)
-    // 射程: 40 (近战)
-    // 攻速: 2.0秒/次 (攻击慢)
-    return { 600, 25, 40.0f, 40.0f, 2.0f };
+Giant* Giant::create() {
+    Giant* pRet = new(std::nothrow) Giant();
+
+    // 调用 GameUnit 的初始化函数
+    // 填入数值: 图片, HP, 速度, 伤害, 射程, 类型
+    if (pRet && pRet->InitUnit("Soldier/Giant.png", 300, 50.0f, 11.0f, 40.0f, UnitType::kSoldier)) {
+
+        pRet->SetUnitName("Giant"); // 设置名字
+        pRet->autorelease();
+        return pRet;
+    }
+    delete pRet;
+    return nullptr;
 }
 
 std::string Giant::getIconName() {

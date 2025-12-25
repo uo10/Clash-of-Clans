@@ -2,13 +2,19 @@
 
 USING_NS_CC;
 
-Soldier::SoldierStats Archer::getStats() {
-    // 血量: 80 (脆皮)
-    // 伤害: 8
-    // 移速: 90 (稍快)
-    // 射程: 200 (远程，可以隔着墙打建筑)
-    // 攻速: 1.0秒/次
-    return { 80, 8, 90.0f, 200.0f, 1.0f };
+Archer* Archer::create() {
+    Archer* pRet = new(std::nothrow) Archer();
+
+    // 调用 GameUnit 的初始化函数
+    // 填入数值: 图片, HP, 速度, 伤害, 射程, 类型
+    if (pRet && pRet->InitUnit("Soldier/Archer.png", 20, 100.0f, 7.0f, 80.0f, UnitType::kSoldier)) {
+
+        pRet->SetUnitName("Archer"); // 设置名字
+        pRet->autorelease();
+        return pRet;
+    }
+    delete pRet;
+    return nullptr;
 }
 
 std::string Archer::getIconName() {

@@ -165,13 +165,15 @@ public:
 		return current_hp_;
 	}
 
-private:
+//private:
+protected:
 	float max_hp_, current_hp_, speed_, damage_, attack_range_;//最大血量、当前血量、移动速度、伤害、攻击范围
 	float attack_speed_;//攻速
 	UnitType type_;//类型
 	std::string unit_name_;//名字
 	GameUnit* target_;//攻击目标
 	cocos2d::ui::LoadingBar* hp_bar_;//血条
+	cocos2d::Sprite* hp_bg_ = nullptr; // 血条背景
 	std::vector<cocos2d::Vec2> path_;//攻击路径
 	int path_index_;//路径下标
 	void UpdateHpBar();//更新血条

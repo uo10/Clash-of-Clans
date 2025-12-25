@@ -531,19 +531,19 @@ void GameMap::SpawnSoldier(std::string troop_name, Vec2 pos) {
 
     // 创建士兵对象
     if (troop_name == "Barbarian") {
-        soldier = GameUnit::Create("Soldier/Barbarian.png", 45, 70.0f, 8.0f, 40.0f, UnitType::kSoldier);
+        soldier = Barbarian::create();
     }
     else if (troop_name == "Archer") {
-        soldier = GameUnit::Create("Soldier/Archer.png", 20, 100.0f, 7.0f, 80.0f, UnitType::kSoldier);
+        soldier = Archer::create();
     }
     else if (troop_name == "Giant") {
-        soldier = GameUnit::Create("Soldier/Giant.png", 300, 50.0f, 11.0f, 40.0f, UnitType::kSoldier);
+        soldier = Giant::create();
     }
     else if (troop_name == "WallBreaker") {
-        soldier = GameUnit::Create("Soldier/Wall_Breaker.png", 20, 100.0f, 12.0f, 40.0f, UnitType::kSoldier);
+        soldier = WallBreaker::create();
     }
     else if (troop_name == "Dragon") {
-        soldier = GameUnit::Create("Soldier/Dragon.png", 500, 120.0f, 15.0f, 60.0f, UnitType::kSoldier);
+        soldier = Dragon::create();
     }
 
     if (soldier) {

@@ -6,12 +6,12 @@
 class Giant : public Soldier
 {
 public:
-    CREATE_FUNC(Giant);
 
-    virtual SoldierStats getStats() override;
+    static Giant* create();
+
     virtual std::string getIconName() override;
 
-    // 重写偏好：告诉基类我想打防御塔
+    // 重写偏好
     virtual BuildingType getPreferredTargetType() override;
 };
 

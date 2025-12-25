@@ -1183,10 +1183,6 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
                             new_soldier = Dragon::create();
                         }
                         if (new_soldier) {
-
-                            new_soldier->setHomeMode(true); // // 开启游走
-                            new_soldier->setHomePosition(building->getPosition());
-
                             // 1. 确定“出生点” (兵营大门位置)
                             Vec2 door_pos = building->getPosition() + Vec2(0, -20);
 
@@ -1218,6 +1214,9 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
                                 // 如果目标在左边，需要翻转 
                                new_soldier->setScaleX(-0.01f); // 用负 Scale 实现翻转
                             }
+
+                            new_soldier->setHomePosition(building->getPosition());
+                            new_soldier->setHomeMode(true); // // 开启游走
 
                             // 4. 添加到地图层 
                             main_village_map_->addChild(new_soldier, 3000 - static_cast<int>(door_pos.y));
@@ -2065,8 +2064,8 @@ void MainVillage::RestoreVillageData() {
 
         if (s) {
             // 1. 设置模式
-            s->setHomeMode(true);
             s->setHomePosition(the_barracks->getPosition());
+            s->setHomeMode(true);
 
             // 2. 随机位置 (兵营下方扇形)
             float angle = CC_DEGREES_TO_RADIANS(210 + CCRANDOM_0_1() * 120);

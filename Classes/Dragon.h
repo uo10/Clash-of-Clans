@@ -8,10 +8,9 @@ class Dragon : public Soldier
 private:
     cocos2d::Sprite* shadow_sprite = nullptr;
 public:
-    CREATE_FUNC(Dragon);
-    virtual bool init() override; // ÊÓ¾õÌØÐ§
+    virtual bool InitUnit(const std::string& filename, float maxHp, float speed, float damage, float range, UnitType type) override;
     virtual void update(float dt) override;
-    virtual SoldierStats getStats() override;
+    static Dragon* create();
     virtual std::string getIconName() override;
 };
 
