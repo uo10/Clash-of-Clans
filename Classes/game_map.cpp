@@ -132,7 +132,7 @@ bool GameMap::Init(const std::string& map_name_)
 	setting_wrapper->setAnchorPoint(Vec2(0.5, 0.5));// 锚点居中
 
     // 2. 创建图标
-    auto setting_sprite = Sprite::create("Settings_Icon.png"); 
+    auto setting_sprite = Sprite::create("Icon/Settings_Icon.png"); 
 
     // --- 自动缩放 ---
     float target_set_size = 100.0f;
@@ -164,7 +164,6 @@ bool GameMap::Init(const std::string& map_name_)
         ));
 
         // --- 打开设置弹窗 ---
-        CCLOG("Clicked Settings");
         this->ShowSettingsLayer();
         });
 
@@ -177,7 +176,7 @@ bool GameMap::Init(const std::string& map_name_)
     this->addChild(settings_menu, 2000); // 保证UI层级在最上层
 
     // ================== 三、播放BGM ======================
-        PlayerData::GetInstance()->PlayBgm("bgm_battle_planning.mp3",true); // 未放士兵 准备阶段
+        PlayerData::GetInstance()->PlayBgm("Audio/bgm_battle_planning.mp3",true); // 未放士兵 准备阶段
 
     // ==================== 四、鼠标操作  ==================
     auto mouse_listener = EventListenerMouse::create();
@@ -216,7 +215,7 @@ bool GameMap::Init(const std::string& map_name_)
         if (new_scale_x > 5.0f) new_scale_x = 5.0f;
         if (new_scale_y > 5.0f) new_scale_y = 5.0f;
 
-        // 应用缩放
+        // 应用缩放值
         map->setScaleX(new_scale_x);
         map->setScaleY(new_scale_y);
 
@@ -262,7 +261,7 @@ bool GameMap::Init(const std::string& map_name_)
 
     // ==================  (二)、鼠标按下  ==================
     
-    // ------ 判断鼠标是否点到UI界面 ------
+    // ------ 判断鼠标是否点到菜单界面 ------
     auto is_mouse_on_menu = [=](Vec2 mouse_pos) -> bool {
         if (troop_menu_node_) {
             // A: 点击到士兵选择菜单
@@ -279,10 +278,7 @@ bool GameMap::Init(const std::string& map_name_)
                     is_dragging_ = false;
                     is_click_valid_ = false;
                     return true;
-                }
-                else {
-                    // 士兵菜单要求一直打开，不用关闭
-                }
+                }              
             }
         }
         //  B: 处于设置界面 
@@ -353,12 +349,12 @@ bool GameMap::Init(const std::string& map_name_)
                         // 检查该瓦片是否为障碍物
                         if (IsTileBlock(target_coord)) {
                             is_dragging_ = false;
-                            CCLOG("Blocked! Cannot place item on water or mountain.");
+                            CCLOG("该瓦块为地图元素！禁止放置！");
                             return;
                         }
                         if (!CanPlaceSoldierAt(node_pos_)) {
                             is_dragging_ = false;
-                            CCLOG("Blocked! Cannot place item on Forbidden.");
+                            CCLOG("禁止在禁区内放置！");
                             return;
                         }
 
@@ -381,9 +377,9 @@ bool GameMap::Init(const std::string& map_name_)
                             if (!has_battle_started_) {
                                 has_battle_started_ = true; // 标记已开战                            
                                 // 切换到激昂的战斗音乐
-                                PlayerData::GetInstance()->PlayBgm("bgm_battle.mp3",true);
+                                PlayerData::GetInstance()->PlayBgm("Audio/bgm_battle.mp3",true);
 
-                                CCLOG("战斗打响！切换 BGM");
+                                CCLOG("战斗打响！切换BGM");
                             }
                         }
 
@@ -436,7 +432,7 @@ bool GameMap::Init(const std::string& map_name_)
             // 如果鼠标移动距离超过阈值，取消点击有效性
             if (is_click_valid_ && current_mouse_pos_.distance(start_click_pos_) > 10.0f) {
                 is_click_valid_ = false;
-                CCLOG("Mode switched to Dragging. Click invalidated.");
+                CCLOG("切换到拖拽模式");
             }
         }
         };
@@ -535,16 +531,19 @@ void GameMap::SpawnSoldier(std::string troop_name, Vec2 pos) {
 
     // 创建士兵对象
     if (troop_name == "Barbarian") {
-        soldier = GameUnit::Create("Barbarian.png", 45, 70.0f, 8.0f, 40.0f, UnitType::kSoldier);
+        soldier = GameUnit::Create("Soldier/Barbarian.png", 45, 70.0f, 8.0f, 40.0f, UnitType::kSoldier);
     }
     else if (troop_name == "Archer") {
-        soldier = GameUnit::Create("Archer.png", 20, 100.0f, 7.0f, 80.0f, UnitType::kSoldier);
+        soldier = GameUnit::Create("Soldier/Archer.png", 20, 100.0f, 7.0f, 80.0f, UnitType::kSoldier);
     }
     else if (troop_name == "Giant") {
-        soldier = GameUnit::Create("Giant.png", 300, 50.0f, 11.0f, 40.0f, UnitType::kSoldier);
+        soldier = GameUnit::Create("Soldier/Giant.png", 300, 50.0f, 11.0f, 40.0f, UnitType::kSoldier);
     }
     else if (troop_name == "WallBreaker") {
-        soldier = GameUnit::Create("Wall_Breaker.png", 20, 100.0f, 12.0f, 40.0f, UnitType::kSoldier);
+        soldier = GameUnit::Create("Soldier/Wall_Breaker.png", 20, 100.0f, 12.0f, 40.0f, UnitType::kSoldier);
+    }
+    else if (troop_name == "Dragon") {
+        soldier = GameUnit::Create("Soldier/Dragon.png", 500, 120.0f, 15.0f, 60.0f, UnitType::kSoldier);
     }
 
     if (soldier) {
@@ -697,14 +696,14 @@ void GameMap::update(float dt)
 				// 4. 判断是否受阻
 
                 bool is_blocked = false;
-                if (obstacle && obstacle->IsAlive()) {
+                if (obstacle && obstacle->IsAlive()&&soldier->GetUnitName()!="Dragon") {
                     // 只要这个格子里有东西，且不是当前目标，且是敌对的围栏就进攻
                     if (obstacle->GetTeam() != soldier->GetTeam()) {
                         if (obstacle->GetUnitName() == "Fence") {
 
                             // 只要还没把围栏设为目标，就拦截
                             if (soldier->GetTarget() != obstacle) {
-                                CCLOG("!!! BLOCKED BY FENCE at (%d, %d) !!!", target_grid_x, target_grid_y);
+                                CCLOG("!!! 围栏阻挡位置： (%d, %d) !!!", target_grid_x, target_grid_y);
                                 soldier->SetTarget(obstacle);
                                 soldier->ClearPath();
                                 is_blocked = true;
@@ -862,6 +861,9 @@ void GameMap::CalculatePath(GameUnit* soldier) {
 
     // 定义可走性
     auto is_walkable = [&](Vec2 tile) {
+        if (soldier->GetUnitName() == "Dragon") {
+			return true;// 飞龙无视一切障碍物
+        }
         //终点可走
         if (tile.x == (int)end.x && tile.y == (int)end.y) {
             return true;
@@ -875,7 +877,7 @@ void GameMap::CalculatePath(GameUnit* soldier) {
         };
 
     //创建路径
-    std::vector<Vec2> path = FindPath::findPath(start, end, map_size, tile_size, is_walkable);
+    std::vector<Vec2> path = ComputePath::ComputePath(start, end, map_size, tile_size, is_walkable);
     soldier->SetPath(path);
 }
 
@@ -1133,7 +1135,7 @@ void GameMap::ShowGameOverLayer(bool is_win) {
     layer->addChild(container);
 
     // 添加弹窗底板 
-    std::string bgPath = is_win ? "panel_win.png" : "panel_lose.png"; // 胜利和失败 分别用 金色和灰色
+    std::string bgPath = is_win ? "Icon/panel_win.png" : "Icon/panel_lose.png"; // 胜利和失败 分别用 金色和灰色
     auto panel_bg = cocos2d::ui::Scale9Sprite::create(bgPath); // 根据路径创建
 
     // 设置大小 (宽500, 高400)
@@ -1156,7 +1158,7 @@ void GameMap::ShowGameOverLayer(bool is_win) {
         int stars = 3;  // 默认为三颗星
         for (int i = 0; i < 3; i++) {
             // 背景灰星
-            auto star_bg = Sprite::create("star_gray.png");
+            auto star_bg = Sprite::create("Icon/star_gray.png");
             if (star_bg) {
                 // 排列: -100, 0, 100 保持间距
                 star_bg->setPosition((i - 1) * 100, 10);
@@ -1164,7 +1166,7 @@ void GameMap::ShowGameOverLayer(bool is_win) {
             }
 
             if (i < stars) {
-                auto star_gold = Sprite::create("star_gold.png");    // 金星
+                auto star_gold = Sprite::create("Icon/star_gold.png");    // 金星
                 if (star_gold) {
                     star_gold->setPosition((i - 1) * 100, 10);
                     star_gold->setScale(0);
@@ -1185,7 +1187,7 @@ void GameMap::ShowGameOverLayer(bool is_win) {
     else { // 失败场景用灰星
         int stars = 3;
         for (int i = 0; i < 3; i++) {
-            auto star_bg = Sprite::create("star_gray.png");          // 背景灰星
+            auto star_bg = Sprite::create("Icon/star_gray.png");          // 背景灰星
             if (star_bg) {
                 // 排列: -100, 0, 100 
                 star_bg->setPosition((i - 1) * 100, 10);
@@ -1193,7 +1195,7 @@ void GameMap::ShowGameOverLayer(bool is_win) {
             }
             if (i < stars) {
 
-                auto star_gold = Sprite::create("star_gray.png");      // 灰星
+                auto star_gold = Sprite::create("Icon/star_gray.png");      // 灰星
                 if (star_gold) {
                     star_gold->setPosition((i - 1) * 100, 10);
                     star_gold->setScale(0);
@@ -1216,7 +1218,7 @@ void GameMap::ShowGameOverLayer(bool is_win) {
     home_wrapper->setAnchorPoint(Vec2(0.5, 0.5));
 
 
-    auto btn_sprite = Sprite::create("Return_btn.png");    // 按钮背景图
+    auto btn_sprite = Sprite::create("Icon/Return_btn.png");    // 按钮背景图
     btn_sprite->setPosition(100, 40); // 居中
     home_wrapper->addChild(btn_sprite);
 
@@ -1278,7 +1280,7 @@ void GameMap::ShowSettingsLayer() {
     this->addChild(settings_layer_, 20000); // 最顶层
 
     // 3. 设置背景板
-    std::string bg_path = "setting_panel.png";
+    std::string bg_path = "Icon/setting_panel.png";
     auto bg = ui::Scale9Sprite::create(bg_path);
 
     // 设置面板大小 
@@ -1391,13 +1393,13 @@ void GameMap::ShowSettingsLayer() {
 
     // 使用上面的通用函数，创建两排控制器
     // 1. 音乐控制 (Music) - 放在 Y=220
-    auto music_items = create_volume_control("Music", "icon_music.png", 220,
+    auto music_items = create_volume_control("Music", "Icon/icon_music.png", 220,
         []() { return PlayerData::GetInstance()->music_volume_; }, // 获取
         [](float v) { PlayerData::GetInstance()->SetMusicVol(v); } // 设置
     );
 
     // 2. 音效控制 (Effect) - 放在 Y=160
-    auto effect_items = create_volume_control("Effect", "icon_effect.png", 160,
+    auto effect_items = create_volume_control("Effect", "Icon/icon_effect.png", 160,
         []() { return PlayerData::GetInstance()->effect_volume_; }, // 获取
         [](float v) { PlayerData::GetInstance()->SetEffectVol(v); } // 设置
     );
@@ -1435,7 +1437,7 @@ void GameMap::ShowSettingsLayer() {
     quit_wrapper->setContentSize(Size(160, 60)); // 设定点击区域大小
     quit_wrapper->setAnchorPoint(Vec2(0.5, 0.5));
     // 图片
-    auto quit_sprite = Sprite::create("End_Battle.png");
+    auto quit_sprite = Sprite::create("Icon/End_Battle.png");
 
     // 缩放适应容器 (宽140, 高50)
     float q_scale_x = 140.0f / std::max(1.0f, quit_sprite->getContentSize().width);
