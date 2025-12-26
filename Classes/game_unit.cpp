@@ -60,11 +60,20 @@ void GameUnit::GetDamage(float damage) {
     current_hp_ -= damage;
 	UpdateHpBar();//更新血条状态
 
+    Node* target_node = GetVisualNode(); // 获取目标节点
+
+    // 受击反馈
+    auto tint_red = TintTo::create(0.1f, 255, 100, 100);
+    auto tint_back = TintTo::create(0.1f, 255, 255, 255);
+    target_node->runAction(Sequence::create(tint_red, tint_back, nullptr));
+
     if (current_hp_ <= 0) {
         // 死亡逻辑
-        this->runAction(Sequence::create(
+        target_node->runAction(Sequence::create(
             FadeOut::create(0.5f),
-            RemoveSelf::create(),
+            CallFunc::create([this]() {
+                this->removeFromParent(); // 移除整体
+                }),
             nullptr
         ));
     }
@@ -78,14 +87,16 @@ void GameUnit::UpdateUnit(float dt) {
     if (!target_ || !target_->IsAlive()) return;
     attack_speed_ += dt;
     if (attack_speed_ >= 1.0f) { // 1秒攻击一次
+        std::string sfx = GetAttackSound(); // 获取当前兵种的音效
+        if (!sfx.empty()) {
+            PlayerData::GetInstance()->PlayEffect(sfx);
+        }
         attack_speed_ = 0;
-        //炸弹兵特判，对围墙超强伤害
-        if (target_->GetUnitName() == "Fence" && unit_name_=="WallBreaker") {
-            target_->GetDamage(damage_*40);
-        }
-        else {
-            target_->GetDamage(damage_);
-        }
+        auto scale_up = ScaleBy::create(0.1f, 1.2f);
+        auto scale_down = scale_up->reverse();
+        Node* target_node = GetVisualNode();
+        target_node->runAction(Sequence::create(scale_up, scale_down, nullptr));
+        target_->GetDamage(damage_);
         CCLOG("%s attacked %s", unit_name_.c_str(), target_->GetUnitName().c_str());
     }
 }

@@ -2,10 +2,13 @@
 #define __GAME_UNIT_H__
 
 #include "cocos2d.h"
+#include "player_data.h"
 #include "ui/CocosGUI.h" 
 
 enum class UnitType {
+	kNone = 0, // 无
 	kSoldier,    // 士兵
+	kWall, // 墙
 	kBuildingDefence, // 防御建筑
 	kBuildingResource // 资源建筑
 };
@@ -81,7 +84,7 @@ public:
 	* @param dt 每帧的时间
 	* 
 	*/
-	void UpdateUnit(float dt); 
+	virtual void UpdateUnit(float dt);
 	/**
 	* 为对象设置当前路径
 	* 
@@ -164,8 +167,21 @@ public:
 	float GetCurrentHP() const {
 		return current_hp_;
 	}
-
-//private:
+	/*
+	* 获取攻击音效文件路径 (默认为空)
+	* return 音效文件路径字符串
+	*/
+	virtual std::string GetAttackSound() { return ""; }
+	/*
+	* 获取兵种偏好攻击类型 (默认为无)
+	* return 偏好攻击类型
+	*/
+	virtual UnitType GetPreferredTargetType() { return UnitType::kNone; }
+	/*
+	* 获取用于播放动画的节点
+	* 默认返回 this，Dragon重写返回 visual_body
+	*/
+	virtual cocos2d::Node* GetVisualNode() { return this; }
 protected:
 	float max_hp_, current_hp_, speed_, damage_, attack_range_;//最大血量、当前血量、移动速度、伤害、攻击范围
 	float attack_speed_;//攻速

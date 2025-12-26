@@ -8,8 +8,8 @@ class Barbarian : public Soldier
 public:
 
     static Barbarian* create();
-
-    virtual std::string getIconName() override;
+    virtual std::string GetIconName() override;
+    virtual std::string GetAttackSound() override { return "Audio/sword_hit1.mp3"; }
 };
 
 #endif

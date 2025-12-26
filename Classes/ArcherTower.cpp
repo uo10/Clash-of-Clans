@@ -3,7 +3,7 @@
 
 USING_NS_CC;
 
-ArcherTower* ArcherTower::create(int level)
+ArcherTower* ArcherTower::Create(int level)
 {
     ArcherTower* pRet = new (std::nothrow) ArcherTower();
     // 强制类型为 ArcherTower
@@ -114,7 +114,7 @@ void ArcherTower::findEnemy()
                 continue; // 跳过这个死人
             }
 
-            if (s->getIsHomeMode()) {
+            if (s->GetIsHomeMode()) {
                 continue; // 跳过自己人
             }
 

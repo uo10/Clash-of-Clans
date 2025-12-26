@@ -9,10 +9,9 @@ public:
 
     static Giant* create();
 
-    virtual std::string getIconName() override;
-
-    // ÖØÐ´Æ«ºÃ
-    virtual BuildingType getPreferredTargetType() override;
+    virtual std::string GetIconName() override;
+    virtual std::string GetAttackSound() override { return "Audio/punch.mp3"; }
+    virtual UnitType GetPreferredTargetType() override { return UnitType::kBuildingDefence; }
 };
 
 #endif

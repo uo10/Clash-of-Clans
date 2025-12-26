@@ -22,7 +22,7 @@
  THE SOFTWARE.
  ****************************************************************************/
 
-#include "AppDelegate.h"
+#include "app_dele_gate.h"
 #include "HelloWorldScene.h"
 #include "main_village.h"
 #include "splash_scene.h"

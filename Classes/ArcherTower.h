@@ -8,8 +8,8 @@ class Soldier;
 class ArcherTower : public BaseBuilding
 {
 public:
-    // 修改为接受等级参数
-    static ArcherTower* create(int level);
+    // 接受等级参数
+    static ArcherTower* Create(int level);
 
     // 初始化函数
     virtual bool init(int level);

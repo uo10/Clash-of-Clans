@@ -10,7 +10,6 @@
 
 USING_NS_CC;
 Scene* MainVillage::CreateScene()
-Scene* MainVillage::createScene()
 {
 	return MainVillage::create();
 }
@@ -479,16 +478,16 @@ bool MainVillage::init()
                         //其他建筑类型
                         else {
                                 if (selected_building_type_ == BuildingType::kWall) {
-                                    new_building = Wall::create(1);
+                                    new_building = Wall::Create(1);
                                 }
                                 if (selected_building_type_ == BuildingType::kCannon) {
-                                    new_building = Cannon::create(1);
+                                    new_building = Cannon::Create(1);
                                 }
                                 if (selected_building_type_ == BuildingType::kArcherTower) {
-                                    new_building = ArcherTower::create(1);
+                                    new_building = ArcherTower::Create(1);
                                 }
                                 if (selected_building_type_ == BuildingType::kTownHall) {
-                                    new_building = TownHall::create(1); 
+                                    new_building = TownHall::Create(1); 
                                 }
                         }
                         if (new_building) {
@@ -507,7 +506,7 @@ bool MainVillage::init()
                                 }
                             }
                             // 获取该大本营的最大建筑容量
-                            int max_limit = TownHall::getMaxBuildingCount(selected_building_type_, current_th_Level);
+                            int max_limit = TownHall::GetMaxBuildingCount(selected_building_type_, current_th_Level);
 
                             // --- b. 统计当前地图上该类建筑的数量 ---
                             int current_count = 0;
@@ -1077,7 +1076,7 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
         }
 
         // 2. 检查是否允许升级
-        if (!TownHall::isUpgradeAllowed(building->type_, next_level, current_th_level)) {
+        if (!TownHall::IsUpgradeAllowed(building->type_, next_level, current_th_level)) {
             CCLOG("升级失败：需要大本营 Lv.%d 才能升级到 Lv.%d", current_th_level + 1, next_level); // 如果满足限制规定
             return; // 直接拦截，不扣钱
         }
@@ -1188,10 +1187,6 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
                             new_soldier = Dragon::create();
                         }
                         if (new_soldier) {
-
-                            new_soldier->setHomeMode(true); // // 开启游走
-                            new_soldier->setHomePosition(building->getPosition());
-
                             // 1. 确定“出生点” (兵营大门位置)
                             Vec2 door_pos = building->getPosition() + Vec2(0, -20);
 
@@ -1224,8 +1219,8 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
                                new_soldier->setScaleX(-0.01f); // 用负 Scale 实现翻转
                             }
 
-                            new_soldier->setHomePosition(building->getPosition());
-                            new_soldier->setHomeMode(true); // // 开启游走
+                            new_soldier->SetHomePosition(building->getPosition());
+                            new_soldier->SetHomeMode(true); // // 开启游走
 
                             // 4. 添加到地图层 
                             main_village_map_->addChild(new_soldier, 3000 - static_cast<int>(door_pos.y));
@@ -2008,16 +2003,16 @@ void MainVillage::RestoreVillageData() {
             new_building = s;
         }
         else if (data.type == BuildingType::kTownHall) {
-            new_building = TownHall::create(data.level);
+            new_building = TownHall::Create(data.level);
         }
         else if (data.type == BuildingType::kArcherTower) {
-            new_building = ArcherTower::create(data.level);
+            new_building = ArcherTower::Create(data.level);
         }
         else if (data.type == BuildingType::kCannon) {
-            new_building = Cannon::create(data.level);
+            new_building = Cannon::Create(data.level);
         }
         else if (data.type == BuildingType::kWall) {
-            new_building = Wall::create(data.level);
+            new_building = Wall::Create(data.level);
         }
         else {
             // 兜底
@@ -2073,9 +2068,8 @@ void MainVillage::RestoreVillageData() {
 
         if (s) {
             // 1. 设置模式
-            s->setHomeMode(true);
-            s->setHomePosition(the_barracks->getPosition());
-            s->setHomeMode(true);
+            s->SetHomePosition(the_barracks->getPosition());
+            s->SetHomeMode(true);
 
             // 2. 随机位置 (兵营下方扇形)
             float angle = CC_DEGREES_TO_RADIANS(210 + CCRANDOM_0_1() * 120);

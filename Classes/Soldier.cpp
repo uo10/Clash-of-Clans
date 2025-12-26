@@ -3,14 +3,14 @@
 USING_NS_CC;
 
 // 开关函数
-void Soldier::setHomeMode(bool isHome) {
-    this->is_home_mode_ = isHome;
-    if (isHome) {
+void Soldier::SetHomeMode(bool is_home) {
+    this->is_home_mode_ = is_home;
+    if (is_home) {
         // 隐藏血条
         if (hp_bg_)  hp_bg_->setVisible(false);
         if (hp_bar_) hp_bar_->setVisible(false);
         // 开启游走
-        pickNewWanderTarget();
+        PickNewWanderTarget();
     }
     else {
         if (hp_bg_)  hp_bg_->setVisible(true);
@@ -26,7 +26,7 @@ void Soldier::update(float dt)
     // 分流逻辑
     if (is_home_mode_) {
         // === 情况 A：在大本营，执行游走 ===
-        updateWander(dt);
+        UpdateWander(dt);
     }
     else {
         // === 情况 B：在战斗地图 ===
@@ -37,19 +37,19 @@ void Soldier::update(float dt)
 }
 
 // 实现游走
-void Soldier::updateWander(float dt)
+void Soldier::UpdateWander(float dt)
 {
     // 状态机：要么在走，要么在发呆
     if (wander_wait_time_ > 0) {
         wander_wait_time_ -= dt;
         if (wander_wait_time_ <= 0) {
-            pickNewWanderTarget();
+            PickNewWanderTarget();
         }
     }
     else {
         // 移动向目标点
-        Vec2 currentPos = this->getPosition();
-        float dist = currentPos.distance(wander_target_);
+        Vec2 current_pos = this->getPosition();
+        float dist = current_pos.distance(wander_target_);
 
         // 如果到了 (距离小于 5 像素)
         if (dist < 5.0f) {
@@ -59,16 +59,16 @@ void Soldier::updateWander(float dt)
         }
         else {
             // 继续走
-            Vec2 dir = wander_target_ - currentPos;
+            Vec2 dir = wander_target_ - current_pos;
             dir.normalize();
 
             // 移动 (速度稍微慢一点，闲庭信步)
-            float moveSpeed = this->GetSpeed() * 0.5f;
-            Vec2 newPos = currentPos + (dir * moveSpeed * dt);
-            this->setPosition(newPos);
+            float move_speed = this->GetSpeed() * 0.5f;
+            Vec2 new_pos = current_pos + (dir * move_speed * dt);
+            this->setPosition(new_pos);
 
             // 调整 ZOrder 和朝向
-            this->setLocalZOrder(3000 - (int)newPos.y);
+            this->setLocalZOrder(3000 - (int)new_pos.y);
             if (dir.x > 0) setFlippedX(true);
             else setFlippedX(false);
         }
@@ -76,9 +76,9 @@ void Soldier::updateWander(float dt)
 }
 
 // 随机选点
-void Soldier::pickNewWanderTarget()
+void Soldier::PickNewWanderTarget()
 {
-    Vec2 currentPos = home_position_;
+    Vec2 current_pos = home_position_;
 
     // 随机半径
     float radius = 100.0f * CCRANDOM_0_1();
@@ -89,32 +89,32 @@ void Soldier::pickNewWanderTarget()
     float offsetX = cos(angle) * radius;
     float offsetY = sin(angle) * radius;
 
-    Vec2 potentialTarget = currentPos + Vec2(offsetX, offsetY);
+    Vec2 potential_target = current_pos + Vec2(offsetX, offsetY);
 
     auto map = dynamic_cast<TMXTiledMap*>(this->getParent());
 
     // 边界检查
     if (map) {
-        Size mapSize = map->getMapSize();
-        Size tileSize = map->getTileSize();
+        Size map_size = map->getMapSize();
+        Size tile_size = map->getTileSize();
 
         float minX = 0;
         float minY = 0;
-        float maxX = mapSize.width * tileSize.width;
-        float maxY = mapSize.height * tileSize.height;
+        float maxX = map_size.width * tile_size.width;
+        float maxY = map_size.height * tile_size.height;
 
         // 设置一个内缩边距，防止兵贴着边缘走
         float padding = 50.0f;
 
         // 限制 X 轴
-        if (potentialTarget.x < minX + padding) potentialTarget.x = minX + padding;
-        if (potentialTarget.x > maxX - padding) potentialTarget.x = maxX - padding;
+        if (potential_target.x < minX + padding) potential_target.x = minX + padding;
+        if (potential_target.x > maxX - padding) potential_target.x = maxX - padding;
 
         // 限制 Y 轴
-        if (potentialTarget.y < minY + padding) potentialTarget.y = minY + padding;
-        if (potentialTarget.y > maxY - padding) potentialTarget.y = maxY - padding;
+        if (potential_target.y < minY + padding) potential_target.y = minY + padding;
+        if (potential_target.y > maxY - padding) potential_target.y = maxY - padding;
     }
 
-    wander_target_ = potentialTarget;
+    wander_target_ = potential_target;
 
 }

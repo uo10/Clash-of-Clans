@@ -17,6 +17,6 @@ Barbarian* Barbarian::create() {
     return nullptr;
 }
 
-std::string Barbarian::getIconName() {
+std::string Barbarian::GetIconName() {
     return "Barbarian.png";
 }

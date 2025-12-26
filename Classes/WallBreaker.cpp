@@ -17,69 +17,37 @@ WallBreaker* WallBreaker::create() {
     return nullptr;
 }
 
-std::string WallBreaker::getIconName() {
+std::string WallBreaker::GetIconName() {
     return "Wall_Breaker.png";
 }
 
-BuildingType WallBreaker::getPreferredTargetType() {
-    // 优先找墙
-    return BuildingType::kWall;
-}
+// 重写攻击逻辑：自爆
+void WallBreaker::UpdateUnit(float dt) {
+    if (!target_ || !target_->IsAlive()) return;
+    attack_speed_ += dt;
+    if (attack_speed_ >= 0.3f) {
+        attack_speed_ = 0; 
 
-/*void WallBreaker::attackTarget(float dt) {
-    // 只有当目标存在时才自爆
-    if (target) {
-        // 1. 造成伤害
-        target->TakeDamage(stats.damage);
+        // 目标是墙
+        if (target_->GetType() == UnitType::kWall || target_->GetUnitName() == "Fence") {
+            //PlayerData::GetInstance()->PlayEffect("Audio/explode.mp3");
 
-        CCLOG("WallBreaker BOOM!");
+            // 造成巨额伤害
+            float final_damage = damage_ * 40.0f;
+            target_->GetDamage(final_damage);
 
-        // 2. 将状态设为 DEAD，停止一切逻辑
-        state = State::DEAD;
+            CCLOG("WallBreaker DETONATED on Wall! Damage: %.0f", final_damage);
+            this->GetDamage(999999.0f);
+        }
+        // 没墙了
+        else {
+            PlayerData::GetInstance()->PlayEffect("Audio/punch.mp3");
+            target_->GetDamage(damage_);
+            auto scale_up = ScaleBy::create(0.1f, 1.2f);
+            auto scale_down = scale_up->reverse();
+            this->runAction(Sequence::create(scale_up, scale_down, nullptr));
 
-        // 3. 播放自爆特效并移除
-        this->runAction(Sequence::create(
-            // 如果有爆炸动画，在这里播放
-            // DelayTime::create(0.1f), 
-            RemoveSelf::create(),
-            nullptr
-        ));
-    }
-}
-
-void WallBreaker::findTarget()
-{
-    Node* map = this->getParent();
-    if (!map) return;
-
-    BaseBuilding* bestTarget = nullptr;
-    float minDst = 999999.0f;
-    Vec2 myPos = this->getPosition();
-
-    // 遍历地图所有子节点
-    for (auto child : map->getChildren()) {
-        if (child->getTag() == 999) {
-            auto b = dynamic_cast<BaseBuilding*>(child);
-
-            // 1. 必须是活着的建筑
-            if (b && b->state_ != BuildingState::kDestroyed) {
-
-                // 2. 只允许 WALL 类型通过
-                // 如果不是墙，直接跳过 (continue)
-                if (b->type_ != BuildingType::kWall) {
-                    continue;
-                }
-
-                // 3. 计算距离，找最近的墙
-                float d = myPos.distance(b->getPosition());
-                if (d < minDst) {
-                    minDst = d;
-                    bestTarget = b;
-                }
-            }
+            CCLOG("WallBreaker punched building (No Suicide).");
         }
     }
-
-    // 更新目标 (如果没有墙，bestTarget 就是 nullptr，炸弹人就会待机)
-    target = bestTarget;
-}*/
+}

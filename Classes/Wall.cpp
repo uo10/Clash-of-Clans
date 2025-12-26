@@ -2,7 +2,7 @@
 
 USING_NS_CC;
 
-Wall* Wall::create(int level)
+Wall* Wall::Create(int level)
 {
     Wall* pRet = new (std::nothrow) Wall();
     // 强制指定类型为 WALL

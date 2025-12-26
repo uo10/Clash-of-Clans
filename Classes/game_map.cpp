@@ -497,7 +497,7 @@ void GameMap::GetBuildings()
         }
         //围栏（Fence）
         else if (name == "Fence") {
-            building = GameUnit::Create("map/Fence.png", 300, 0, 0, 0, UnitType::kBuildingResource); // 大本营血厚
+            building = GameUnit::Create("map/Fence.png", 300, 0, 0, 0, UnitType::kWall); // 大本营血厚
             isset = true;
             building->SetUnitName("Fence");
         }
@@ -617,20 +617,29 @@ bool GameMap::CanPlaceSoldierAt(Vec2 map_pos) {
 }
 
 //寻找最佳目标
-GameUnit* GameMap::FindBestTarget(Vec2 pos) {
+GameUnit* GameMap::FindBestTarget(GameUnit* soldier) {
+    if (!soldier) return nullptr;
+    
+    Vec2 pos = soldier->getPosition();
     GameUnit* best = nullptr;
     float min_dst = FLT_MAX;
 
-    // 优先找防御塔
-    for (auto b : buildings_) {
-        if (b->IsAlive() && b->GetType() == UnitType::kBuildingDefence) {
-            float dst = pos.distanceSquared(b->getPosition());
-            if (dst < min_dst) { min_dst = dst; best = b; }//检查攻击范围
+    // 优先找偏好目标
+    UnitType pref = soldier->GetPreferredTargetType();
+    if (pref != UnitType::kNone) {
+        for (auto b : buildings_) {
+            if (b->IsAlive() && b->GetType() == pref) {
+                float dst = pos.distanceSquared(b->getPosition());
+                if (dst < min_dst) {
+                    min_dst = dst;
+                    best = b;
+                }
+            }
         }
     }
-	if (best) return best;//找到防御塔就返回
+    if (best) return best;
 
-    // 否则找最近的非围栏建筑
+    // 否则找最近的目标
     min_dst = FLT_MAX;
     for (auto b : buildings_) {
 		// 排除围栏
@@ -668,7 +677,7 @@ void GameMap::update(float dt)
         // 2. 目标检测
         GameUnit* target = soldier->GetTarget();
         if (!target || !target->IsAlive()) {
-            target = FindBestTarget(soldier->getPosition()); // 找最近的目标
+            target = FindBestTarget(soldier); // 找最近的目标
             soldier->SetTarget(target);
             if (target) CalculatePath(soldier); // 找到新目标，计算路径
         }
@@ -719,6 +728,14 @@ void GameMap::update(float dt)
                 // 5. 只有未受阻挡才移动
                 if (!is_blocked) {
                     Vec2 direction = (next_path_node - soldier->getPosition()).getNormalized();
+
+                    if (direction.x > 0) {
+                        soldier->setFlippedX(false); // 向右走：不翻转
+                    }
+                    else if (direction.x < 0) {
+                        soldier->setFlippedX(true);  // 向左走：水平翻转
+                    }
+
 					Vec2 next_frame_pos = soldier->getPosition() + direction * soldier->GetSpeed() * dt;// 计算下一帧位置，加上该帧内移动距离 
                     soldier->setPosition(next_frame_pos);
 

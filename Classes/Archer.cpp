@@ -17,6 +17,6 @@ Archer* Archer::create() {
     return nullptr;
 }
 
-std::string Archer::getIconName() {
+std::string Archer::GetIconName() {
     return "Archer.png";
 }

@@ -8,8 +8,8 @@ class Archer : public Soldier
 public:
 
     static Archer* create();
-
-    virtual std::string getIconName() override;
+    virtual std::string GetIconName() override;
+    virtual std::string GetAttackSound() override { return "Audio/arrow.mp3"; }
 };
 
 #endif

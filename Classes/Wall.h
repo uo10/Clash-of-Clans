@@ -6,7 +6,7 @@
 class Wall : public BaseBuilding
 {
 public:
-    static Wall* create(int level);
+    static Wall* Create(int level);
     virtual bool init(int level);
 
     // “连成一排自动变样子”的功能，可以在这里扩展

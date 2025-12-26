@@ -3,7 +3,7 @@
 
 USING_NS_CC;
 
-Cannon* Cannon::create(int level)
+Cannon* Cannon::Create(int level)
 {
     Cannon* pRet = new (std::nothrow) Cannon();
     // 强制类型为 CANNON
@@ -115,7 +115,7 @@ void Cannon::findEnemy()
                 continue; // 跳过这个死人
             }
 
-            if (s->getIsHomeMode()) {
+            if (s->GetIsHomeMode()) {
                 continue; // 跳过自己人
             }
 

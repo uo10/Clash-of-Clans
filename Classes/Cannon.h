@@ -9,7 +9,7 @@
     {
     public:
         // 修改为接受等级参数
-        static Cannon* create(int level);
+        static Cannon* Create(int level);
 
         // 初始化函数
         virtual bool init(int level);

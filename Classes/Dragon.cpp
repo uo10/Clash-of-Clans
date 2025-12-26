@@ -20,38 +20,42 @@ Dragon* Dragon::create() {
 bool Dragon::InitUnit(const std::string& filename, float maxHp, float speed, float damage, float range, UnitType type)
 {
     if (!GameUnit::InitUnit(filename, maxHp, speed, damage, range, type)) return false;
-
-    // 制作影子
-    shadow_sprite = Sprite::create(getIconName());
-
-    if (shadow_sprite) {
-        // --- 样式设置 ---
-        shadow_sprite->setColor(Color3B::BLACK);
-        shadow_sprite->setOpacity(100); // 半透明
-
-        // --- 变形设置 ---
-        shadow_sprite->setScaleY(0.3f); // 压扁
-        shadow_sprite->setSkewX(20.0f); // 倾斜
-
-        // --- 位置设置 ---
+    
+    this->setOpacity(0);
+    visual_body = Sprite::create(GetIconName());
+    if (visual_body) {
         Size s = this->getContentSize();
-        // 稍微偏移一点，看起来更有立体感
+        // 放在中心
+        visual_body->setPosition(Vec2(s.width / 2, s.height / 2));
+
+        //悬浮动画
+        float hover_distance = 10.0f;
+        float hover_duration = 1.0f;
+        auto move_up = MoveBy::create(hover_duration, Vec2(0, hover_distance));
+        auto move_down = move_up->reverse();
+        auto hover_seq = Sequence::create(move_up, move_down, nullptr);
+
+        visual_body->runAction(RepeatForever::create(hover_seq));
+
+        // 添加为子节点，Z=1 保证盖在影子上面
+        this->addChild(visual_body, 1);
+    }
+
+    // 创建影子 (贴在本体 this 上，而不是 visual_body 上)
+    shadow_sprite = Sprite::create(GetIconName());
+    if (shadow_sprite) {
+        shadow_sprite->setColor(Color3B::BLACK);
+        shadow_sprite->setOpacity(100);
+        shadow_sprite->setScaleY(0.3f);
+        shadow_sprite->setSkewX(20.0f);
+
+        Size s = this->getContentSize();
+        // 影子位置固定在脚下
         shadow_sprite->setPosition(Vec2(s.width / 2 - 20, -100));
         shadow_sprite->setAnchorPoint(Vec2(0.5, 0));
 
-        this->addChild(shadow_sprite, -1); // 放在身后
+        this->addChild(shadow_sprite, -1); // 在最底层
     }
-
-    // 悬停动画
-    // 让龙在那儿上下漂浮，增加“飞翔”的感觉
-    float hoverDistance = 10.0f;
-    float hoverDuration = 1.0f;
-
-    auto moveUp = MoveBy::create(hoverDuration, Vec2(0, hoverDistance));
-    auto moveDown = moveUp->reverse();
-
-    auto hoverSeq = Sequence::create(moveUp, moveDown, nullptr);
-    this->runAction(RepeatForever::create(hoverSeq));
 
     return true;
 }
@@ -60,16 +64,20 @@ bool Dragon::InitUnit(const std::string& filename, float maxHp, float speed, flo
 void Dragon::update(float dt)
 {
     Soldier::update(dt);
+    if (visual_body) {
+        visual_body->setFlippedX(this->isFlippedX());
+        // 如果有帧动画，也要同步
+        if (this->getSpriteFrame()) {
+            
+        }
+    }
     // 同步影子状态
     if (shadow_sprite) {
-        if (this->getSpriteFrame()) {
-            shadow_sprite->setSpriteFrame(this->getSpriteFrame());
-        }
-        shadow_sprite->setFlippedX(this->isFlippedX()); // 同步朝向
+        shadow_sprite->setFlippedX(this->isFlippedX());
     }
 }
 
 
-std::string Dragon::getIconName() {
+std::string Dragon::GetIconName() {
     return "Dragon.png";
 }

@@ -8,7 +8,7 @@
 #include "player_data.h"
 #include "Wall.h"
 #include "ArcherTower.h"
-#include "TownHall.h"
+#include "town_hall.h"
 #include "Cannon.h"
 #include "Archer.h"
 #include "Barbarian.h"
@@ -20,7 +20,7 @@
 class MainVillage :public cocos2d::Scene
 {
 public:
-    static cocos2d::Scene* createScene();
+    static cocos2d::Scene* CreateScene();
 
     virtual bool init();
 

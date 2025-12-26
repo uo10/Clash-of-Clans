@@ -8,17 +8,14 @@
 class Soldier : public GameUnit
 {
 public:
-    //virtual bool init() override;
     virtual void update(float dt) override;
 
-    virtual std::string getIconName() = 0;
-
-    virtual BuildingType getPreferredTargetType() { return BuildingType::kNone; }
+    virtual std::string GetIconName() = 0;
 
     //设置是否为家乡模式（只游走不攻击）
-    void setHomeMode(bool isHome);
-    bool getIsHomeMode() const { return is_home_mode_; }
-    void setHomePosition(cocos2d::Vec2 pos) { home_position_ = pos; }
+    void SetHomeMode(bool is_home);
+    bool GetIsHomeMode() const { return is_home_mode_; }
+    void SetHomePosition(cocos2d::Vec2 pos) { home_position_ = pos; }
 
 protected:
     bool is_home_mode_ = false;    // 开关
@@ -28,8 +25,8 @@ protected:
     cocos2d::Vec2 home_position_; // 记录兵营位置
 
     // 游走逻辑
-    void updateWander(float dt);
-    void pickNewWanderTarget();
+    void UpdateWander(float dt);
+    void PickNewWanderTarget();
 
 };
 

@@ -2,8 +2,8 @@
 #define __GAMEMAP_H__
 
 #include "cocos2d.h"
-#include"game_unit.h"
-#include"find_path.h"
+#include "game_unit.h"
+#include "find_path.h"
 #include "main_village.h"
 #include "trap.h"
 #include "Barbarian.h"   
@@ -108,13 +108,13 @@ public:
 	*/
 	void ShootCannonBall(GameUnit* tower, GameUnit* target);
 	/**
-	* 传入当前士兵位置，按优先级寻找攻击目标
+	* 传入士兵，按优先级寻找攻击目标
 	* 
 	* @param pos 当前士兵的像素位置
 	* 
 	* @return 先找防御塔（大炮），若有防御塔则返回防御塔节点，否则返回其他最近的建筑，若建筑都已被消灭，返回空指针
 	*/
-	GameUnit* FindBestTarget(cocos2d::Vec2 pos);
+	GameUnit* FindBestTarget(GameUnit* soldier);
 	/**
 	* 为当前士兵计算到目标的最佳路径
 	* 
