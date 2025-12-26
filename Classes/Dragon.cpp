@@ -2,7 +2,8 @@
 
 USING_NS_CC;
 
-Dragon* Dragon::create() {
+// 创建对象
+Dragon* Dragon::Create() {
     Dragon* pRet = new(std::nothrow) Dragon();
 
     // 调用 GameUnit 的初始化函数
@@ -17,6 +18,7 @@ Dragon* Dragon::create() {
     return nullptr;
 }
 
+// 初始化对象
 bool Dragon::InitUnit(const std::string& filename, float maxHp, float speed, float damage, float range, UnitType type)
 {
     if (!GameUnit::InitUnit(filename, maxHp, speed, damage, range, type)) return false;
@@ -25,8 +27,7 @@ bool Dragon::InitUnit(const std::string& filename, float maxHp, float speed, flo
     visual_body = Sprite::create(GetIconName());
     if (visual_body) {
         Size s = this->getContentSize();
-        // 放在中心
-        visual_body->setPosition(Vec2(s.width / 2, s.height / 2));
+        visual_body->setPosition(Vec2(s.width / 2, s.height / 2)); // 放在中心
 
         //悬浮动画
         float hover_distance = 10.0f;
@@ -37,11 +38,10 @@ bool Dragon::InitUnit(const std::string& filename, float maxHp, float speed, flo
 
         visual_body->runAction(RepeatForever::create(hover_seq));
 
-        // 添加为子节点，Z=1 保证盖在影子上面
-        this->addChild(visual_body, 1);
+        this->addChild(visual_body, 1); // 盖在影子上面
     }
 
-    // 创建影子 (贴在本体 this 上，而不是 visual_body 上)
+    // 创建影子
     shadow_sprite = Sprite::create(GetIconName());
     if (shadow_sprite) {
         shadow_sprite->setColor(Color3B::BLACK);
@@ -52,7 +52,7 @@ bool Dragon::InitUnit(const std::string& filename, float maxHp, float speed, flo
         Size s = this->getContentSize();
         // 影子位置固定在脚下
         shadow_sprite->setPosition(Vec2(s.width / 2 - 20, -100));
-        shadow_sprite->setAnchorPoint(Vec2(0.5, 0));
+        shadow_sprite->setAnchorPoint(Vec2(0.5, 0)); 
 
         this->addChild(shadow_sprite, -1); // 在最底层
     }
@@ -77,7 +77,7 @@ void Dragon::update(float dt)
     }
 }
 
-
+// 获取图标名称
 std::string Dragon::GetIconName() {
     return "Dragon.png";
 }

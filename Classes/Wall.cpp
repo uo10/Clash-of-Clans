@@ -2,10 +2,10 @@
 
 USING_NS_CC;
 
+// 创建对象
 Wall* Wall::Create(int level)
 {
     Wall* pRet = new (std::nothrow) Wall();
-    // 强制指定类型为 WALL
     if (pRet && pRet->init(level))
     {
         pRet->autorelease();
@@ -15,6 +15,7 @@ Wall* Wall::Create(int level)
     return nullptr;
 }
 
+// 初始化对象
 bool Wall::init(int level)
 {
     if (!BaseBuilding::Init(BuildingType::kWall, level)) return false;

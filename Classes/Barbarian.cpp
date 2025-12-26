@@ -2,7 +2,8 @@
 
 USING_NS_CC;
 
-Barbarian* Barbarian::create() {
+// 创建对象
+Barbarian* Barbarian::Create() {
     Barbarian* pRet = new(std::nothrow) Barbarian();
 
     // 调用 GameUnit 的初始化函数
@@ -17,6 +18,7 @@ Barbarian* Barbarian::create() {
     return nullptr;
 }
 
+// 获取图标名称
 std::string Barbarian::GetIconName() {
     return "Barbarian.png";
 }

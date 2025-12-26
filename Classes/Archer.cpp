@@ -2,7 +2,8 @@
 
 USING_NS_CC;
 
-Archer* Archer::create() {
+// 创建对象
+Archer* Archer::Create() {
     Archer* pRet = new(std::nothrow) Archer();
 
     // 调用 GameUnit 的初始化函数
@@ -17,6 +18,7 @@ Archer* Archer::create() {
     return nullptr;
 }
 
+// 获取图标名称
 std::string Archer::GetIconName() {
     return "Archer.png";
 }

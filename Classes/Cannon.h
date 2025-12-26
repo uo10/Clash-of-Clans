@@ -1,35 +1,24 @@
-    #ifndef __CANNON_H__
-    #define __CANNON_H__
+#ifndef __CANNON_H__
+#define __CANNON_H__
 
-    #include "base_building.h"
-    // 前向声明 Soldier，因为我们需要攻击它
-    class Soldier;
+#include "base_building.h"
 
-    class Cannon : public BaseBuilding
-    {
-    public:
-        // 修改为接受等级参数
-        static Cannon* Create(int level);
+class Cannon : public BaseBuilding
+{
+public:
+    /*
+    * 创建对象
+    * @param level 等级
+    * @return 创建成功返回对象指针，失败返回空指针
+    */
+    static Cannon* Create(int level);
 
-        // 初始化函数
-        virtual bool init(int level);
+    /*
+    * 初始化对象
+    * @param level 等级
+    * @return 初始化成功返回true 否则返回false
+    */
+    virtual bool init(int level);
+};
 
-        // 核心循环：用于寻找敌人并攻击
-        virtual void update(float dt) override;
-
-        // 更新特有属性 (升级时伤害增加)
-        virtual void UpdateSpecialProperties() override;
-
-    private:
-        float _attackRange;    // 攻击范围
-        float _damage;         // 攻击伤害
-        float _attackInterval; // 攻击间隔
-        float _attackTimer;    // 计时器
-
-        Soldier* _targetSoldier; // 当前锁定的敌人
-
-        void findEnemy();      // 寻找最近的敌人
-        void fireAtEnemy();    // 开火逻辑
-    };
-
-    #endif
+#endif

@@ -531,19 +531,19 @@ void GameMap::SpawnSoldier(std::string troop_name, Vec2 pos) {
 
     // 创建士兵对象
     if (troop_name == "Barbarian") {
-        soldier = Barbarian::create();
+        soldier = Barbarian::Create();
     }
     else if (troop_name == "Archer") {
-        soldier = Archer::create();
+        soldier = Archer::Create();
     }
     else if (troop_name == "Giant") {
-        soldier = Giant::create();
+        soldier = Giant::Create();
     }
     else if (troop_name == "WallBreaker") {
-        soldier = WallBreaker::create();
+        soldier = WallBreaker::Create();
     }
     else if (troop_name == "Dragon") {
-        soldier = Dragon::create();
+        soldier = Dragon::Create();
     }
 
     if (soldier) {
@@ -839,6 +839,7 @@ void GameMap::ShootCannonBall(GameUnit* tower, GameUnit* target) {
         // b. 再次检查目标是否还活着 (防止子弹飞的时候人死了)
         if (target && target->IsAlive()) {
             // c. 造成伤害
+            PlayerData::GetInstance()->PlayEffect("Audio/cannon.mp3");
             target->GetDamage(tower->GetAttackValue());
         }
         });

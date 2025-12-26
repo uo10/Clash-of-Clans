@@ -2,6 +2,7 @@
 
 USING_NS_CC;
 
+// 创建对象
 TownHall* TownHall::Create(int level)
 {
     TownHall* pRet = new (std::nothrow) TownHall();
@@ -14,13 +15,12 @@ TownHall* TownHall::Create(int level)
     return nullptr;
 }
 
+// 初始化对象
 bool TownHall::Init(int level)
 {
-    // 初始化父类
     if (!BaseBuilding::Init(BuildingType::kTownHall, level)) return false;
     return true;
 }
-
 
 // 数量限制
 int TownHall::GetMaxBuildingCount(BuildingType type, int town_hall_level)

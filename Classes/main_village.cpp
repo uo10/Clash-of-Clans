@@ -252,9 +252,9 @@ bool MainVillage::init()
             current_pos.x = 0;
         }
         // 2、地图右边界不能往左跑 (x不能小于屏幕宽 - 地图宽，否则右边出现黑边)
-        float minX = visible_size.width - current_map_width;
-        if (current_pos.x < minX) {
-            current_pos.x = minX;
+        float min_x = visible_size.width - current_map_width;
+        if (current_pos.x < min_x) {
+            current_pos.x = min_x;
         }
 
         // --- Y轴修正 ---
@@ -263,9 +263,9 @@ bool MainVillage::init()
             current_pos.y = 0;
         }
         // 2、地图上边界不能往下跑 (y不能小于屏幕高-地图高，否则上边出现黑边)
-        float minY = visible_size.height - current_map_height;
-        if (current_pos.y < minY) {
-            current_pos.y = minY;
+        float min_y = visible_size.height - current_map_height;
+        if (current_pos.y < min_y) {
+            current_pos.y = min_y;
         }
         map->setPosition(current_pos);
 
@@ -1172,19 +1172,19 @@ void MainVillage::ShowBuildingMenu(BaseBuilding* building) {
                         Soldier* new_soldier = nullptr;
                         // 根据名字判断创建哪种兵
                         if (info.name == "Barbarian") {
-                            new_soldier = Barbarian::create();
+                            new_soldier = Barbarian::Create();
                         }
                         else if (info.name == "Archer") {
-                            new_soldier = Archer::create();
+                            new_soldier = Archer::Create();
                         }
                         else if (info.name == "Giant") {
-                            new_soldier = Giant::create();
+                            new_soldier = Giant::Create();
                         }
                         else if (info.name == "WallBreaker") { 
-                            new_soldier = WallBreaker::create();
+                            new_soldier = WallBreaker::Create();
                         }
                         else if (info.name == "Dragon") {
-                            new_soldier = Dragon::create();
+                            new_soldier = Dragon::Create();
                         }
                         if (new_soldier) {
                             // 1. 确定“出生点” (兵营大门位置)
@@ -2060,11 +2060,11 @@ void MainVillage::RestoreVillageData() {
     // b. 定义生成函数 (只针对 theBarracks)
     auto spawn_troops_at_barracks = [&](std::string name) {
         Soldier* s = nullptr;
-        if (name == "Barbarian") s = Barbarian::create();
-        else if (name == "Archer") s = Archer::create();
-        else if (name == "Giant") s = Giant::create();
-        else if (name == "WallBreaker") s = WallBreaker::create();
-        else if (name == "Dragon") s = Dragon::create();
+        if (name == "Barbarian") s = Barbarian::Create();
+        else if (name == "Archer") s = Archer::Create();
+        else if (name == "Giant") s = Giant::Create();
+        else if (name == "WallBreaker") s = WallBreaker::Create();
+        else if (name == "Dragon") s = Dragon::Create();
 
         if (s) {
             // 1. 设置模式

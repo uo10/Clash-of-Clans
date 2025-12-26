@@ -2,7 +2,8 @@
 
 USING_NS_CC;
 
-Giant* Giant::create() {
+// 创建对象
+Giant* Giant::Create() {
     Giant* pRet = new(std::nothrow) Giant();
 
     // 调用 GameUnit 的初始化函数
@@ -17,6 +18,7 @@ Giant* Giant::create() {
     return nullptr;
 }
 
+// 获取图标名称
 std::string Giant::GetIconName() {
     return "Giant.png";
 }
