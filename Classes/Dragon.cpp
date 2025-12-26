@@ -79,5 +79,5 @@ void Dragon::update(float dt)
 
 // 获取图标名称
 std::string Dragon::GetIconName() {
-    return "Dragon.png";
+    return "Soldier/Dragon.png";
 }

@@ -625,18 +625,16 @@ GameUnit* GameMap::FindBestTarget(GameUnit* soldier) {
     float min_dst = FLT_MAX;
 
     // 优先找偏好目标
-    UnitType pref = soldier->GetPreferredTargetType();
-    if (pref != UnitType::kNone) {
+    //UnitType pref = soldier->GetPreferredTargetType();   
         for (auto b : buildings_) {
-            if (b->IsAlive() && b->GetType() == pref) {
+            if (b->IsAlive() && b->GetType() == UnitType::kBuildingDefence) {
                 float dst = pos.distanceSquared(b->getPosition());
                 if (dst < min_dst) {
                     min_dst = dst;
                     best = b;
                 }
             }
-        }
-    }
+        }   
     if (best) return best;
 
     // 否则找最近的目标

@@ -2,10 +2,10 @@
 
 USING_NS_CC;
 
-TownHall* TownHall::create(int level)
+TownHall* TownHall::Create(int level)
 {
     TownHall* pRet = new (std::nothrow) TownHall();
-    if (pRet && pRet->init(level))
+    if (pRet && pRet->Init(level))
     {
         pRet->autorelease();
         return pRet;
@@ -14,7 +14,7 @@ TownHall* TownHall::create(int level)
     return nullptr;
 }
 
-bool TownHall::init(int level)
+bool TownHall::Init(int level)
 {
     // 初始化父类 (会自动加载 TownHall1.png 等)
     if (!BaseBuilding::Init(BuildingType::kTownHall, level)) return false;
@@ -26,7 +26,7 @@ bool TownHall::init(int level)
 // =========================================================
 // 逻辑迁移：数量限制
 // =========================================================
-int TownHall::getMaxBuildingCount(BuildingType type, int townHallLevel)
+int TownHall::GetMaxBuildingCount(BuildingType type, int townHallLevel)
 {
     // 基础保护
     if (townHallLevel < 1&&type!= BuildingType::kTownHall) return 0;
@@ -77,7 +77,7 @@ int TownHall::getMaxBuildingCount(BuildingType type, int townHallLevel)
 // =========================================================
 // 逻辑迁移：升级限制
 // =========================================================
-bool TownHall::isUpgradeAllowed(BuildingType buildingType, int targetLevel, int townHallLevel)
+bool TownHall::IsUpgradeAllowed(BuildingType buildingType, int targetLevel, int townHallLevel)
 {
     // 如果没有大本营，默认禁止高级升级
     if (townHallLevel <= 0) return false;

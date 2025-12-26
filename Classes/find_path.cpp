@@ -8,7 +8,7 @@ std::vector<Vec2> FindPath::ComputePath(Vec2 start_grid, Vec2 end_grid, Size map
 {
     std::vector<Vec2> path;//最终可行路径点集合
     std::vector<PathNode*> open_list;//待检查的点集合
-    std::vector<PathNode*> closed_list;//已经检查过的点集合
+    std::vector<PathNode*> close_list;//已经检查过的点集合
 
     PathNode* start_node = new PathNode((int)start_grid.x, (int)start_grid.y);
     PathNode* end_node = new PathNode((int)end_grid.x, (int)end_grid.y);
@@ -37,7 +37,7 @@ std::vector<Vec2> FindPath::ComputePath(Vec2 start_grid, Vec2 end_grid, Size map
         }
         //将当前节点从待检查的点集合中消去，添加到已检查的点集合中
         open_list.erase(it);
-        closed_list.push_back(current_node);
+        close_list.push_back(current_node);
 
         // 检查当前节点上下左右节点是否可走
         int dirs[4][2] = { {0,1}, {0,-1}, {1,0}, {-1,0} };
@@ -55,10 +55,10 @@ std::vector<Vec2> FindPath::ComputePath(Vec2 start_grid, Vec2 end_grid, Size map
                 CCLOG("该点不可走！");
                 continue;
             }
-            // 检查 ClosedList，防止重复检查
-            bool in_closed = false;
-            for (auto n : closed_list) if (n->x == nx && n->y == ny) { in_closed = true; break; }
-            if (in_closed) continue;
+            // 检查 CloseList，防止重复检查
+            bool in_close = false;
+            for (auto n : close_list) if (n->x == nx && n->y == ny) { in_close = true; break; }
+            if (in_close) continue;
 
             // 检查 OpenList，更新节点值并纳入新节点
             PathNode* neighbor = nullptr;
@@ -81,6 +81,6 @@ std::vector<Vec2> FindPath::ComputePath(Vec2 start_grid, Vec2 end_grid, Size map
         }
     }
     for (auto n : open_list) delete n;
-    for (auto n : closed_list) delete n;
+    for (auto n : close_list) delete n;
     return path;
 }
