@@ -7,9 +7,9 @@
    eJzTZGBgMARiSyBWIAHLMDAsEALSwkAsQqJeWaBecSAtAcRSZOglRT0ylqNA71DFWgwMDeTqdRrVSzRWBaYtoH4FdKxFRJoDABW/JNc=
   </data>
  </layer>
- <layer id="1" name="MainForeGround" width="15" height="15" locked="1">
+ <layer id="1" name="MainForeGround" width="15" height="15">
   <data encoding="base64" compression="zlib">
-   eJxjYCAOMEExP5SmJWCHYnL1ItPUcAs11MDUkeoufOpZgZgTiLmpYCYhd5HibmLNRxcjFD6E3MBIhFps4oxoeokFILN4iNDLiwPzQzEAb+cBPg==
+   eJxjYEAAJhIwOsAmRixA18sOxfjU43ILOxpNKSDGHGLtIuQvbHLU8gel9pDiDmLNRxcjJ3xIVUvN8ISZxU9AHS8ODNLHA8QAd58BNQ==
   </data>
  </layer>
  <objectgroup id="2" name="abletoset" visible="0"/>
