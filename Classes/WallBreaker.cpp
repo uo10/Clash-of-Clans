@@ -8,7 +8,7 @@ WallBreaker* WallBreaker::Create() {
 
     // 调用 GameUnit 的初始化函数
     // 填入数值: 图片, HP, 速度, 伤害, 射程, 类型
-    if (pRet && pRet->InitUnit("Soldier/Wall_Breaker.png", 20, 100.0f, 7.0f, 80.0f, UnitType::kSoldier)) {
+    if (pRet && pRet->InitUnit("Soldier/Wall_Breaker.png", 20, 100.0f, 12.0f, 40.0f, UnitType::kSoldier)) {
 
         pRet->SetUnitName("WallBreaker"); // 设置名字
         pRet->autorelease();
