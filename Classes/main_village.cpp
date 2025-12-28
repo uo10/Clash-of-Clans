@@ -1,10 +1,10 @@
 ﻿#include "main_village.h"
 #include "SimpleAudioEngine.h"
-#include "Barbarian.h"   
-#include "Archer.h"
-#include "Giant.h"
-#include "WallBreaker.h" 
-#include "Dragon.h"
+#include "barbarian.h"   
+#include "archer.h"
+#include "giant.h"
+#include "wall_breaker.h" 
+#include "dragon.h"
 #include "game_map.h"
 
 

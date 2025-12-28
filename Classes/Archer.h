@@ -1,7 +1,7 @@
 #ifndef __ARCHER_H__
 #define __ARCHER_H__
 
-#include "Soldier.h"
+#include "soldier.h"
 
 class Archer : public Soldier
 {

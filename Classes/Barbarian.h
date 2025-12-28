@@ -1,7 +1,7 @@
 #ifndef __BARBARIAN_H__
 #define __BARBARIAN_H__
 
-#include "Soldier.h"
+#include "soldier.h"
 
 class Barbarian : public Soldier
 {

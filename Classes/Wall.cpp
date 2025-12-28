@@ -1,4 +1,4 @@
-#include "Wall.h"
+#include "wall.h"
 
 USING_NS_CC;
 

@@ -1,4 +1,4 @@
-#include "Barbarian.h"
+#include "barbarian.h"
 
 USING_NS_CC;
 
@@ -20,5 +20,5 @@ Barbarian* Barbarian::Create() {
 
 // 获取图标名称
 std::string Barbarian::GetIconName() {
-    return "Barbarian.png";
+    return "Soldier/Barbarian.png";
 }

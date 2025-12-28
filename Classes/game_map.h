@@ -6,11 +6,11 @@
 #include "find_path.h"
 #include "main_village.h"
 #include "trap.h"
-#include "Barbarian.h"   
-#include "Archer.h"
-#include "Giant.h"
-#include "WallBreaker.h" 
-#include "Dragon.h"
+#include "barbarian.h"   
+#include "archer.h"
+#include "giant.h"
+#include "wall_breaker.h" 
+#include "dragon.h"
 #include "ui/CocosGUI.h"
 
 class GameMap : public cocos2d::Scene

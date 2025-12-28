@@ -1,4 +1,4 @@
-#include "Giant.h"
+#include "giant.h"
 
 USING_NS_CC;
 
@@ -20,5 +20,5 @@ Giant* Giant::Create() {
 
 // 获取图标名称
 std::string Giant::GetIconName() {
-    return "Giant.png";
+    return "Soldier/Giant.png";
 }

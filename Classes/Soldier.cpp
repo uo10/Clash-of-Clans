@@ -1,4 +1,4 @@
-#include "Soldier.h"
+#include "soldier.h"
 
 USING_NS_CC;
 

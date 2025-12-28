@@ -1,4 +1,4 @@
-#include "Cannon.h"
+#include "cannon.h"
 
 USING_NS_CC;
 

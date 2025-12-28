@@ -1,7 +1,7 @@
 #ifndef __DRAGON_H__
 #define __DRAGON_H__
 
-#include "Soldier.h"
+#include "soldier.h"
 
 class Dragon : public Soldier
 {

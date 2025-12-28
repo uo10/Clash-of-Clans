@@ -1,4 +1,4 @@
-#include "Archer.h"
+#include "archer.h"
 
 USING_NS_CC;
 
@@ -20,5 +20,5 @@ Archer* Archer::Create() {
 
 // 获取图标名称
 std::string Archer::GetIconName() {
-    return "Archer.png";
+    return "Soldier/Archer.png";
 }

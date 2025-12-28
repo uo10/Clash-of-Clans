@@ -1,7 +1,7 @@
 #ifndef __GIANT_H__
 #define __GIANT_H__
 
-#include "Soldier.h"
+#include "soldier.h"
 
 class Giant : public Soldier
 {
