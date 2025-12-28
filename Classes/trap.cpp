@@ -6,56 +6,56 @@ GameTrap* GameTrap::CreateTrap( Vec2 pos,Size tilesize) {
     GameTrap* trap = new GameTrap();
     if (trap && trap->init()) {
         trap->setPosition(pos);
-        trap->is_able_ = true; //ÒÔ´Ë×´Ì¬±ê¼ÇÏİÚåÒÑ²¼Éè
+        trap->is_able_ = true; //ä»¥æ­¤çŠ¶æ€æ ‡è®°é™·é˜±å·²å¸ƒè®¾
 
-        // ÉèÖÃÊôĞÔ
-            trap->trigger_range_ = 30.0f; // ´¥·¢°ë¾¶
-            trap->damage_range_ = 50.0f; // ±¬Õ¨°ë¾¶
+        // è®¾ç½®å±æ€§
+            trap->trigger_range_ = 30.0f; // è§¦å‘åŠå¾„
+            trap->damage_range_ = 50.0f; // çˆ†ç‚¸åŠå¾„
             trap->damage_ = 20.0f;
             trap->sprite_ = Sprite::create("map/trapBomb.png");
             Size sprite_size = trap->sprite_->getContentSize();
             trap->sprite_->setScaleX(tilesize.width / sprite_size.width);
             trap->sprite_->setScaleY(tilesize.height / sprite_size.height);
             trap->addChild(trap->sprite_);          
-            // ÏİÚåÃ»ÓĞ´¥·¢Ê±ÊÇÒş²Ø×´Ì¬
+            // é™·é˜±æ²¡æœ‰è§¦å‘æ—¶æ˜¯éšè—çŠ¶æ€
             trap->setVisible(false);                 
 
         trap->autorelease();
         return trap;
     }
-	CC_SAFE_DELETE(trap);// É¾³ı¶ÔÏó
+	CC_SAFE_DELETE(trap);// åˆ é™¤å¯¹è±¡
     return nullptr;
 }
 void GameTrap::UpdateTrap(float dt, const Vector<GameUnit*>& enemies) {
-    if (!is_able_) return; // Õ¨¹ıÁË¾Í²»ÔÙ¼ì²â
+    if (!is_able_) return; // ç‚¸è¿‡äº†å°±ä¸å†æ£€æµ‹
 
     for (auto enemy : enemies) {
-        // ±ØĞëÊÇ»î×ÅµÄµĞÈË
+        // å¿…é¡»æ˜¯æ´»ç€çš„æ•Œäºº
         if (enemy->IsAlive()) {
 
             float dist = this->getPosition().distance(enemy->getPosition());
 
-            // Ö»ÒªÓĞÒ»¸öµĞÈË×ß½ø´¥·¢·¶Î§
+            // åªè¦æœ‰ä¸€ä¸ªæ•Œäººèµ°è¿›è§¦å‘èŒƒå›´
             if (dist <= trigger_range_) {
-                this->Activate(enemies); // ´«ÈëËùÓĞµĞÈËÊÇÎªÁË¼ÆËã·¶Î§±¬Õ¨
-                break; // ´¥·¢Ò»´Î¼´¿É£¬Ìø³öÑ­»·
+                this->Activate(enemies); // ä¼ å…¥æ‰€æœ‰æ•Œäººæ˜¯ä¸ºäº†è®¡ç®—èŒƒå›´çˆ†ç‚¸
+                break; // è§¦å‘ä¸€æ¬¡å³å¯ï¼Œè·³å‡ºå¾ªç¯
             }
         }
     }
 }
 void GameTrap::Activate(const Vector<GameUnit*>& enemies) {
-    is_able_ = false; // ±ê¼ÇÎªÒÑÊ§Ğ§
+    is_able_ = false; // æ ‡è®°ä¸ºå·²å¤±æ•ˆ
 
-    //²Èµ½ÁËÏÔÊ¾Õ¨µ¯
+    //è¸©åˆ°äº†æ˜¾ç¤ºç‚¸å¼¹
     this->setVisible(true);
 
-    // ÈÃÕ¨µ¯Ìø³öÀ´
+    // è®©ç‚¸å¼¹è·³å‡ºæ¥
     auto sequence = Sequence::create(
-        ScaleTo::create(0.2f, 1.2f), // µ¯Æğ¶¯»­
+        ScaleTo::create(0.2f, 1.2f), // å¼¹èµ·åŠ¨ç”»
         CallFunc::create([this, enemies]() {
 
-            // ¼ÆËã·¶Î§ÉËº¦
-            // ±éÀúËùÓĞµĞÈË£¬¶Ô±¬Õ¨·¶Î§ÄÚµÄµĞÈËÔì³ÉÉËº¦
+            // è®¡ç®—èŒƒå›´ä¼¤å®³
+            // éå†æ‰€æœ‰æ•Œäººï¼Œå¯¹çˆ†ç‚¸èŒƒå›´å†…çš„æ•Œäººé€ æˆä¼¤å®³
             for (auto enemy : enemies) {
                 if (enemy->IsAlive()) {
                     float dist = this->getPosition().distance(enemy->getPosition());
@@ -64,7 +64,7 @@ void GameTrap::Activate(const Vector<GameUnit*>& enemies) {
                     }
                 }
             }         
-            // Ïú»ÙÏİÚå
+            // é”€æ¯é™·é˜±
             this->removeFromParent();
             }),
         nullptr
