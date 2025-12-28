@@ -15,6 +15,9 @@
 
 ## 系统架构设计
 本项目主要基于主村庄和游戏地图两个框架进行设计。
+<img width="827" height="877" alt="COCdrawio drawio (1)" src="https://github.com/user-attachments/assets/04e03020-4cfb-4ed8-85e7-fd551d260607" />
+<img width="1233" height="739" alt="未命名绘图 drawio (1)" src="https://github.com/user-attachments/assets/6c50ec59-e9a6-4e13-bb4c-8d2cd0c7226e" />
+
 
 |主村庄相关类|游戏地图相关类|建筑相关类|士兵相关类|场景切换相关类|
 |:---:|:---:|:---:|:---:|:---:|
